@@ -51,6 +51,52 @@ class RelayStorage {
                     ON DELETE CASCADE
             ) STRICT;
 
+            CREATE TABLE IF NOT EXISTS incidents (
+                incident_id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                status TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                sequence INTEGER NOT NULL,
+                server_owned INTEGER NOT NULL,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
+            ) STRICT;
+
+            CREATE TABLE IF NOT EXISTS incident_events (
+                event_id TEXT PRIMARY KEY,
+                incident_id TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                sequence INTEGER NOT NULL,
+                occurred_at INTEGER NOT NULL,
+                payload_json TEXT NOT NULL,
+                FOREIGN KEY(incident_id)
+                    REFERENCES incidents(incident_id)
+                    ON DELETE CASCADE
+            ) STRICT;
+
+            CREATE TABLE IF NOT EXISTS processed_commands (
+                command_id TEXT PRIMARY KEY,
+                incident_id TEXT NOT NULL,
+                command_type TEXT NOT NULL,
+                severity TEXT,
+                processed_at INTEGER NOT NULL,
+                FOREIGN KEY(incident_id)
+                    REFERENCES incidents(incident_id)
+                    ON DELETE CASCADE
+            ) STRICT;
+
+            CREATE TABLE IF NOT EXISTS timeline_entries (
+                entry_id TEXT PRIMARY KEY,
+                incident_id TEXT NOT NULL,
+                event_id TEXT NOT NULL UNIQUE,
+                message TEXT NOT NULL,
+                author TEXT NOT NULL,
+                occurred_at INTEGER NOT NULL,
+                FOREIGN KEY(incident_id)
+                    REFERENCES incidents(incident_id)
+                    ON DELETE CASCADE
+            ) STRICT;
+
             CREATE TABLE IF NOT EXISTS incident_access (
                 user_id TEXT NOT NULL,
                 incident_id TEXT NOT NULL,
@@ -59,6 +105,9 @@ class RelayStorage {
                 PRIMARY KEY(user_id, incident_id),
                 FOREIGN KEY(user_id)
                     REFERENCES users(user_id)
+                    ON DELETE CASCADE,
+                FOREIGN KEY(incident_id)
+                    REFERENCES incidents(incident_id)
                     ON DELETE CASCADE
             ) STRICT;
 
@@ -70,6 +119,18 @@ class RelayStorage {
 
             CREATE INDEX IF NOT EXISTS idx_refresh_sessions_user
                 ON refresh_sessions(user_id);
+
+            CREATE INDEX IF NOT EXISTS idx_incident_events_replay
+                ON incident_events(
+                    incident_id,
+                    sequence
+                );
+
+            CREATE INDEX IF NOT EXISTS idx_timeline_incident
+                ON timeline_entries(
+                    incident_id,
+                    occurred_at
+                );
             `
         );
     }
@@ -326,6 +387,400 @@ class RelayStorage {
             .run(
                 refreshToken
             );
+    }
+
+    getIncident(
+        incidentId
+    ) {
+
+        return this.database
+            .prepare(
+                `
+                SELECT
+                    incident_id AS id,
+                    title,
+                    status,
+                    severity,
+                    sequence,
+                    server_owned AS serverOwned
+                FROM incidents
+                WHERE incident_id = ?
+                `
+            )
+            .get(
+                incidentId
+            ) || null;
+    }
+
+    ensureIncident(
+        incidentId,
+        defaults = {}
+    ) {
+
+        const existing =
+            this.getIncident(
+                incidentId
+            );
+
+        if (existing) {
+            return existing;
+        }
+
+        const incident = {
+            id:
+                incidentId,
+            title:
+                defaults.title ||
+                "Existing Relay incident",
+            status:
+                defaults.status ||
+                "Active",
+            severity:
+                defaults.severity ||
+                "MEDIUM",
+            sequence:
+                Number(
+                    defaults.sequence ||
+                    0
+                ),
+            serverOwned:
+                defaults.serverOwned ===
+                true
+        };
+
+        const timestamp =
+            Date.now();
+
+        this.database
+            .prepare(
+                `
+                INSERT INTO incidents (
+                    incident_id,
+                    title,
+                    status,
+                    severity,
+                    sequence,
+                    server_owned,
+                    created_at,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `
+            )
+            .run(
+                incident.id,
+                incident.title,
+                incident.status,
+                incident.severity,
+                incident.sequence,
+                incident.serverOwned
+                    ? 1
+                    : 0,
+                timestamp,
+                timestamp
+            );
+
+        return incident;
+    }
+
+    getProcessedCommand(
+        commandId
+    ) {
+
+        return this.database
+            .prepare(
+                `
+                SELECT
+                    command_id AS commandId,
+                    incident_id AS incidentId,
+                    command_type AS type,
+                    severity,
+                    processed_at AS processedAt
+                FROM processed_commands
+                WHERE command_id = ?
+                `
+            )
+            .get(
+                commandId
+            ) || null;
+    }
+
+    applySeverityCommand(
+        commandId,
+        incidentId,
+        severity,
+        occurredAt
+    ) {
+
+        const existing =
+            this.getProcessedCommand(
+                commandId
+            );
+
+        if (existing) {
+
+            return {
+                duplicate: true,
+                incident:
+                    this.getIncident(
+                        existing.incidentId
+                    ),
+                event:
+                    null
+            };
+        }
+
+        this.database.exec(
+            "BEGIN IMMEDIATE"
+        );
+
+        try {
+
+            const incident =
+                this.ensureIncident(
+                    incidentId
+                );
+
+            const nextSequence =
+                Number(
+                    incident.serverOwned
+                ) ===
+                1 ||
+                incident.serverOwned ===
+                true
+                    ? Number(
+                        incident.sequence
+                    ) + 1
+                    : 0;
+
+            this.database
+                .prepare(
+                    `
+                    UPDATE incidents
+                    SET severity = ?,
+                        sequence = ?,
+                        updated_at = ?
+                    WHERE incident_id = ?
+                    `
+                )
+                .run(
+                    severity,
+                    nextSequence,
+                    occurredAt,
+                    incidentId
+                );
+
+            const event = {
+                type:
+                    "incident.updated",
+                eventId:
+                    "EVT-SEVERITY-" +
+                    commandId,
+                incidentId,
+                occurredAt,
+                severity,
+                sequence:
+                    nextSequence
+            };
+
+            if (
+                Number(
+                    incident.serverOwned
+                ) ===
+                    1 ||
+                incident.serverOwned ===
+                    true
+            ) {
+
+                this.database
+                    .prepare(
+                        `
+                        INSERT INTO incident_events (
+                            event_id,
+                            incident_id,
+                            event_type,
+                            sequence,
+                            occurred_at,
+                            payload_json
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        `
+                    )
+                    .run(
+                        event.eventId,
+                        incidentId,
+                        event.type,
+                        nextSequence,
+                        occurredAt,
+                        JSON.stringify(
+                            event
+                        )
+                    );
+            }
+
+            this.database
+                .prepare(
+                    `
+                    INSERT INTO processed_commands (
+                        command_id,
+                        incident_id,
+                        command_type,
+                        severity,
+                        processed_at
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    `
+                )
+                .run(
+                    commandId,
+                    incidentId,
+                    "incident.severity.update",
+                    severity,
+                    occurredAt
+                );
+
+            this.database.exec(
+                "COMMIT"
+            );
+
+            return {
+                duplicate: false,
+                incident:
+                    this.getIncident(
+                        incidentId
+                    ),
+                event
+            };
+
+        } catch (error) {
+
+            this.database.exec(
+                "ROLLBACK"
+            );
+
+            throw error;
+        }
+    }
+
+    saveTimelineEntry(
+        entry
+    ) {
+
+        const existing =
+            this.getTimelineEntry(
+                entry.entryId
+            );
+
+        if (existing) {
+            return existing;
+        }
+
+        this.ensureIncident(
+            entry.incidentId
+        );
+
+        this.database
+            .prepare(
+                `
+                INSERT INTO timeline_entries (
+                    entry_id,
+                    incident_id,
+                    event_id,
+                    message,
+                    author,
+                    occurred_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                `
+            )
+            .run(
+                entry.entryId,
+                entry.incidentId,
+                entry.eventId,
+                entry.message,
+                entry.author,
+                entry.occurredAt
+            );
+
+        return entry;
+    }
+
+    getTimelineEntry(
+        entryId
+    ) {
+
+        const row =
+            this.database
+                .prepare(
+                    `
+                    SELECT
+                        entry_id AS entryId,
+                        incident_id AS incidentId,
+                        event_id AS eventId,
+                        message,
+                        author,
+                        occurred_at AS occurredAt
+                    FROM timeline_entries
+                    WHERE entry_id = ?
+                    `
+                )
+                .get(
+                    entryId
+                );
+
+        if (!row) {
+            return null;
+        }
+
+        return {
+            type:
+                "timeline.entry.added",
+            ...row
+        };
+    }
+
+    getReplay(
+        incidentId,
+        fromSequence,
+        throughSequence
+    ) {
+
+        return this.database
+            .prepare(
+                `
+                SELECT payload_json AS payloadJson
+                FROM incident_events
+                WHERE incident_id = ?
+                  AND sequence >= ?
+                  AND sequence <= ?
+                ORDER BY sequence ASC
+                `
+            )
+            .all(
+                incidentId,
+                fromSequence,
+                throughSequence
+            )
+            .map(
+                row =>
+                    JSON.parse(
+                        row.payloadJson
+                    )
+            );
+    }
+
+    countIncidents() {
+
+        const row =
+            this.database
+                .prepare(
+                    "SELECT COUNT(*) AS count FROM incidents"
+                )
+                .get();
+
+        return Number(
+            row.count
+        );
     }
 
     grantIncidentAccess(
