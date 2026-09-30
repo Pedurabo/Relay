@@ -79,10 +79,25 @@ class WebSocketTimelineSender(
                 }
             }
 
-            val request =
+            val requestBuilder =
                 Request.Builder()
                     .url(url)
-                    .build()
+
+            val token =
+                tokenProvider()
+
+            if (
+                !token.isNullOrBlank()
+            ) {
+
+                requestBuilder.header(
+                    "Authorization",
+                    "Bearer " + token
+                )
+            }
+
+            val request =
+                requestBuilder.build()
 
             Log.i(
                 TAG,
