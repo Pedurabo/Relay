@@ -4,12 +4,16 @@ const http = require("http");
 const crypto = require("crypto");
 const { WebSocketServer } = require("ws");
 const { createStorage } = require("./storage");
+const { loadConfig } = require("./config");
+
+const config =
+    loadConfig(
+        process.env,
+        __dirname
+    );
 
 const PORT =
-    Number(
-        process.env.RELAY_PORT ||
-        9000
-    );
+    config.port;
 
 const persistentStateFile =
     path.join(
@@ -18,18 +22,16 @@ const persistentStateFile =
     );
 
 const BOOTSTRAP_USERNAME =
-    process.env.RELAY_BOOTSTRAP_USERNAME ||
-    "relay.operator";
+    config.bootstrapUsername;
 
 const BOOTSTRAP_PASSWORD =
-    process.env.RELAY_BOOTSTRAP_PASSWORD ||
-    "RelayDemo123!";
+    config.bootstrapPassword;
 
 const BOOTSTRAP_USER_ID =
-    "dev-relay-operator";
+    config.bootstrapUserId;
 
 const BOOTSTRAP_DISPLAY_NAME =
-    "Relay Operator";
+    config.bootstrapDisplayName;
 
 const previousRoomTestStateFile =
     path.join(
@@ -37,22 +39,16 @@ const previousRoomTestStateFile =
         "room-outbox-final-state.json"
     );
 
-
 const SESSION_TTL_MS =
-    Number(
-        process.env.RELAY_ACCESS_TTL_MS ||
-        60 * 60 * 1000
-    );
+    config.accessTtlMs;
 
 const REFRESH_TTL_MS =
-    Number(
-        process.env.RELAY_REFRESH_TTL_MS ||
-        7 * 24 * 60 * 60 * 1000
-    );
+    config.refreshTtlMs;
 
 const storage =
     createStorage(
-        __dirname
+        __dirname,
+        config.databasePath
     );
 
 function issueSession(
@@ -271,6 +267,7 @@ if (
 }
 
 if (
+    config.allowDevelopmentBootstrap &&
     !storage.getUserByUsername(
         BOOTSTRAP_USERNAME
     )
@@ -292,6 +289,19 @@ if (
     console.log(
         "AUTH_BOOTSTRAP_USER_CREATED|" +
         BOOTSTRAP_USER_ID
+    );
+}
+
+if (
+    config.isProduction &&
+    storage.countUsers() ===
+        0
+) {
+
+    storage.close();
+
+    throw new Error(
+        "Production user store is empty. Provision users before starting Relay."
     );
 }
 
@@ -560,8 +570,7 @@ const server =
             }
 
             if (
-                process.env.RELAY_ENABLE_TEST_SHUTDOWN ===
-                    "1" &&
+                config.testShutdownEnabled &&
                 request.method ===
                     "POST" &&
                 request.url ===
