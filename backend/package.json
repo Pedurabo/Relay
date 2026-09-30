@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:auth": "node auth-test.js",
-    "test:storage": "node storage-test.js"
+    "test:storage": "node storage-test.js",
+    "test:restart": "node restart-e2e-test.js"
   },
   "keywords": [],
   "author": "",
