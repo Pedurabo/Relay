@@ -908,9 +908,7 @@ server.listen(
 
         console.log(
             "INCIDENT_COUNT|" +
-            Object.keys(
-                state.incidents
-            ).length
+            storage.countIncidents()
         );
     }
 );
