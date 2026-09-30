@@ -78,7 +78,9 @@ function createServiceAccountJwt(
 
 function buildIncidentPushPayload(
     event,
-    content
+    content,
+    incident =
+        {}
 ) {
 
     return {
@@ -86,14 +88,59 @@ function buildIncidentPushPayload(
             String(
                 event.eventId
             ),
+        eventType:
+            String(
+                event.type ||
+                ""
+            ),
         incidentId:
             String(
                 event.incidentId
             ),
         severity:
             String(
-                event.severity
+                event.severity ||
+                incident.severity ||
+                ""
             ).toUpperCase(),
+        occurredAt:
+            String(
+                event.occurredAt ||
+                Date.now()
+            ),
+        sequence:
+            String(
+                event.sequence ||
+                incident.sequence ||
+                0
+            ),
+        incidentTitle:
+            String(
+                incident.title ||
+                event.title ||
+                ""
+            ),
+        incidentStatus:
+            String(
+                incident.status ||
+                event.status ||
+                ""
+            ),
+        entryId:
+            String(
+                event.entryId ||
+                ""
+            ),
+        message:
+            String(
+                event.message ||
+                ""
+            ),
+        author:
+            String(
+                event.author ||
+                ""
+            ),
         content:
             String(
                 content
