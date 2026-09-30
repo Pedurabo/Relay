@@ -498,9 +498,66 @@ function canAccessIncident(
 // ------------------------------------------------------------
 //
 
+let shuttingDown =
+    false;
+
 const server =
     http.createServer(
         (request, response) => {
+
+            if (
+                request.method ===
+                    "GET" &&
+                request.url ===
+                    "/healthz"
+            ) {
+
+                response.writeHead(
+                    200,
+                    {
+                        "Content-Type":
+                            "application/json"
+                    }
+                );
+
+                response.end(
+                    JSON.stringify({
+                        status:
+                            "ok"
+                    })
+                );
+
+                return;
+            }
+
+            if (
+                request.method ===
+                    "GET" &&
+                request.url ===
+                    "/readyz"
+            ) {
+
+                response.writeHead(
+                    shuttingDown
+                        ? 503
+                        : 200,
+                    {
+                        "Content-Type":
+                            "application/json"
+                    }
+                );
+
+                response.end(
+                    JSON.stringify({
+                        status:
+                            shuttingDown
+                                ? "shutting_down"
+                                : "ready"
+                    })
+                );
+
+                return;
+            }
 
             if (
                 request.method ===
@@ -1270,10 +1327,8 @@ wss.on(
                         );
 
                     const author =
-                        String(
-                            message.author ||
-                            "You"
-                        );
+                        authenticatedSession
+                            .userName;
 
                     console.log(
                         "TIMELINE_COMMAND|" +
@@ -1492,21 +1547,104 @@ wss.on(
     }
 );
 
+function gracefulShutdown(
+    signal
+) {
+
+    if (
+        shuttingDown
+    ) {
+        return;
+    }
+
+    shuttingDown =
+        true;
+
+    console.log(
+        "SERVER_SHUTDOWN_BEGIN|" +
+        signal
+    );
+
+    for (
+        const client of
+        wss.clients
+    ) {
+
+        try {
+            client.close(
+                1001,
+                "Server shutting down"
+            );
+        } catch (error) {
+
+            console.error(
+                "CLIENT_SHUTDOWN_CLOSE_FAILED|" +
+                error.message
+            );
+        }
+    }
+
+    server.close(
+        () => {
+
+            try {
+
+                storage.close();
+
+                console.log(
+                    "SERVER_SHUTDOWN_COMPLETE|" +
+                    signal
+                );
+
+                process.exit(
+                    0
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "SERVER_SHUTDOWN_STORAGE_FAILED|" +
+                    error.message
+                );
+
+                process.exit(
+                    1
+                );
+            }
+        }
+    );
+
+    setTimeout(
+        () => {
+
+            console.error(
+                "SERVER_SHUTDOWN_FORCED|" +
+                signal
+            );
+
+            process.exit(
+                1
+            );
+        },
+        10_000
+    ).unref();
+}
+
 process.on(
     "SIGINT",
     () => {
-
-        storage.close();
-        process.exit(0);
+        gracefulShutdown(
+            "SIGINT"
+        );
     }
 );
 
 process.on(
     "SIGTERM",
     () => {
-
-        storage.close();
-        process.exit(0);
+        gracefulShutdown(
+            "SIGTERM"
+        );
     }
 );
 
