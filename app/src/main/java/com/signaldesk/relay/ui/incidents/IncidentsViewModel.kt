@@ -186,6 +186,8 @@ class IncidentsViewModel(
 
     fun signIn() {
         SessionManager.signIn(
+            userId =
+                "dev-relay-operator",
             userName =
                 "Relay Operator"
         )
