@@ -222,118 +222,53 @@ function verifyPassword(
     );
 }
 
-function freshState() {
-
-    return {
-        incidents: {},
-        processedCommands: {},
-        timelineEntries: {}
-    };
-}
-
-function loadState() {
+function loadLegacyState() {
 
     if (
-        fs.existsSync(
+        !fs.existsSync(
             persistentStateFile
         )
     ) {
-
-        try {
-
-            return JSON.parse(
-                fs.readFileSync(
-                    persistentStateFile,
-                    "utf8"
-                )
-            );
-
-        } catch (error) {
-
-            console.error(
-                "STATE_LOAD_FAILED|" +
-                error.message
-            );
-        }
+        return null;
     }
 
-    return freshState();
+    try {
+
+        return JSON.parse(
+            fs.readFileSync(
+                persistentStateFile,
+                "utf8"
+            )
+        );
+
+    } catch (error) {
+
+        console.error(
+            "LEGACY_STATE_LOAD_FAILED|" +
+            error.message
+        );
+
+        return null;
+    }
 }
 
-function saveState() {
+const legacyState =
+    loadLegacyState();
 
-    fs.writeFileSync(
-        persistentStateFile,
-        JSON.stringify(
-            state,
-            null,
-            2
-        )
+if (
+    legacyState &&
+    storage.countIncidents() ===
+        0
+) {
+
+    storage.importLegacyState(
+        legacyState
+    );
+
+    console.log(
+        "LEGACY_STATE_MIGRATED_TO_SQLITE"
     );
 }
-
-function normalizeState() {
-
-    if (
-        !state.incidents
-    ) {
-        state.incidents = {};
-    }
-
-    if (
-        !state.processedCommands
-    ) {
-        state.processedCommands = {};
-    }
-
-    if (
-        !state.timelineEntries
-    ) {
-        state.timelineEntries = {};
-    }
-
-    for (
-        const incident of
-        Object.values(
-            state.incidents
-        )
-    ) {
-
-        if (
-            !Array.isArray(
-                incident.history
-            )
-        ) {
-            incident.history = [];
-        }
-
-        if (
-            typeof incident.sequence !==
-            "number"
-        ) {
-            incident.sequence = 0;
-        }
-
-        if (
-            !incident.severity
-        ) {
-            incident.severity =
-                "MEDIUM";
-        }
-
-        if (
-            !incident.status
-        ) {
-            incident.status =
-                "Active";
-        }
-    }
-}
-
-let state =
-    loadState();
-
-normalizeState();
 
 if (
     !storage.getUserByUsername(
@@ -367,7 +302,6 @@ if (
 // ------------------------------------------------------------
 // Import the previously proven Room idempotency incident.
 // ------------------------------------------------------------
-//
 
 if (
     fs.existsSync(
@@ -387,64 +321,32 @@ if (
 
         if (
             previous.incidentId &&
-            !state.incidents[
+            !storage.getIncident(
                 previous.incidentId
-            ]
+            )
         ) {
 
-            state.incidents[
-                previous.incidentId
-            ] = {
-
-                id:
-                    previous.incidentId,
-
-                title:
-                    previous.title ||
-                    "Room process-death test",
-
-                status:
-                    previous.status ||
-                    "Active",
-
-                severity:
-                    previous.severity ||
-                    "MEDIUM",
-
-                sequence:
-                    Number(
-                        previous.sequence || 1
-                    ),
-
-                serverOwned:
-                    true,
-
-                history:
-                    []
-            };
-
-            if (
-                Array.isArray(
-                    previous.processedCommandIds
-                )
-            ) {
-
-                for (
-                    const commandId of
-                    previous.processedCommandIds
-                ) {
-
-                    state.processedCommands[
-                        commandId
-                    ] = {
-                        commandId,
-                        incidentId:
-                            previous.incidentId,
-                        type:
-                            "incident.severity.update"
-                    };
+            storage.ensureIncident(
+                previous.incidentId,
+                {
+                    title:
+                        previous.title ||
+                        "Room process-death test",
+                    status:
+                        previous.status ||
+                        "Active",
+                    severity:
+                        previous.severity ||
+                        "MEDIUM",
+                    sequence:
+                        Number(
+                            previous.sequence ||
+                            1
+                        ),
+                    serverOwned:
+                        true
                 }
-            }
+            );
 
             console.log(
                 "IMPORTED_ROOM_TEST|" +
@@ -465,9 +367,6 @@ if (
     }
 }
 
-saveState();
-
-//
 // ------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------
@@ -519,63 +418,9 @@ function ensureIncident(
     incidentId
 ) {
 
-    let incident =
-        state.incidents[
-            incidentId
-        ];
-
-    if (
-        !incident
-    ) {
-
-        //
-        // Compatibility mode for incidents that already exist
-        // in Relay's Room database but were created by older
-        // deterministic backends.
-        //
-        // sequence = 0 means Relay handles the authoritative
-        // update as unsequenced rather than incorrectly
-        // rejecting it as stale against an old local sequence.
-        //
-
-        incident = {
-
-            id:
-                incidentId,
-
-            title:
-                "Existing Relay incident",
-
-            status:
-                "Active",
-
-            severity:
-                "MEDIUM",
-
-            sequence:
-                0,
-
-            serverOwned:
-                false,
-
-            history:
-                []
-        };
-
-        state.incidents[
-            incidentId
-        ] =
-            incident;
-
-        saveState();
-
-        console.log(
-            "DISCOVERED_LEGACY_INCIDENT|" +
-            incidentId
-        );
-    }
-
-    return incident;
+    return storage.ensureIncident(
+        incidentId
+    );
 }
 
 function buildSeverityEvent(
@@ -1231,9 +1076,10 @@ wss.on(
                     }
 
                     const existingCommand =
-                        state.processedCommands[
-                            commandId
-                        ];
+                        storage
+                            .getProcessedCommand(
+                                commandId
+                            );
 
                     if (
                         existingCommand
@@ -1273,63 +1119,24 @@ wss.on(
                         return;
                     }
 
+                    const applied =
+                        storage
+                            .applySeverityCommand(
+                                commandId,
+                                incidentId,
+                                severity,
+                                now()
+                            );
+
                     const incident =
-                        ensureIncident(
-                            incidentId
-                        );
-
-                    incident.severity =
-                        severity;
-
-                    //
-                    // Ordered server-owned incidents advance their
-                    // sequence normally.
-                    //
-                    // Older Room-only incidents stay sequence 0 so
-                    // Relay does not discard them as stale.
-                    //
-
-                    if (
-                        incident.serverOwned
-                    ) {
-
-                        incident.sequence +=
-                            1;
-                    }
+                        applied.incident;
 
                     const event =
+                        applied.event ||
                         buildSeverityEvent(
                             incident,
                             commandId
                         );
-
-                    if (
-                        incident.serverOwned
-                    ) {
-
-                        incident.history.push(
-                            event
-                        );
-                    }
-
-                    state.processedCommands[
-                        commandId
-                    ] = {
-
-                        commandId,
-
-                        incidentId,
-
-                        severity,
-
-                        type:
-                            "incident.severity.update",
-
-                        processedAt:
-                            now()
-                    };
-
-                    saveState();
 
                     console.log(
                         "SEVERITY_APPLIED|" +
@@ -1518,43 +1325,32 @@ wss.on(
                     );
 
                     let event =
-                        state.timelineEntries[
-                            entryId
-                        ];
+                        storage
+                            .getTimelineEntry(
+                                entryId
+                            );
 
                     if (
                         !event
                     ) {
 
-                        event = {
-
-                            type:
-                                "timeline.entry.added",
-
-                            eventId:
-                                randomId(
-                                    "EVT-TIMELINE"
-                                ),
-
-                            incidentId,
-
-                            occurredAt:
-                                now(),
-
-                            entryId,
-
-                            message:
-                                text,
-
-                            author
-                        };
-
-                        state.timelineEntries[
-                            entryId
-                        ] =
-                            event;
-
-                        saveState();
+                        event =
+                            storage
+                                .saveTimelineEntry({
+                                    type:
+                                        "timeline.entry.added",
+                                    eventId:
+                                        randomId(
+                                            "EVT-TIMELINE"
+                                        ),
+                                    incidentId,
+                                    occurredAt:
+                                        now(),
+                                    entryId,
+                                    message:
+                                        text,
+                                    author
+                                });
 
                         console.log(
                             "TIMELINE_APPLIED|" +
@@ -1564,25 +1360,16 @@ wss.on(
                         );
                     }
 
-                    if (
-                        state.timelineEntries[
-                            entryId
-                        ]
-                    ) {
+                    console.log(
+                        "TIMELINE_CONFIRM|" +
+                        entryId +
+                        "|" +
+                        incidentId
+                    );
 
-                        console.log(
-                            "TIMELINE_CONFIRM|" +
-                            entryId +
-                            "|" +
-                            incidentId
-                        );
-
-                        broadcast(
-                            state.timelineEntries[
-                                entryId
-                            ]
-                        );
-                    }
+                    broadcast(
+                        event
+                    );
 
                     return;
                 }
@@ -1629,9 +1416,10 @@ wss.on(
                     }
 
                     const incident =
-                        state.incidents[
-                            incidentId
-                        ];
+                        storage
+                            .getIncident(
+                                incidentId
+                            );
 
                     console.log(
                         "REPLAY_REQUEST|" +
@@ -1666,29 +1454,13 @@ wss.on(
                         return;
                     }
 
-                    const history =
-                        Array.isArray(
-                            incident.history
-                        )
-                            ? incident.history
-                            : [];
-
                     const replay =
-                        history.filter(
-                            event => {
-
-                                return (
-                                    Number(
-                                        event.sequence
-                                    ) >=
-                                        fromSequence &&
-                                    Number(
-                                        event.sequence
-                                    ) <=
-                                        throughSequence
-                                );
-                            }
-                        );
+                        storage
+                            .getReplay(
+                                incidentId,
+                                fromSequence,
+                                throughSequence
+                            );
 
                     for (
                         const event of
@@ -1726,7 +1498,6 @@ process.on(
     "SIGINT",
     () => {
 
-        saveState();
         storage.close();
         process.exit(0);
     }
@@ -1736,7 +1507,6 @@ process.on(
     "SIGTERM",
     () => {
 
-        saveState();
         storage.close();
         process.exit(0);
     }
