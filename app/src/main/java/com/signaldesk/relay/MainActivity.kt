@@ -12,6 +12,11 @@ import com.signaldesk.relay.ui.theme.RelayTheme
 
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        const val EXTRA_INCIDENT_ID =
+            "relay_incident_id"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -21,7 +26,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    RelayNavHost()
+                    RelayNavHost(
+                        initialIncidentId =
+                            intent
+                                .getStringExtra(
+                                    EXTRA_INCIDENT_ID
+                                )
+                    )
                 }
             }
         }
