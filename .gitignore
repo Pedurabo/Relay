@@ -1,0 +1,56 @@
+﻿# Android / Gradle
+.gradle/
+**/build/
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Relay backend runtime state
+backend/relay-dev-state.json
+backend/relay-dev-backend.log
+backend/relay-dev-backend-error.log
+backend/room-process-death-failpoint.json
+
+# Local proof / test artifacts
+account-isolation-proof/
+session-outbox-proof/
+fairness-proof/
+fairness-proof-v2/
+fairness-logcat-proof/
+lease-proof-baseline/
+lease-proof-final/
+final-proof-pre/
+final-room-proof-inspect/
+final-room-proof-post/
+
+# Development backups created during milestones
+backup-before-*/
+
+# Generated source/debug bundles
+account-isolation-source.txt
+
+# Local database snapshots
+*.db
+*.db-wal
+*.db-shm
+
+# Misc local proof directories
+*-proof/
+*-proof-*/
+*-baseline/
+*-final/
+*-inspect/
+*-dead/

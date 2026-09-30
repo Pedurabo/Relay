@@ -1,0 +1,991 @@
+  --------- beginning of main
+> 09-30 15:19:52.640 I/adbd    ( 3363): adbd service requested 'shell,v2,TERM=xterm,raw:am force-stop com.signaldesk.relay'
+  09-30 15:19:52.680 D/MobileStatusTracker(0/2)( 2480): onSignalStrengthsChanged level=4, vendorLevel=5
+  09-30 15:19:52.681 D/Telephony: SamsungWfcCapabilityNotificationMgr( 2371): onSignalStrengthsChanged: level=4
+  09-30 15:19:52.681 D/Telephony: SamsungWfcCapabilityNotificationMgr( 2371): onSignalStrengthsChanged: mRsrp=-87
+  09-30 15:19:52.682 D/MobileSignalController(0/2)( 2480): notifyListener: enabled=true, connected=true, dataConnected=false, networkType=NR/NR_NSA is5gAvailable=false (5G_Available), emergencyOnly=false, roaming=false, isDefault=false, dataActivity=, level=5, ca=false, mmWave=false, disabledDataIcon=false, simCard=AIRTEL
+  09-30 15:19:52.682 D/NetworkController( 2480): SignalStrength from intent slotId=0
+  09-30 15:19:52.690 I/Telephony: SamsungWifiCallRepositoryImpl( 2371): getInt() wifi_call_enable : 1 , phoneId0
+  09-30 15:19:52.692 I/Telephony: SamsungWifiCallRepositoryImpl( 2371): isWifiCallEnabled [ 0] : 1
+  09-30 15:19:52.693 I/Telephony: SamsungWifiCallRepositoryImpl( 2371): getWfcCapaNotiCount count :0
+  09-30 15:19:52.693 I/Telephony: SamsungWifiCallRepositoryImpl( 2371): isWifiCallMenuEnabled: false
+  09-30 15:19:52.693 D/Telephony: SamsungWfcCapabilityNotificationMgr( 2371): updateWFCCapabilityNotification: tryCount=0 isWiFiCallEnable=true isWifiConnected=true isWifiCallMenuEnabled=false
+  09-30 15:19:52.693 D/Telephony: SamsungWfcCapabilityNotificationMgr( 2371): updateWFCCapabilityNotification: canShowWfcCapableNotification=false shouldShowWfcCapableNotification=false isShowingNotification=false rsrp=-87
+  09-30 15:19:52.718 W/libc    (10307): Access denied finding property "sys.perf.boostopt"
+  09-30 15:19:52.718 W/libc    (10307): Access denied finding property "sys.perf.boostopt"
+  --------- beginning of system
+  09-30 15:19:52.725 D/ActivityManager( 1248): force stop from com.android.server.am.ActivityManagerService.forceStopPackage:4699 com.android.server.am.ActivityManagerShellCommand.runForceStop:1236 
+> 09-30 15:19:52.725 I/ActivityManager( 1248): Force stopping com.signaldesk.relay appid=10396 user=0: from pid 10307
+  09-30 15:19:52.742 W/BroadcastQueue( 1248): Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_RESTARTED dat=package: flg=0x10 (has extras) } to android/com.kddi.android.CpaNotiReceiver
+> 09-30 15:19:52.743 D/CarrierSvcBindHelper( 2371): onHandleForceStop: [com.signaldesk.relay]
+  09-30 15:19:52.743 D/CarrierSvcBindHelper( 2371): No carrier app for: 0
+  09-30 15:19:52.744 D/CarrierSvcBindHelper( 2371): No carrier app for: 1
+  09-30 15:19:52.746 D/RegisteredNfcFServicesCache( 2803): Service unchanged, not updating
+  09-30 15:19:52.758 I/SLPASVC (21303): EuiccServiceImpl init                                                                               [at com.samsung.euicc.service.EuiccServiceImpl.<init>(EuiccServiceImpl.java:22)]
+  09-30 15:19:52.762 D/SettingsProvider( 1248): isChangeAllowed() : name = euicc_downloading
+  09-30 15:19:52.763 I/SLPASVC (21303): EuiccServiceImpl.onBind()                                                                           [at com.samsung.euicc.service.EuiccServiceImpl.onBind(EuiccServiceImpl.java:2)]
+  09-30 15:19:52.767 I/SLPASVC (21303): +onGetEuiccProfileInfoList(1)                                                                       [at com.samsung.euicc.service.EuiccServiceImpl.onGetEuiccProfileInfoList(EuiccServiceImpl.java:22)]
+  09-30 15:19:52.768 I/SLPASVC (21303): need to connect 1                                                                                   [at com.samsung.euicc.service.EuiccServiceImpl.onGetEuiccProfileInfoList(EuiccServiceImpl.java:159)]
+  09-30 15:19:52.768 I/SLPASVC (21303): ListEuiccRequest                                                                                    [at com.samsung.euicc.service.EuiccServiceImpl.onGetEuiccProfileInfoList(EuiccServiceImpl.java:159)]
+  09-30 15:19:52.768 I/SLPASVC (21303): To Service : ListEuiccRequest                                                                       [at com.samsung.euicc.service.EuiccServiceImpl.onGetEuiccProfileInfoList(EuiccServiceImpl.java:159)]
+  09-30 15:19:52.769 W/ContextImpl(21303): Calling a method in the system process without a qualified user: android.app.ContextImpl.bindService:2023 android.content.ContextWrapper.bindService:870 com.samsung.euicc.service.EuiccServiceImpl.q:33 com.samsung.euicc.service.EuiccServiceImpl.o:47 com.samsung.euicc.service.EuiccServiceImpl.f:78 
+  09-30 15:19:52.772 I/SLPASVC (21303): onCreate(): null                                                                                    [at com.samsung.euicc.lpaService.LpaService.onCreate(LpaService.java:15)]
+  09-30 15:19:52.773 I/SLPASVC (21303): MonitorHandler                                                                                      [at com.samsung.euicc.lpaService.MonitorHandler.<init>(MonitorHandler.java:5)]
+  09-30 15:19:52.778 I/SLPASVC (21303): onBind                                                                                              [at com.samsung.euicc.lpaService.LpaService.onBind(LpaService.java:2)]
+  09-30 15:19:52.778 I/SLPASVC (21303): eSIM_CSC: enabled                                                                                   [at com.samsung.euicc.util.EuiccSvcLog.sp(EuiccSvcLog.java:20)]
+  09-30 15:19:52.779 I/SLPASVC (21303): Size of client sim state listener before remove: 1                                                  [at com.samsung.euicc.lpaService.SimStateReceiver.onReceive(SimStateReceiver.java:30)]
+  09-30 15:19:52.780 I/SLPASVC (21303): Size of client sim state listener after remove: 1                                                   [at com.samsung.euicc.lpaService.SimStateReceiver.onReceive(SimStateReceiver.java:71)]
+  09-30 15:19:52.780 I/SLPASVC (21303): Size of listener: 1                                                                                 [at com.samsung.euicc.lpaService.SimStateReceiver.onReceive(SimStateReceiver.java:97)]
+  09-30 15:19:52.780 I/SLPASVC (21303): SIM intent: android.intent.action.ACTION_SUBINFO_RECORD_UPDATED                                     [at com.samsung.euicc.lpaService.SimStateReceiver.onReceive(SimStateReceiver.java:117)]
+  09-30 15:19:52.780 I/SLPASVC (21303): SIM intent = android.intent.action.ACTION_SUBINFO_RECORD_UPDATED                                    [at com.samsung.euicc.lpaService.SimAbsentListener.onReceive(SimAbsentListener.java:21)]
+  09-30 15:19:52.864 I/SLPASVC (21303): [STORE DATA] blockNumber : 0                                                                        [at com.samsung.euicc.lpaService.gsma.phase2.es10.uicc.EuiccCommandInterface$EuiccSlot.iccTransmitApduLogicalChannel(EuiccCommandInterface$EuiccSlot.java:4)]
+  09-30 15:19:52.864 I/SLPASVC (21303): case 4 command APDU                                                                                 [at com.samsung.euicc.lpaService.gsma.phase2.es10.uicc.EuiccCommandInterface$EuiccSlot.getCmdApdu(EuiccCommandInterface$EuiccSlot.java:127)]
+  09-30 15:19:52.892 I/SLPASVC (21303): APDU StatusWord - 9X XX                                                                             [at com.samsung.euicc.lpaService.gsma.phase2.es10.uicc.EuiccCommandInterface$EuiccSlot.handleResponse(EuiccCommandInterface$EuiccSlot.java:62)]
+  09-30 15:19:52.892 I/SLPASVC (21303): EuiccLogicalChannel::close(): 1                                                                     [at com.samsung.euicc.lpaService.gsma.phase2.es10.uicc.EuiccLogicalChannel.close(EuiccLogicalChannel.java:15)]
+> 09-30 15:19:52.897 I/adbd    ( 3363): adbd service requested 'shell,v2,TERM=xterm,raw:am start -n com.signaldesk.relay/.MainActivity'
+  09-30 15:19:52.924 I/SLPASVC (21303): 0x00000001 was closed                                                                               [at com.samsung.euicc.lpaService.gsma.phase2.es10.uicc.EuiccLogicalChannel.close(EuiccLogicalChannel.java:56)]
+  09-30 15:19:52.925 I/SLPASVC (21303): open channel count(1): 0                                                                            [at com.samsung.euicc.lpaService.gsma.phase2.es10.uicc.EuiccLogicalChannel.close(EuiccLogicalChannel.java:108)]
+  09-30 15:19:52.926 E/SLPASVC (21303): Notification List is null!!                                                                         [at com.samsung.euicc.lpaService.worker.WorkerHandler$1.run(WorkerHandler$1.java:88)]
+  09-30 15:19:52.926 I/SLPASVC (21303): To Client: ConnectResponse                                                                          [at com.samsung.euicc.lpaService.worker.RxHandler.handleMessage(RxHandler.java:1006)]
+  09-30 15:19:52.926 I/SLPASVC (21303): force TriggerNotificationJob                                                                        [at com.samsung.euicc.lpaService.LpaServiceHandler.handleMessage(LpaServiceHandler.java:127)]
+  09-30 15:19:52.931 W/SLPASVC (21303): getAllPendingJobs: [(job:16942831/android/com.android.server.appsearch.contactsindexer.ContactsIndexerMaintenanceService), (job:800/android/com.android.server.pm.BackgroundDexOptJobService), (job:100014/android/com.android.server.content.SyncJobService), (job:808/android/com.android.server.MountServiceIdler), (job:860414/com.samsung.android.svcagent/com.samsung.android.service.svcagent.DailyBgJobService), (job:191934935/android/com.android.server.blob.BlobStoreIdleJobService), (job:100079/android/com.android.server.content.SyncJobService), (job:6000/com.samsung.android.lool/com.samsung.android.sm.external.service.DailyJobService), (job:52417896/android/com.android.server.backup.KeyValueBackupJob), (job:882313/android/com.android.server.net.watchlist.ReportWatchlistJobService), (job:203142925/android/com.android.server.pm.DynamicCodeLoggingService), (job:31856/com.samsung.aasaservice/.AASAJobService), (job:3923512/android/com.android.server.display.BrightnessIdleJob), (job:50017212/com.samsung.android.lool/androidx.work.impl.background.systemjob.SystemJobService), (job:211941221/com.sec.android.app.setupwizard/com.samsung.vzw.activationagent.contenturiobservers.NotifyContentUriChangedJobService), (job:100345/android/com.android.server.content.SyncJobService), (job:100357/android/com.android.server.content.SyncJobService), (job:634789/com.samsung.android.da.daagent/.service.SendSaLogService), (job:478621/com.sec.android.diagmonagent/.sa.scheduler.DiagnosticUploadJobService), (job:497024/com.sec.android.diagmonagent/.sa.scheduler.DataLoggingUploadJobService), (job:100347/android/com.android.server.content.SyncJobService), (job:9807/android/com.android.server.ipm.auf.AufPeriodic), (job:100158/android/com.android.server.content.SyncJobService), (job:1145656139/android/com.android.server.storage.DiskStatsLoggingService), (job:100045/android/com.android.server.content.SyncJobService), (job:765123/android/com.android.server.PruneInstantAppsJobService), (job:813/android/com.android.server.NandswapManager), (job:8452948/android/com.samsung.android.server.pm.rescueparty.SystemFileBackupManager$BackupJobService), (job:2131427963/com.android.settings/.fuelgauge.batterytip.AnomalyCleanupJobService), (job:100309/android/com.android.server.content.SyncJobService), (job:100133/android/com.android.server.content.SyncJobService), (job:100171/android/com.android.server.content.SyncJobService), (job:100337/android/com.android.server.content.SyncJobService), (job:100023/android/com.android.server.content.SyncJobService), (job:100155/android/com.android.server.content.SyncJobService), (job:100325/android/com.android.server.content.SyncJobService), (job:100302/android/com.android.server.content.SyncJobService), (job:100025/android/com.android.server.content.SyncJobService), (job:2030028/android/com.android.server.pm.DynamicCodeLoggingService), (job:50017190/com.samsung.android.lool/androidx.work.impl.background.systemjob.SystemJobService), (job:16964307/android/com.android.server.appsearch.contactsindexer.ContactsIndexerMaintenanceService), (job:100332/android/com.android.server.content.SyncJobService), (job:2000/com.samsung.android.forest/.core.WeeklyJobService), (job:237160490/android/com.android.server.companion.InactiveAssociationsRemovalService), (job:100015/android/com.android.server.content.SyncJobService), (job:546357475/android/com.android.server.usage.UsageStatsIdleService), (job:875330/com.sec.android.soagent/.NetworkJobService), (job:100313/android/com.android.server.content.SyncJobService), (job:52418896/android/com.android.server.backup.FullBackupJob), (job:13254266/android/com.android.server.camera.CameraStatsJobService), (job:100099/android/com.android.server.content.SyncJobService), (job:9602/android/com.android.server.ipm.nap.NapBigDataService), (job:100350/android/com.android.server.content.SyncJobService), (job:100052/android/com.android.server.content.SyncJobService), (job:100157/android/com.android.server.content.SyncJobService), (job:100876/android/com.android.server.content.SyncJobSe
+  09-30 15:19:52.932 I/SLPASVC (21303): From Service : ConnectResponse                                                                      [at com.samsung.euicc.service.EuiccServiceImpl.n(EuiccServiceImpl.java:61)]
+  09-30 15:19:52.932 I/SLPASVC (21303): ConnectRequest callback slot: 1                                                                     [at com.samsung.euicc.service.a.handleMessage(a.java:110)]
+  09-30 15:19:52.932 I/SLPASVC (21303): Connected successfully token: 1348482573                                                            [at com.samsung.euicc.service.a.handleMessage(a.java:142)]
+  09-30 15:19:52.932 I/SLPASVC (21303): +blockingSendRequest(): com.samsung.euicc.lib.message.ListProfileRequest@ccf1364                    [at com.samsung.euicc.service.EuiccServiceImpl.onGetEuiccProfileInfoList(EuiccServiceImpl.java:179)]
+  09-30 15:19:52.933 I/SLPASVC (21303): EVENT_LIST_PROFILE_REQUEST                                                                          [at com.samsung.euicc.service.LpaResponseHandler.handleMessage(LpaResponseHandler.java:77)]
+  09-30 15:19:52.933 I/SLPASVC (21303): To Service : ListProfileRequest                                                                     [at com.samsung.euicc.service.EuiccServiceImpl.p(EuiccServiceImpl.java:21)]
+  09-30 15:19:52.933 I/SLPASVC (21303): From Client: ListProfileRequest (1348482573, com.samsung.euicc)                                     [at com.samsung.euicc.lpaService.worker.RxHandler.handleMessage(RxHandler.java:548)]
+  09-30 15:19:52.933 I/SLPASVC (21303): worker set busy!                                                                                    [at com.samsung.euicc.lpaService.worker.RxHandler.handleMessage(RxHandler.java:1095)]
+  09-30 15:19:52.933 I/SLPASVC (21303): in progress message list size: 1                                                                    [at com.samsung.euicc.lpaService.worker.TxHandler.a(TxHandler.java:155)]
+  09-30 15:19:52.934 I/SLPASVC (21303): source key: 1348482573, target workerhandler:(com.samsung.euicc,Handler (com.samsung.euicc.lpaService.worker.WorkerHandler) {3bd3282})[at com.samsung.euicc.lpaService.worker.RxHandler.handleMessage(RxHandler.java:1160)]
+  09-30 15:19:52.934 E/SLPASVC (21303): not blocking request: ListProfileRequest                                                            [at com.samsung.euicc.lpaService.gsma.phase2.state.Idle.b(Idle.java:119)]
+  09-30 15:19:52.936 I/SLPASVC (21303): in progress message list size: 2                                                                    [at com.samsung.euicc.lpaService.worker.TxHandler.a(TxHandler.java:155)]
+  09-30 15:19:52.936 I/SLPASVC (21303): To Client: ListProfileInfo (1348482573, com.samsung.euicc)                                          [at com.samsung.euicc.lpaService.worker.TxHandler.handleMessage(TxHandler.java:123)]
+  09-30 15:19:52.936 I/SLPASVC (21303): EVENT_LIST_PROFILE_RESPONSE                                                                         [at com.samsung.euicc.service.LpaResponseHandler.a(LpaResponseHandler.java:12)]
+  09-30 15:19:52.971 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPULittleMinFreq] UpdateResource Request ID : 1289172    Value : 1804800
+  09-30 15:19:52.972 I/SemDvfsHyPerManager( 4541): acquire hyper - APP_START_SHORT/4541@12, type = -999
+  09-30 15:19:52.977 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPUMinFreq] UpdateResource Request ID : 1289172    Value : 2841600
+  09-30 15:19:52.978 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 10367193  [4541 / 12]    HINT : APP_START    list : [TIMEOUT / 1500] 
+> 09-30 15:19:52.978 I/ChimeraSystemEventListener( 1248): appLaunchIntent package name is: com.signaldesk.relay
+  09-30 15:19:52.978 D/CompatibilityChangeReporter( 1248): Compat change id reported: 161252188; UID 10396; state: ENABLED
+> 09-30 15:19:52.978 I/ActivityTaskManager( 1248): START u0 {flg=0x10000000 cmp=com.signaldesk.relay/.MainActivity} from uid 2000
+  09-30 15:19:52.978 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPUMaxFreq] UpdateResource Request ID : 10367193    Value : 2841600
+> 09-30 15:19:52.979 D/ActivityTaskManager( 1248): TaskLaunchParamsModifier:task=null activity=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} display-id=0 display-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@170577341
+> 09-30 15:19:52.979 D/[secipm]( 1248): mSecIpmManager Preload com.signaldesk.relay dex files
+> 09-30 15:19:52.979 D/ActivityTaskManager( 1248): TaskLaunchParamsModifier:task=null activity=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t-1} display-id=0 display-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@170577341 non-freeform-display display-area=DefaultTaskDisplayArea@170577341 maximized-bounds
+> 09-30 15:19:52.979 D/PkgPredictorService-IpmAdcpController( 1248): create a new DexPreloadTask pkg:com.signaldesk.relay  path:/data/app/~~x6TcyW3vZiW59elvMdD1Sg==/com.signaldesk.relay-7AB64-fg1b6y8Y2z7C76-g==
+  09-30 15:19:52.979 I/SemDvfsHyPerManager( 1248): acquire hyper - AMS_APP_SWITCH/1248@22, type = -999
+  09-30 15:19:52.979 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 807107  [1248 / 22]    HINT : AMS_APP_SWITCH    list : 
+  09-30 15:19:52.980 I/SurfaceFlinger( 1126): id=15022 createSurf, flag=24004, Task=15919#15022
+  09-30 15:19:52.980 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPULittleMinFreq] UpdateResource Request ID : 807107    Value : 1804800
+  09-30 15:19:52.980 D/ActivityManagerPerformance( 1248): AMP_acquire() APP_SWITCH
+  09-30 15:19:52.980 I/SemDvfsHyPerManager( 4541): acquire hyper - APP_START_SHORT/4541@12, type = -999
+> 09-30 15:19:52.981 D/ActivityTaskManager( 1248): TaskLaunchParamsModifier:task=Task{4271f6e #15919 type=standard A=10396:com.signaldesk.relay U=0 visible=false visibleRequested=false mode=fullscreen translucent=true sz=0} activity=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t-1} display-from-task=0 display-id=0 display-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@170577341 non-freeform-display display-area=DefaultTaskDisplayArea@170577341 maximized-bounds
+> 09-30 15:19:52.981 I/SurfaceFlinger( 1126): id=15023 createSurf, flag=80004, ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}#15023
+  09-30 15:19:52.982 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPUMinFreq] UpdateResource Request ID : 807107    Value : 2841600
+  09-30 15:19:52.982 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 10367193  [4541 / 12]    HINT : APP_START    list : [TIMEOUT / 1500] 
+  09-30 15:19:52.982 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPUMaxFreq] UpdateResource Request ID : 10367193    Value : 2841600
+  09-30 15:19:52.983 D/ActivityTaskManager( 1248): scheduleTopResumedActivityChanged, onTop=false r=ActivityRecord{d92f309 u0 com.sec.android.app.launcher/.activities.LauncherActivity} t15784} caller=com.android.server.wm.ActivityTaskSupervisor.updateTopResumedActivityIfNeeded:2508 com.android.server.wm.TaskDisplayArea.positionChildTaskAt:602 com.android.server.wm.TaskDisplayArea.positionChildAt:537 com.android.server.wm.Task.moveToFrontInner:5974 com.android.server.wm.Task.moveToFront:5940 com.android.server.wm.ActivityStarter.startActivityInner:2917 
+  09-30 15:19:52.984 W/WindowManager( 1248): Prepare app transition: mNextAppTransitionRequests=[TRANSIT_OPEN], mNextAppTransitionFlags=, displayId: 0 Callers=com.android.server.wm.DisplayContent.prepareAppTransition:6470 com.android.server.wm.DisplayContent.prepareAppTransition:6461 com.android.server.wm.Task.startActivityLocked:6516 com.android.server.wm.ActivityStarter.startActivityInner:2973 com.android.server.wm.ActivityStarter.startActivityUnchecked:2463 
+  09-30 15:19:52.984 V/WindowManager( 1248): Checking theme of starting window: 0x7f0a0009
+  09-30 15:19:52.984 V/WindowManager( 1248): Translucent=false Floating=false ShowWallpaper=false Disable=false
+  09-30 15:19:52.984 V/WindowManager( 1248): Creating SplashScreenStartingData
+  09-30 15:19:52.984 D/ActivityTaskManager( 1248): Add starting com.android.server.wm.ActivityRecord$AddStartingWindow@a7828a5: typeParam=139
+  09-30 15:19:52.984 V/WindowManager( 1248): Add starting com.android.server.wm.ActivityRecord$AddStartingWindow@a7828a5: startingData=com.android.server.wm.SplashScreenStartingData@629c47a
+> 09-30 15:19:52.985 V/WindowManager( 1248): Added starting ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}: startingWindow=null startingView=com.android.server.wm.StartingSurfaceController$StartingSurface@a02042b
+  09-30 15:19:52.986 I/sensors-hal( 1015): handle_sns_std_sensor_event:268, [SSC_LIGHT] P: 13(13),m:1,c:5,b:103,ch:0,r:0,bl:0,16:18
+  09-30 15:19:52.993 D/NativeCustomFrequencyManager( 2480): [NativeCFMS] BpCustomFrequencyManager::BpCustomFrequencyManager()
+  09-30 15:19:52.993 I/AppOps  ( 1248): updateUidProcState uid: 10041 procState: 1 capability:15
+  09-30 15:19:52.994 I/SurfaceFlinger( 1126): SFWD update time=56187015981169
+  09-30 15:19:52.995 D/SurfaceFlinger( 1126): GPIS:: requestGPIS
+  09-30 15:19:52.997 I/CameraService( 1278): onUidStateChanged: uid=10041, procState is changed. (0 -> 1)
+  09-30 15:19:52.998 I/SemDvfsHyPerManager( 1248): acquire hyper - AMS_APP_LAUNCH/1248@19, type = -999
+  09-30 15:19:52.998 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 803297  [1248 / 19]    HINT : AMS_APP_LAUNCH    list : 
+  09-30 15:19:52.999 I/SemDvfsHyPerManager( 4541): acquire hyper - APP_START/4541@14, type = -999
+  09-30 15:19:52.999 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPULittleMinFreq] UpdateResource Request ID : 803297    Value : 1804800
+  09-30 15:19:53.000 D/InputTransport( 1248): Input channel constructed: 'e67aa21', fd=974
+  09-30 15:19:53.000 D/InputTransport( 1248): Input channel constructed: 'e67aa21', fd=976
+  09-30 15:19:53.000 D/InputTransport( 1248): Input channel constructed: 'e67aa21', fd=1004
+  09-30 15:19:53.000 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPUMinFreq] UpdateResource Request ID : 803297    Value : 2841600
+> 09-30 15:19:53.000 I/SurfaceFlinger( 1126): id=15024 createSurf, flag=80004, e67aa21 Splash Screen com.signaldesk.relay#15024
+  09-30 15:19:53.000 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 10376304  [4541 / 14]    HINT : APP_START    list : 
+  09-30 15:19:53.001 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPUMaxFreq] UpdateResource Request ID : 10376304    Value : 2841600
+> 09-30 15:19:53.001 V/WindowManager( 1248): addWindow: ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919} startingWindow=Window{e67aa21 u0 Splash Screen com.signaldesk.relay}
+  09-30 15:19:53.001 D/InputTransport( 1248): Input channel destroyed: 'e67aa21', fd=1004
+  09-30 15:19:53.002 I/BaseActivity( 2901): removeActivityFlags, flags : 16
+  09-30 15:19:53.002 I/BaseActivity( 2901): removeActivityFlags, flags : 6
+  09-30 15:19:53.002 I/DragController( 2901): endDrag
+  09-30 15:19:53.002 W/LauncherAppWidgetHost( 2901): setShouldListenFlag, mFlags:15 flag:resume on:false isFront:false
+  09-30 15:19:53.002 W/PageOverlayMover( 2901): updateActivityLifecycleState : 3
+> 09-30 15:19:53.002 D/InsetsController( 2480): onStateChanged: InsetsState: {mDisplayFrame=Rect(0, 0 - 1080, 2400), mDisplayCutout=DisplayCutout{insets=Rect(0, 78 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(690, 0 - 750, 78), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2400 physicalDisplayWidth=1440 physicalDisplayHeight=3200 density={3.0} cutoutSpec={M 0,0 H -10 V 26 H 10 V 0 H 0 Z @dp} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={1.0}}}}, mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=72, center=Point(72, 72)}, RoundedCorner{position=TopRight, radius=72, center=Point(1008, 72)}, RoundedCorner{position=BottomRight, radius=72, center=Point(1008, 2328)}, RoundedCorner{position=BottomLeft, radius=72, center=Point(72, 2328)}]}  mRoundedCornerFrame=Rect(0, 0 - 1080, 2400), mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(948, 0 - 1080, 78) rotation=0}, mSources= { InsetsSource: {mType=ITYPE_STATUS_BAR, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_NAVIGATION_BAR, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_LEFT_GESTURES, mFrame=[0,0][0,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_RIGHT_GESTURES, mFrame=[1080,0][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_MANDATORY_GESTURES, mFrame=[0,0][1080,114], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_MANDATORY_GESTURES, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_LEFT_DISPLAY_CUTOUT, mFrame=[0,0][-100000,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_DISPLAY_CUTOUT, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_RIGHT_DISPLAY_CUTOUT, mFrame=[100000,0][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_DISPLAY_CUTOUT, mFrame=[0,100000][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_TAPPABLE_ELEMENT, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_TAPPABLE_ELEMENT, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false} } host=Splash Screen com.signaldesk.relay from=android.view.ViewRootImpl.setView:1732
+  09-30 15:19:53.002 I/SPayUpdater( 2901): updateSpayHandler launcher activity is paused false
+  09-30 15:19:53.003 I/PageOverlayServiceImpl( 5225): [FROM HOME] updateActivityLifecycleState : [3] : onPaused
+> 09-30 15:19:53.003 D/MARsPolicyManager( 1248): onPackageResumedFG pkgName = com.signaldesk.relay, userId = 0
+  09-30 15:19:53.003 I/ViewRootImpl@7fa7edd[relay]( 2480): setView = android.widget.FrameLayout@2252bd9 TM=true
+  09-30 15:19:53.003 I/VSyncReactor( 1126): Current= 60, Period= 60, hwcPeriod= 60
+  09-30 15:19:53.004 W/WindowManager( 1248): Prepare app transition: mNextAppTransitionRequests=[TRANSIT_OPEN, TRANSIT_OPEN], mNextAppTransitionFlags=, displayId: 0 Callers=com.android.server.wm.DisplayContent.prepareAppTransition:6470 com.android.server.wm.TaskFragment.resumeTopActivity:1573 com.android.server.wm.TaskFragment.resumeTopActivity:1307 com.android.server.wm.Task.resumeTopActivityInnerLocked:6372 com.android.server.wm.Task.resumeTopActivityUncheckedLocked:6273 
+  09-30 15:19:53.004 I/ViewRootImpl@7fa7edd[relay]( 2480): performTraversals params={(0,0)(fillxfill) sim={adjust=pan} ty=APPLICATION_STARTING fmt=TRANSLUCENT wanim=0x1030309
+  09-30 15:19:53.004 I/ViewRootImpl@7fa7edd[relay]( 2480):   fl=81030118
+  09-30 15:19:53.004 I/ViewRootImpl@7fa7edd[relay]( 2480):   pfl=16000010
+  09-30 15:19:53.004 I/ViewRootImpl@7fa7edd[relay]( 2480):   apr=LIGHT_STATUS_BARS LIGHT_NAVIGATION_BARS
+  09-30 15:19:53.004 I/ViewRootImpl@7fa7edd[relay]( 2480):   bhv=DEFAULT
+  09-30 15:19:53.004 I/ViewRootImpl@7fa7edd[relay]( 2480):   fitSides= naviIconColor=0}
+  09-30 15:19:53.005 I/ViewRootImpl@7fa7edd[relay]( 2480): performTraversals mFirst=true windowShouldResize=true viewVisibilityChanged=false mForceNextWindowRelayout=false params={(0,0)(fillxfill) sim={adjust=pan} ty=APPLICATION_STARTING fmt=TRANSLUCENT wanim=0x1030309
+  09-30 15:19:53.005 I/ViewRootImpl@7fa7edd[relay]( 2480):   fl=81030118
+  09-30 15:19:53.005 I/ViewRootImpl@7fa7edd[relay]( 2480):   pfl=16000010
+  09-30 15:19:53.005 I/ViewRootImpl@7fa7edd[relay]( 2480):   apr=LIGHT_STATUS_BARS LIGHT_NAVIGATION_BARS
+  09-30 15:19:53.005 I/ViewRootImpl@7fa7edd[relay]( 2480):   bhv=DEFAULT
+  09-30 15:19:53.005 I/ViewRootImpl@7fa7edd[relay]( 2480):   fitSides= naviIconColor=0}
+> 09-30 15:19:53.005 D/WindowManagerServiceExt( 1248): notifyOccludeChangeNotice: cn=ComponentInfo{com.signaldesk.relay/com.signaldesk.relay.MainActivity} occludesParent=true inMultiWindow=false styleFloating=false caller=com.android.server.wm.WindowManagerServiceExt.updateOccludeTargetIfNeeded:1402 com.android.server.wm.DisplayContent.ensureActivitiesVisible:7509 com.android.server.wm.RootWindowContainer.ensureActivitiesVisible:2248 com.android.server.wm.RootWindowContainer.ensureActivitiesVisible:2229 com.android.server.wm.TaskFragment.completePause:2076 
+  09-30 15:19:53.006 I/TopTaskTracker( 2901): onTaskMovedToFront : taskId = 15919
+> 09-30 15:19:53.006 V/WindowManager( 1248): Relayout Window{e67aa21 u0 Splash Screen com.signaldesk.relay}: viewVisibility=0 req=1080x2400 d0
+  09-30 15:19:53.006 D/RestrictionPolicy( 1248): isScreenCaptureEnabled : ret=true userId=0
+> 09-30 15:19:53.006 I/SurfaceFlinger( 1126): id=15025 createSurf, flag=40004, Splash Screen com.signaldesk.relay$_2480#15025
+> 09-30 15:19:53.007 D/WindowManager( 1248): makeSurface duration=1 name=Splash Screen com.signaldesk.relay$_2480
+  09-30 15:19:53.008 V/WindowManager( 1248): Changing focus from Window{40fbcc6 u0 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity} to null displayId=0 Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:595 com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6803 com.android.server.wm.WindowManagerService.relayoutWindow:2813 com.android.server.wm.Session.relayout:274 
+  09-30 15:19:53.008 D/MARsPolicyManager( 1248): onPackageResumedFG pkgName = com.sec.android.app.launcher, userId = 0
+  09-30 15:19:53.008 D/StatusBarManagerService( 1248): notifyRequestedSystemKey recent=false home=false
+  09-30 15:19:53.009 V/WindowManager( 1248): rotationForOrientation(orient=SCREEN_ORIENTATION_PORTRAIT (1), last=ROTATION_0 (0)); user=ROTATION_0 (0) USER_ROTATION_LOCKED
+> 09-30 15:19:53.009 D/WindowManager( 1248): rotationForOrientation, orientationSource=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}
+  09-30 15:19:53.009 V/WindowManager( 1248): Computed rotation=ROTATION_0 (0) for display id=0 based on lastOrientation=SCREEN_ORIENTATION_PORTRAIT (1) and oldRotation=ROTATION_0 (0), caller=com.android.server.wm.DisplayRotation.updateOrientation:414 com.android.server.wm.DisplayContent.updateOrientation:1981 com.android.server.wm.DisplayContent.updateOrientation:1863 com.android.server.wm.WindowManagerService.relayoutWindow:2844 com.android.server.wm.Session.relayout:274 android.view.IWindowSession$Stub.onTransact:779 
+  09-30 15:19:53.009 V/WindowManager( 1248): Relayout hash=e67aa21, pid=2480, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=pan} ty=APPLICATION_STARTING fmt=TRANSLUCENT wanim=0x1030309
+  09-30 15:19:53.009 V/WindowManager( 1248):   fl=81030118
+  09-30 15:19:53.009 V/WindowManager( 1248):   pfl=16000010
+  09-30 15:19:53.009 V/WindowManager( 1248):   apr=LIGHT_STATUS_BARS LIGHT_NAVIGATION_BARS
+  09-30 15:19:53.009 V/WindowManager( 1248):   bhv=DEFAULT
+  09-30 15:19:53.009 V/WindowManager( 1248):   fitSides= naviIconColor=0}
+  09-30 15:19:53.009 D/CompatibilityChangeReporter( 1248): Compat change id reported: 135634846; UID 10396; state: DISABLED
+  09-30 15:19:53.009 D/CompatibilityChangeReporter( 1248): Compat change id reported: 177438394; UID 10396; state: DISABLED
+> 09-30 15:19:53.009 D/InsetsController( 2480): onStateChanged: InsetsState: {mDisplayFrame=Rect(0, 0 - 1080, 2400), mDisplayCutout=DisplayCutout{insets=Rect(0, 78 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(690, 0 - 750, 78), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2400 physicalDisplayWidth=1440 physicalDisplayHeight=3200 density={3.0} cutoutSpec={M 0,0 H -10 V 26 H 10 V 0 H 0 Z @dp} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={1.0}}}}, mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=72, center=Point(72, 72)}, RoundedCorner{position=TopRight, radius=72, center=Point(1008, 72)}, RoundedCorner{position=BottomRight, radius=72, center=Point(1008, 2328)}, RoundedCorner{position=BottomLeft, radius=72, center=Point(72, 2328)}]}  mRoundedCornerFrame=Rect(0, 0 - 1080, 2400), mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(948, 0 - 1080, 78) rotation=0}, mSources= { InsetsSource: {mType=ITYPE_STATUS_BAR, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_NAVIGATION_BAR, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_LEFT_GESTURES, mFrame=[0,0][0,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_RIGHT_GESTURES, mFrame=[1080,0][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_MANDATORY_GESTURES, mFrame=[0,0][1080,114], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_MANDATORY_GESTURES, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_LEFT_DISPLAY_CUTOUT, mFrame=[0,0][-100000,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_DISPLAY_CUTOUT, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_RIGHT_DISPLAY_CUTOUT, mFrame=[100000,0][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_DISPLAY_CUTOUT, mFrame=[0,100000][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_TAPPABLE_ELEMENT, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_TAPPABLE_ELEMENT, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_IME, mFrame=[0,0][0,0], mVisible=false, mInsetsRoundedCornerFrame=false} } host=Splash Screen com.signaldesk.relay from=android.view.ViewRootImpl.relayoutWindow:9802
+  09-30 15:19:53.009 D/CompatibilityChangeReporter( 1248): Compat change id reported: 135772972; UID 10396; state: DISABLED
+  09-30 15:19:53.009 D/CompatibilityChangeReporter( 1248): Compat change id reported: 135754954; UID 10396; state: ENABLED
+> 09-30 15:19:53.010 D/CoreBackPreview( 1248): Window{e67aa21 u0 Splash Screen com.signaldesk.relay}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@32a7c59, mPriority=0}
+  09-30 15:19:53.010 I/ViewRootImpl@7fa7edd[relay]( 2480): updateBlastSurfaceIfNeeded mBlastBufferQueue=null isSameSurfaceControl=false
+  09-30 15:19:53.010 I/BLASTBufferQueue( 2480): new BLASTBufferQueue, mName= ViewRootImpl@7fa7edd[relay] mNativeObject= 0xb4000072ba92cdb0 sc.mNativeObject= 0xb40000724a988290 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2909 android.view.ViewRootImpl.relayoutWindow:9847 android.view.ViewRootImpl.performTraversals:3884 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 android.view.Choreographer.doCallbacks:923 android.view.Choreographer.doFrame:852 android.view.Choreographer$FrameDisplayEventReceiver.run:1283 
+  09-30 15:19:53.010 I/BLASTBufferQueue( 2480): update, w= 1080 h= 2400 mName = ViewRootImpl@7fa7edd[relay] mNativeObject= 0xb4000072ba92cdb0 sc.mNativeObject= 0xb40000724a988290 format= -3 caller= android.graphics.BLASTBufferQueue.<init>:84 android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2909 android.view.ViewRootImpl.relayoutWindow:9847 android.view.ViewRootImpl.performTraversals:3884 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 
+  09-30 15:19:53.010 D/CompatibilityChangeReporter( 1248): Compat change id reported: 143937733; UID 10396; state: ENABLED
+  09-30 15:19:53.011 I/ViewRootImpl@7fa7edd[relay]( 2480): Relayout returned: old=(0,0,1080,2400) new=(0,0,1080,2400) req=(1080,2400)0 dur=5 res=0x3 s={true 0xb40000734aa1a220} ch=true seqId=0
+  09-30 15:19:53.011 I/ViewRootImpl@7fa7edd[relay]( 2480): mThreadedRenderer.initialize() mSurface={isValid=true 0xb40000734aa1a220} hwInitialized=true
+  09-30 15:19:53.011 D/OpenGLRenderer( 2480): eglCreateWindowSurface
+  09-30 15:19:53.011 I/ViewRootImpl@7fa7edd[relay]( 2480): reportNextDraw android.view.ViewRootImpl.performTraversals:4438 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 
+  09-30 15:19:53.011 I/ViewRootImpl@7fa7edd[relay]( 2480): Setup new sync id=0
+  09-30 15:19:53.011 I/ViewRootImpl@7fa7edd[relay]( 2480): Setting syncFrameCallback
+  09-30 15:19:53.012 I/ViewRootImpl@7fa7edd[relay]( 2480): registerCallbacksForSync syncBuffer=false
+  09-30 15:19:53.013 I/ViewRootImpl@7fa7edd[relay]( 2480): Received frameDrawingCallback syncResult=0 frameNum=1.
+  09-30 15:19:53.013 I/ViewRootImpl@7fa7edd[relay]( 2480): Setting up sync and frameCommitCallback
+  09-30 15:19:53.013 I/BLASTBufferQueue( 2480): [ViewRootImpl@7fa7edd[relay]#739](f:0,a:0) onFrameAvailable the first frame is available
+  09-30 15:19:53.013 I/ViewRootImpl@7fa7edd[relay]( 2480): Received frameCommittedCallback lastAttemptedDrawFrameNum=1 didProduceBuffer=true
+  09-30 15:19:53.015 D/OpenGLRenderer( 2480): CFMS:: SetUp Pid : 2480    Tid : 2536
+  09-30 15:19:53.015 W/Parcel  ( 2480): Expecting binder but got null!
+  09-30 15:19:53.015 I/ViewRootImpl@7fa7edd[relay]( 2480): onSyncComplete
+  09-30 15:19:53.015 I/ViewRootImpl@7fa7edd[relay]( 2480): setupSync seqId=0 mSyncId=0 fn=1 caller=android.view.ViewRootImpl$$ExternalSyntheticLambda11.accept:6 android.window.SurfaceSyncer.lambda$setupSync$1$android-window-SurfaceSyncer:128 android.window.SurfaceSyncer$$ExternalSyntheticLambda1.accept:8 android.window.SurfaceSyncer$SyncSet.checkIfSyncIsComplete:382 android.window.SurfaceSyncer$SyncSet.markSyncReady:359 android.window.SurfaceSyncer.markSyncReady:151 android.view.ViewRootImpl.performTraversals:4503 
+  09-30 15:19:53.015 I/ViewRootImpl@7fa7edd[relay]( 2480): reportDrawFinished seqId=0 mSyncId=-1 fn=1 mSurfaceChangedTransaction=0xb40000727a8ea130
+  09-30 15:19:53.016 I/CocktailBarManagerServiceContainer( 1248): handleMessage: entry what = 6
+> 09-30 15:19:53.016 D/WindowManager( 1248): finishDrawingWindow: Window{e67aa21 u0 Splash Screen com.signaldesk.relay} mDrawState=DRAW_PENDING seqId=0
+> 09-30 15:19:53.016 V/WindowManager( 1248): Finishing drawing window Window{e67aa21 u0 Splash Screen com.signaldesk.relay}: mDrawState=DRAW_PENDING
+> 09-30 15:19:53.016 V/WindowManager( 1248): Draw state now committed in Window{e67aa21 u0 Splash Screen com.signaldesk.relay}
+  09-30 15:19:53.016 D/SGM:FgCheckThread( 1248): notePauseComponent(), received pkgName: com.sec.android.app.launcher, userId: 0
+  09-30 15:19:53.017 W/WindowManager( 1248): Execute app transition: mNextAppTransitionRequests=[TRANSIT_OPEN, TRANSIT_OPEN], mNextAppTransitionFlags=, displayId: 0 Callers=com.android.server.wm.ActivityRecord.onStartingWindowDrawn:7486 com.android.server.wm.WindowState.performShowLocked:5471 com.android.server.wm.WindowStateAnimator.commitFinishDrawingLocked:351 com.android.server.wm.DisplayContent.lambda$new$8:1184 com.android.server.wm.DisplayContent.$r8$lambda$OtLCIQFjCt9o-SYztyeDUcWUwGs:0 
+> 09-30 15:19:53.017 D/WindowManager( 1248): performShow logReadyForDisplay win=Window{e67aa21 u0 Splash Screen com.signaldesk.relay} mToken.waitingToShow:true isTransitionSet:true
+  09-30 15:19:53.018 D/WindowManager( 1248): Loading animation for app transition. transit=TRANSIT_OLD_WALLPAPER_CLOSE enter=false frame=Rect(0, 0 - 1080, 2178) insets=Rect(0, 0 - 0, 0) surfaceInsets=Rect(0, 0 - 0, 0)
+  09-30 15:19:53.019 D/InputDispatcher( 1248): Focus left window (0): 40fbcc6 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity
+  09-30 15:19:53.019 I/WindowManager( 1248): Reparenting to leash, surface=Surface(name=Task=1)/@0xac29226, leashParent=Surface(name=DefaultTaskDisplayArea)/@0xcc3fe67
+  09-30 15:19:53.019 D/Zygote  (  916): Forked child process 10360
+> 09-30 15:19:53.020 I/ActivityManager( 1248): Start proc 10360:com.signaldesk.relay/u0a396 for next-top-activity {com.signaldesk.relay/com.signaldesk.relay.MainActivity}
+> 09-30 15:19:53.020 D/DynamicHiddenApp_BGProtectManager( 1248): [SecIpm] it's a ML_TYPE_EMPTYPROCESS protected process com.signaldesk.relay
+  09-30 15:19:53.020 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): MSG_WINDOW_FOCUS_CHANGED 0 0
+  09-30 15:19:53.020 I/BaseActivity( 2901): removeActivityFlags, flags : 8
+  09-30 15:19:53.022 I/SurfaceFlinger( 1126): id=15026 createSurf, flag=24000, Surface(name=Task=1)/@0xac29226 - animation-leash of app_transition#15026
+  09-30 15:19:53.022 I/SurfaceFlinger( 1126): [40fbcc6 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity#114] FrameRatePriority: -1
+  09-30 15:19:53.022 D/WindowManager( 1248): makeSurface duration=3 leash=Surface(name=Surface(name=Task=1)/@0xac29226 - animation-leash of app_transition)/@0xed46ecc
+  09-30 15:19:53.023 D/WindowManager( 1248): Loading animation for app transition. transit=TRANSIT_OLD_WALLPAPER_CLOSE enter=true frame=Rect(0, 0 - 1080, 2400) insets=Rect(0, 78 - 0, 144) surfaceInsets=Rect(0, 0 - 0, 0)
+  09-30 15:19:53.023 I/WindowManager( 1248): Reparenting to leash, surface=Surface(name=Task=15919)/@0x63fabb8, leashParent=Surface(name=DefaultTaskDisplayArea)/@0xcc3fe67
+  09-30 15:19:53.023 I/SurfaceFlinger( 1126): id=15027 createSurf, flag=24004, Surface(name=Task=15919)/@0x63fabb8 - animation-leash of app_transition#15027
+  09-30 15:19:53.024 D/WindowManager( 1248): makeSurface duration=1 leash=Surface(name=Surface(name=Task=15919)/@0x63fabb8 - animation-leash of app_transition)/@0x7be5d91
+> 09-30 15:19:53.024 V/WindowManager( 1248): performShowLocked: mDrawState=HAS_DRAWN in Window{e67aa21 u0 Splash Screen com.signaldesk.relay}
+> 09-30 15:19:53.026 I/SurfaceFlinger( 1126): id=15028 createSurf, flag=80000, 10e4370 ActivityRecordInputSink com.signaldesk.relay/.MainActivity#15028
+  09-30 15:19:53.028 D/Bubbles ( 2480): onLocusVisibilityChanged: LocusId[17_chars] visible=false
+  09-30 15:19:53.030 I/ignaldesk.relay(10360): Late-enabling -Xcheck:jni
+  09-30 15:19:53.033 D/BoundBrokerSvc(19758): onUnbind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+  09-30 15:19:53.038 I/BadgeRenderer( 2901): Invalid count : 0
+> 09-30 15:19:53.039 I/Layer   ( 1126): Layer [Splash Screen com.signaldesk.relay$_2480#15025] hidden!! flag(0)
+  09-30 15:19:53.043 I/ignaldesk.relay(10360): Using generational CollectorTypeCC GC.
+  09-30 15:19:53.048 I/adbd    ( 3363): jdwp connection from 10360
+  09-30 15:19:53.051 D/nativeloader(10360): Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+  09-30 15:19:53.052 W/libc    (10360): Access denied finding property "sys.perf.boostopt"
+  09-30 15:19:53.052 W/libc    (10360): Access denied finding property "sys.perf.boostopt"
+  09-30 15:19:53.053 D/ActivityThread(10360): setConscryptValidator
+  09-30 15:19:53.053 D/ActivityThread(10360): setConscryptValidator - put
+  09-30 15:19:53.054 I/adbd    ( 3363): adbd service requested 'jdwp:10360'
+> 09-30 15:19:53.057 I/ActivityManager( 1248): DSS OFF for com.signaldesk.relay
+> 09-30 15:19:53.060 I/DexController( 1248): getTaskHasActivityIsWaitingToRun: r=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}, app=ProcessRecord{373c75d 10360:com.signaldesk.relay/u0a396}
+  09-30 15:19:53.061 V/WindowManager( 1248): rotationForOrientation(orient=SCREEN_ORIENTATION_PORTRAIT (1), last=ROTATION_0 (0)); user=ROTATION_0 (0) USER_ROTATION_LOCKED
+> 09-30 15:19:53.061 D/WindowManager( 1248): rotationForOrientation, orientationSource=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}
+  09-30 15:19:53.061 V/WindowManager( 1248): Computed rotation=ROTATION_0 (0) for display id=0 based on lastOrientation=SCREEN_ORIENTATION_PORTRAIT (1) and oldRotation=ROTATION_0 (0), caller=com.android.server.wm.DisplayRotation.updateOrientation:414 com.android.server.wm.DisplayContent.updateOrientation:1981 com.android.server.wm.DisplayContent.updateOrientation:1882 com.android.server.wm.RootWindowContainer.ensureVisibilityAndConfig:2139 com.android.server.wm.ActivityTaskSupervisor.realStartActivityLocked:913 com.android.server.wm.RootWindowContainer$AttachApplicationHelper.test:4288 
+  09-30 15:19:53.061 V/WindowManager( 1248): updateDisplayAndOrientation: Change 571.5x564.444dpi to 428.625x423.33298dpi, BaseDpi=571.5x564.444, DisplayRatio=0.75x0.75
+  09-30 15:19:53.062 D/TspStateManager( 1248): updateCustomValue customSetting=
+  09-30 15:19:53.062 V/WindowManager( 1248): updateDisplayAndOrientation: Change 571.5x564.444dpi to 428.625x423.33298dpi, BaseDpi=571.5x564.444, DisplayRatio=0.75x0.75
+  09-30 15:19:53.063 D/TspStateManager( 1248): updateCustomValue customSetting=
+> 09-30 15:19:53.063 D/SGM:PkgDataHelper( 1248): notifyAppCreate(), pkgName: com.signaldesk.relay, userId: 0, sendRet: true
+> 09-30 15:19:53.063 D/MARsPolicyManager( 1248): onPackageResumedFG pkgName = com.signaldesk.relay, userId = 0
+> 09-30 15:19:53.064 D/ActivityTaskManager( 1248): scheduleTopResumedActivityChanged, onTop=true r=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919} caller=com.android.server.wm.ActivityTaskSupervisor.scheduleTopResumedActivityStateIfNeeded:2533 com.android.server.wm.ActivityTaskSupervisor.updateTopResumedActivityIfNeeded:2525 com.android.server.wm.TaskFragment.setResumedActivity:493 com.android.server.wm.TaskFragment.onActivityStateChanged:805 com.android.server.wm.ActivityRecord.setState:6396 com.android.server.wm.Task.minimalResumeActivityLocked:6076 
+> 09-30 15:19:53.064 D/InputDispatcher( 1248): Focused application(0): ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}
+> 09-30 15:19:53.064 D/SGM:FgCheckThread( 1248): onLooperPrepared(), msg: MSG_APP_CREATE, pkgName: com.signaldesk.relay, userId: 0
+  09-30 15:19:53.064 D/SGM:FgCheckThread( 1248): TaskStackListener.onTaskFocusChanged(), taskId=15784, focused=false
+  09-30 15:19:53.064 D/SGM:FgCheckThread( 1248): TaskStackListener.onTaskFocusChanged(), taskId=15919, focused=true
+> 09-30 15:19:53.064 D/SGM:FgCheckThread( 1248):   sendRunningComponentFocus(), pkgName: com.signaldesk.relay, userId: 0
+> 09-30 15:19:53.065 D/SGM:FgCheckThread( 1248): onLooperPrepared(), msg: MSG_TASK_FOCUSED, pkgName: com.signaldesk.relay, userId: 0
+  09-30 15:19:53.065 D/SGM:FgCheckThread( 1248): handleTaskFocused().
+> 09-30 15:19:53.065 D/SGM:FgCheckThread( 1248):   handleTaskFocused(), pkgName: com.signaldesk.relay, userID:0
+  09-30 15:19:53.065 D/SGM:FgCheckThread( 1248): handleResume().
+  09-30 15:19:53.065 D/SGM:FgCheckThread( 1248): sendFocusOutConditionally() - mPrevNotiPkg: KILL_YOURSELF, userId: 0
+> 09-30 15:19:53.065 D/SGM:FgCheckThread( 1248):   handleResume(). pkgName: com.signaldesk.relay, userId: 0, isTunableApp: null
+> 09-30 15:19:53.065 D/SGM:FgCheckThread( 1248): notifyFocusInOut(). of pkg: com.signaldesk.relay, type: 4, isTunableApp: false, userId: 0
+  09-30 15:19:53.065 D/SGM:FgCheckThread( 1248):   notifyFocusInOut(). do nothing. mKillNotiCount: 1
+  09-30 15:19:53.065 D/SGM:SystemHelper( 1248): callReleaseBlock needReleaseBlock:false
+  09-30 15:19:53.066 I/ActivityManager( 1248): Changes in 10396 19 to 2, 0 to 15
+  09-30 15:19:53.066 I/AppOps  ( 1248): updateUidProcState uid: 10396 procState: 2 capability:15
+  09-30 15:19:53.066 I/AppOps  ( 1248): commitUidPendingStateLocked() :: UID - 10396, 700 > 200, 0 > 15
+  09-30 15:19:53.066 I/ActivityManager( 1248): updateOomAdj start time is before than pendingPid added, don't delete it
+> 09-30 15:19:53.068 I/GameSDK@LifeCycle( 1248): noteResumeComponent(): package name  : com.signaldesk.relay
+  09-30 15:19:53.068 I/CocktailBarManagerServiceContainer( 1248): handleMessage: entry what = 5
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Delete Task Tid(2901)
+  09-30 15:19:53.068 E/ANDR-PERF-UTIL( 1034): Failed to read /proc/sys/kernel/walt_low_latency_task_threshold
+  09-30 15:19:53.068 E/ANDR-PERF-OPTSHANDLER( 1034): Failed to read /proc/sys/kernel/walt_low_latency_task_threshold
+  09-30 15:19:53.068 E/ANDR-PERF-RESOURCEQS( 1034): Failed to apply optimization [3, 54]
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Delete Task Tid(4792)
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Delete Task Tid(5240)
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Delete Task Tid(5241)
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Add Task Tid(2901)
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Add Task Tid(4792)
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Add Task Tid(5241)
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Add Task Tid(5240)
+  09-30 15:19:53.068 D/Native_CFMS( 1248): CFMS Add Task Tid(10360)
+> 09-30 15:19:53.069 I/ActivityUtils( 4801): HomePackage : com.sec.android.app.launcher, resumePackageName : com.signaldesk.relay
+  09-30 15:19:53.069 I/MediaSessionMonitor( 1248): Media session stopped : not playing state
+  09-30 15:19:53.071 W/libc    (10360): Access denied finding property "sys.perf.boostopt"
+  09-30 15:19:53.073 D/CompatibilityChangeReporter(10360): Compat change id reported: 171979766; UID 10396; state: ENABLED
+  09-30 15:19:53.074 D/SurfaceFlinger( 1126): Display 4630947232161729153 HWC layers:
+  09-30 15:19:53.074 D/SurfaceFlinger( 1126):      CLIENT | 0xb400007acd3c7490 | 0100 | RGBx_8888    |   67.0    0.0 1147.0 2400.0 |    0    0 1080 2400 | Wallpaper BBQ wrapper#78
+  09-30 15:19:53.074 D/SurfaceFlinger( 1126):      CLIENT | 0xb400007acd3f7970 | 0100 | RGBA_8888    |    0.0    0.0 1080.0 2400.0 |    0    0 1080 2400 | com.sec.android.app.launcher/com.sec[...]erActivity$_2901#15016 (blurRegions)
+> 09-30 15:19:53.074 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3f4400 | 0100 | RGBA_8888    |    0.0    0.0 1080.0 2400.0 |   76  168 1004 2232 | Splash Screen com.signaldesk.relay$_2480#15025
+  09-30 15:19:53.074 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3cc2c0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0   78.0 |    0    0 1080   78 | StatusBar$_2480#84
+  09-30 15:19:53.074 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3caa90 | 0100 | RGBA_8888    |    0.0    0.0   67.0  342.0 | 1013  824 1080 1166 | com.samsung.android.app.cocktailbars[...]rvice.CocktailBarService$_4801#14995
+  09-30 15:19:53.074 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3d3cd0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0  144.0 |    0 2256 1080 2400 | NavigationBar0$_2480#79
+  09-30 15:19:53.074 D/SurfaceFlinger( 1126): 
+  09-30 15:19:53.074 D/NativeSemDvfsManager( 1126): acquire:: timeout = 2000 mIsAcquired = 1  mTagName : SurfaceFlinger 
+  09-30 15:19:53.075 E/NativeCustomFrequencyManager( 1126): [NativeCFMS] BpCustomFrequencyManager::acquire()
+  09-30 15:19:53.075 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 2262001  [1126 / 1000]    HINT : SF_GPU_MINLOCK    list : [TIMEOUT / 2000] 
+> 09-30 15:19:53.077 I/heimdall( 1103): insert_task_to_group:67, insert tgid 10360 to group com.signaldesk.relay, ret = 0
+> 09-30 15:19:53.077 D/SGM:GameManager( 1248): identifyGamePackage. com.signaldesk.relay, mCurrentUserId: 0, callerUserId: 0, callingMethodInfo: com.samsung.android.game.SemGameManager.isGamePackage(SemGameManager.java:104)
+> 09-30 15:19:53.077 D/SGM:PkgDataHelper( 1248): getGamePkgData(). com.signaldesk.relay
+> 09-30 15:19:53.077 D/SGM:SemGameManager( 1248): isGamePackage(), pkgName=com.signaldesk.relay, ret=false
+  09-30 15:19:53.077 I/Rubin   (20998): [193] s9.a.c(SourceFile:1) : Notify com.samsung.android.rubin.inferenceengine.contextanalytics.engine.loggers.d's database is updated.
+> 09-30 15:19:53.077 D/SGM:FgCheckThread( 1248): noteResumeComponent(), received pkgName: com.signaldesk.relay, userId: 0
+> 09-30 15:19:53.077 D/SGM:FgCheckThread( 1248): onLooperPrepared(), msg: MSG_APP_RESUME, pkgName: com.signaldesk.relay, userid: 0
+  09-30 15:19:53.077 D/SGM:FgCheckThread( 1248): handleResume().
+  09-30 15:19:53.077 D/SGM:FgCheckThread( 1248):   handleResume(). same package with Prev KILL_YOURSELF. ignore
+> 09-30 15:19:53.078 D/SGM:GameManager( 1248): identifyGamePackage. com.signaldesk.relay, mCurrentUserId: 0, callerUserId: 0, callingMethodInfo: com.android.server.ssrm.SortingMachine.isGame(SortingMachine.java:162)
+> 09-30 15:19:53.078 D/SGM:PkgDataHelper( 1248): getGamePkgData(). com.signaldesk.relay
+> 09-30 15:19:53.080 D/SGM:GameManager( 1248): identifyForegroundApp. com.signaldesk.relay, mCurrentUserId: 0, callerUserId: 0
+> 09-30 15:19:53.080 D/SGM:PkgDataHelper( 1248): getGamePkgData(). com.signaldesk.relay
+> 09-30 15:19:53.082 D/SGM:GameManager( 1248): identifyGamePackage. com.signaldesk.relay, mCurrentUserId: 0, callerUserId: 0, callingMethodInfo: com.samsung.android.game.IGameManagerService$Stub.onTransact(IGameManagerService.java:233)
+> 09-30 15:19:53.082 D/SGM:PkgDataHelper( 1248): getGamePkgData(). com.signaldesk.relay
+  09-30 15:19:53.084 I/Rubin   (20998): [193] ga.e.m(SourceFile:6) : isSatisfiedByCmh is false
+  09-30 15:19:53.091 W/System  ( 1248): A resource failed to call HardwareBuffer.close. 
+  09-30 15:19:53.091 W/System  ( 1248): A resource failed to call release. 
+  09-30 15:19:53.106 I/RecentModel( 2901): onTaskStackChangedBackground
+  09-30 15:19:53.109 I/RecentTasksList( 2901): loadTasksInBackground : groupTask = GroupTask{task1=[id=15844 windowingMode=1 user=0 lastActiveTime=153283024] null, task2=null, task3=null, mStagedSplitBounds=null}
+  09-30 15:19:53.109 I/RecentTasksList( 2901): loadTasksInBackground : groupTask = GroupTask{task1=[id=15890 windowingMode=1 user=0 lastActiveTime=154101121] null, task2=null, task3=null, mStagedSplitBounds=null}
+  09-30 15:19:53.109 I/RecentTasksList( 2901): loadTasksInBackground : groupTask = GroupTask{task1=[id=15919 windowingMode=1 user=0 lastActiveTime=157820968] null, task2=null, task3=null, mStagedSplitBounds=null}
+> 09-30 15:19:53.197 D/MdnieScenarioControlService( 1248):  packageName : com.signaldesk.relay    className : com.signaldesk.relay.MainActivity
+  09-30 15:19:53.197 V/MdnieScenarioControlService( 1248): setUIMode from UI function(3)
+> 09-30 15:19:53.270 D/nativeloader(10360): Configuring clns-4 for other apk /data/app/~~x6TcyW3vZiW59elvMdD1Sg==/com.signaldesk.relay-7AB64-fg1b6y8Y2z7C76-g==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~x6TcyW3vZiW59elvMdD1Sg==/com.signaldesk.relay-7AB64-fg1b6y8Y2z7C76-g==/lib/arm64:/data/app/~~x6TcyW3vZiW59elvMdD1Sg==/com.signaldesk.relay-7AB64-fg1b6y8Y2z7C76-g==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.signaldesk.relay
+  09-30 15:19:53.275 D/nativeloader(10360): Load libframework-connectivity-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity.jar: ok
+> 09-30 15:19:53.277 V/GraphicsEnvironment(10360): ANGLE Developer option for 'com.signaldesk.relay' set to: 'default'
+> 09-30 15:19:53.277 V/GraphicsEnvironment(10360): ANGLE GameManagerService for com.signaldesk.relay: false
+  09-30 15:19:53.278 V/GraphicsEnvironment(10360): App is not on the allowlist for updatable production driver.
+  09-30 15:19:53.279 D/NetworkSecurityConfig(10360): No Network Security Config specified, using platform default
+  09-30 15:19:53.292 D/NetworkSecurityConfig(10360): No Network Security Config specified, using platform default
+  09-30 15:19:53.298 V/MdnieScenarioControlService( 1248): mAclOffEnabled : false mAclPreviewState : false mAclCompensationState : false
+  09-30 15:19:53.320 D/OpenGLRenderer(10360): RenderThread::requireGlContext()
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): QUALCOMM build                   : 193b2ee, I593c16c433
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): Build Date                       : 10/07/21
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): OpenGL ES Shader Compiler Version: EV031.32.02.10
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): Local Branch                     : Test-lib-SR05432264
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): Remote Branch                    : 
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): Remote Branch                    : 
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): Reconstruct Branch               : 
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): Build Config                     : S P 10.0.5 AArch64
+  09-30 15:19:53.321 I/AdrenoGLES-0(10360): Driver Path                      : /vendor/lib64/egl/libGLESv2_adreno.so
+  09-30 15:19:53.324 I/AdrenoGLES-0(10360): PFP: 0x016dd093, ME: 0x00000000
+  09-30 15:19:53.329 D/OpenGLRenderer(10360): RenderThread::setGrContext()
+  09-30 15:19:53.331 I/GenerationRegistry( 1248): mBackingStore.isClosed() : false
+  09-30 15:19:53.340 I/DecorView(10360): [INFO] isPopOver=false config=true
+  09-30 15:19:53.340 I/DecorView(10360): updateCaptionType: isFloating=false isApplication=true hasWindowDecorCaption=false this=DecorView@2af7d7[]
+  09-30 15:19:53.340 D/DecorView(10360): setCaptionType = 0, this = DecorView@2af7d7[]
+  09-30 15:19:53.342 I/DecorView(10360): getCurrentDensityDpi: from real metrics. densityDpi=480 msg=resources_loaded
+  09-30 15:19:53.342 I/DecorView(10360): setWindowBackground: isPopOver=false color=fffafafa d=android.graphics.drawable.ColorDrawable@2a113ad
+> 09-30 15:19:53.355 I/MSHandlerLifeCycle(10360): check: return. pkg=com.signaldesk.relay parent=null callers=com.android.internal.policy.DecorView.setVisibility:4411 android.app.ActivityThread.handleResumeActivity:5476 android.app.servertransaction.ResumeActivityItem.execute:54 android.app.servertransaction.ActivityTransactionItem.execute:45 android.app.servertransaction.TransactionExecutor.executeLifecycleState:176 
+  09-30 15:19:53.355 I/MSHandlerLifeCycle(10360): removeMultiSplitHandler: no exist. decor=DecorView@2af7d7[]
+  09-30 15:19:53.358 D/NativeCustomFrequencyManager(10360): [NativeCFMS] BpCustomFrequencyManager::BpCustomFrequencyManager()
+  09-30 15:19:53.361 D/InputTransport( 1248): Input channel constructed: '8ed53eb', fd=872
+  09-30 15:19:53.361 D/InputTransport( 1248): Input channel constructed: '8ed53eb', fd=958
+  09-30 15:19:53.361 D/InputTransport( 1248): Input channel constructed: '8ed53eb', fd=959
+> 09-30 15:19:53.361 I/SurfaceFlinger( 1126): id=15029 createSurf, flag=80004, 8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity#15029
+  09-30 15:19:53.362 D/RestrictionPolicy( 1248): isScreenCaptureEnabled : ret=true userId=0
+  09-30 15:19:53.362 D/InputTransport( 1248): Input channel destroyed: '8ed53eb', fd=959
+> 09-30 15:19:53.363 D/InsetsController(10360): onStateChanged: InsetsState: {mDisplayFrame=Rect(0, 0 - 1080, 2400), mDisplayCutout=DisplayCutout{insets=Rect(0, 78 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(690, 0 - 750, 78), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2400 physicalDisplayWidth=1440 physicalDisplayHeight=3200 density={3.0} cutoutSpec={M 0,0 H -10 V 26 H 10 V 0 H 0 Z @dp} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={1.0}}}}, mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=72, center=Point(72, 72)}, RoundedCorner{position=TopRight, radius=72, center=Point(1008, 72)}, RoundedCorner{position=BottomRight, radius=72, center=Point(1008, 2328)}, RoundedCorner{position=BottomLeft, radius=72, center=Point(72, 2328)}]}  mRoundedCornerFrame=Rect(0, 0 - 1080, 2400), mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(948, 0 - 1080, 78) rotation=0}, mSources= { InsetsSource: {mType=ITYPE_STATUS_BAR, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_NAVIGATION_BAR, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_LEFT_GESTURES, mFrame=[0,0][0,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_RIGHT_GESTURES, mFrame=[1080,0][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_MANDATORY_GESTURES, mFrame=[0,0][1080,114], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_MANDATORY_GESTURES, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_LEFT_DISPLAY_CUTOUT, mFrame=[0,0][-100000,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_DISPLAY_CUTOUT, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_RIGHT_DISPLAY_CUTOUT, mFrame=[100000,0][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_DISPLAY_CUTOUT, mFrame=[0,100000][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_TAPPABLE_ELEMENT, mFrame=[0,0][1080,78], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_TAPPABLE_ELEMENT, mFrame=[0,2256][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_IME, mFrame=[0,0][0,0], mVisible=false, mInsetsRoundedCornerFrame=false} } host=com.signaldesk.relay/com.signaldesk.relay.MainActivity from=android.view.ViewRootImpl.setView:1732
+> 09-30 15:19:53.364 D/CoreBackPreview( 1248): Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@264dfe1, mPriority=0}
+  09-30 15:19:53.364 I/ViewRootImpl@9886924[MainActivity](10360): setView = com.android.internal.policy.DecorView@2af7d7 TM=true
+  09-30 15:19:53.365 I/MSHandlerLifeCycle(10360): removeMultiSplitHandler: no exist. decor=DecorView@2af7d7[MainActivity]
+  09-30 15:19:53.369 I/Utils   ( 4801): isCurrentUser current = 0, ownerId = 0
+  09-30 15:19:53.370 I/TrayVisibilityController( 4801): getComputedTrayVisible : keyguardState = 1
+  09-30 15:19:53.370 I/TrayVisibilityController( 4801): updateTrayVisible: State=1 visible=1 mCurrentVisible=1 specificMode=0
+  09-30 15:19:53.370 I/TrayStateController( 4801): onNotifyUpdateTray: state=0
+  09-30 15:19:53.386 I/WindowManager( 1248): Reparenting to original parent: Surface(name=DefaultTaskDisplayArea)/@0xcc3fe67, destroy=true, surface=Surface(name=Task=1)/@0xac29226
+  09-30 15:19:53.387 V/WindowManager( 1248): Setting visibility of Window{dd791ca u0 com.samsung.android.app.spage}: false, caller=com.android.server.wm.WindowContainer.sendAppVisibilityToClients:1246 com.android.server.wm.WindowState.sendAppVisibilityToClients:4177 com.android.server.wm.WindowContainer.sendAppVisibilityToClients:1246 com.android.server.wm.WindowToken.setClientVisible:431 com.android.server.wm.ActivityRecord.setClientVisible:7682 
+  09-30 15:19:53.387 V/WindowManager( 1248): Setting visibility of Window{40fbcc6 u0 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity}: false, caller=com.android.server.wm.WindowContainer.sendAppVisibilityToClients:1246 com.android.server.wm.WindowToken.setClientVisible:431 com.android.server.wm.ActivityRecord.setClientVisible:7682 com.android.server.wm.ActivityRecord.onAnimationFinished:8552 com.android.server.wm.WindowContainer.doAnimationFinished:3483 
+  09-30 15:19:53.387 I/ViewRootImpl@4f10b53[]( 5225): handleAppVisibility mAppVisible = true visible = false
+  09-30 15:19:53.387 I/WindowManager( 1248): Reparenting to original parent: Surface(name=DefaultTaskDisplayArea)/@0xcc3fe67, destroy=true, surface=Surface(name=Task=15919)/@0x63fabb8
+  09-30 15:19:53.387 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): handleAppVisibility mAppVisible = true visible = false
+  09-30 15:19:53.387 V/WindowManager( 1248): Setting visibility of Window{8e1252d u0 com.android.systemui.ImageWallpaper}: false, caller=com.android.server.wm.WindowContainer.sendAppVisibilityToClients:1246 com.android.server.wm.WindowToken.setClientVisible:431 com.android.server.wm.WallpaperWindowToken.setVisible:160 com.android.server.wm.WallpaperWindowToken.updateWallpaperWindows:154 com.android.server.wm.WallpaperController.updateWallpaperTokens:676 
+  09-30 15:19:53.388 D/WallpaperService( 2480): dispatchAppVisibility onVisibilityChanged(): false
+  09-30 15:19:53.388 D/WallpaperService( 2480): reportVisibility onVisibilityChanged visible: false
+  09-30 15:19:53.388 I/ImageWallpaper[GLEngine]( 2480):  onVisibilityChanged false , 0
+  09-30 15:19:53.404 I/Layer   ( 1126): id=15026 removedFromDrawingState Surface(name=Task=1)/@0xac29226 - animation-leash of app_transition#15026 (172)
+  09-30 15:19:53.405 I/Layer   ( 1126): Layer [com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity$_2901#15016] hidden!! flag(1)
+  09-30 15:19:53.405 I/Layer   ( 1126): id=15027 removedFromDrawingState Surface(name=Task=15919)/@0x63fabb8 - animation-leash of app_transition#15027 (172)
+  09-30 15:19:53.405 I/SurfaceFlinger( 1126): id=15027 Removed Surface(name=Task=15919)/@0x63fabb8 - animation-leash of app_transition#15027 (172)
+  09-30 15:19:53.407 V/WindowManager( 1248):   bhv=SHOW_TRANSIENT_BARS_BY_SWIPE
+  09-30 15:19:53.407 V/WindowManager( 1248):   fitSides= naviIconColor=0}
+  09-30 15:19:53.408 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): Relayout returned: old=(0,0,1080,2400) new=(0,0,1080,2400) req=(1080,2400)8 dur=2 res=0x2 s={false 0x0} ch=true seqId=0
+  09-30 15:19:53.420 D/SurfaceFlinger( 1126): Display 4630947232161729153 HWC layers:
+> 09-30 15:19:53.420 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3f4400 | 0100 | RGBA_8888    |    0.0    0.0 1080.0 2400.0 |    0    0 1080 2400 | Splash Screen com.signaldesk.relay$_2480#15025
+  09-30 15:19:53.420 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3cc2c0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0   78.0 |    0    0 1080   78 | StatusBar$_2480#84
+  09-30 15:19:53.420 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3caa90 | 0100 | RGBA_8888    |    0.0    0.0   67.0  342.0 | 1013  824 1080 1166 | com.samsung.android.app.cocktailbars[...]rvice.CocktailBarService$_4801#14995
+  09-30 15:19:53.420 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3d3cd0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0  144.0 |    0 2256 1080 2400 | NavigationBar0$_2480#79
+  09-30 15:19:53.420 D/SurfaceFlinger( 1126): 
+  09-30 15:19:53.445 I/GenerationRegistry( 1248): mBackingStore.isClosed() : false
+  09-30 15:19:53.463 I/ignaldesk.relay(10360): hiddenapi: Accessing hidden method Landroid/os/SystemProperties;->addChangeCallback(Ljava/lang/Runnable;)V (runtime_flags=0, domain=platform, api=unsupported) from Landroidx/compose/ui/platform/AndroidComposeView$Companion; (domain=app, TargetSdkVersion=36) using reflection: allowed
+  09-30 15:19:53.463 D/CompatibilityChangeReporter(10360): Compat change id reported: 193247900; UID 10396; state: ENABLED
+  09-30 15:19:53.503 I/cimd    ( 5570): onPause
+  09-30 15:19:53.563 I/SQLiteOpenHelper(10360): DB version upgrading from 7 to 8
+  09-30 15:19:53.628 I/ignaldesk.relay(10360): Compiler allocated 6246KB to compile void android.view.ViewRootImpl.performTraversals()
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360): performTraversals params={(0,0)(fillxfill) sim={adjust=pan forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360):   fl=81810100
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360):   pfl=12020040
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360):   bhv=DEFAULT
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360):   fitSides= naviIconColor=0}
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360): performTraversals mFirst=true windowShouldResize=true viewVisibilityChanged=false mForceNextWindowRelayout=false params={(0,0)(fillxfill) sim={adjust=pan forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360):   fl=81810100
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360):   pfl=12020040
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360):   bhv=DEFAULT
+  09-30 15:19:53.667 I/ViewRootImpl@9886924[MainActivity](10360):   fitSides= naviIconColor=0}
+> 09-30 15:19:53.668 V/WindowManager( 1248): Relayout Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity}: viewVisibility=0 req=1080x2400 d0
+  09-30 15:19:53.668 D/RestrictionPolicy( 1248): isScreenCaptureEnabled : ret=true userId=0
+> 09-30 15:19:53.668 I/SurfaceFlinger( 1126): id=15030 createSurf, flag=40004, com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360#15030
+> 09-30 15:19:53.668 D/WindowManager( 1248): makeSurface duration=1 name=com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360
+> 09-30 15:19:53.670 V/WindowManager( 1248): Changing focus from null to Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity} displayId=0 Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:595 com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6803 com.android.server.wm.WindowManagerService.relayoutWindow:2813 com.android.server.wm.Session.relayout:274 
+> 09-30 15:19:53.670 D/MARsPolicyManager( 1248): onPackageResumedFG pkgName = com.signaldesk.relay, userId = 0
+  09-30 15:19:53.671 I/WindowManager( 1248): Cancelling animation restarting=true, leash=Surface(name=Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation)/@0x30c746b
+  09-30 15:19:53.671 I/WindowManager( 1248): Reparenting to original parent: Surface(name=WindowToken{adde396 type=2000 android.os.BinderProxy@305d158})/@0x4c0a2e4, destroy=false, surface=Surface(name=7d5cb17 StatusBar)/@0xc33677
+  09-30 15:19:53.671 I/WindowManager( 1248): Reparenting to leash, surface=Surface(name=7d5cb17 StatusBar)/@0xc33677, leashParent=Surface(name=WindowToken{adde396 type=2000 android.os.BinderProxy@305d158})/@0x4c0a2e4
+  09-30 15:19:53.671 I/SurfaceFlinger( 1126): id=15031 createSurf, flag=24000, Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation#15031
+  09-30 15:19:53.671 D/WindowManager( 1248): makeSurface duration=1 leash=Surface(name=Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation)/@0x6ae5563
+  09-30 15:19:53.671 I/WindowManager( 1248): Cancelling animation restarting=true, leash=Surface(name=Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation)/@0x3b63461
+  09-30 15:19:53.671 I/WindowManager( 1248): Reparenting to original parent: Surface(name=WindowToken{64d6ddc type=2019 android.os.BinderProxy@d94c4ae})/@0x42ac313, destroy=false, surface=Surface(name=a98fee5 NavigationBar0)/@0x5240e02
+  09-30 15:19:53.671 I/WindowManager( 1248): Reparenting to leash, surface=Surface(name=a98fee5 NavigationBar0)/@0x5240e02, leashParent=Surface(name=WindowToken{64d6ddc type=2019 android.os.BinderProxy@d94c4ae})/@0x42ac313
+  09-30 15:19:53.671 I/SurfaceFlinger( 1126): id=15032 createSurf, flag=24000, Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation#15032
+  09-30 15:19:53.672 D/WindowManager( 1248): makeSurface duration=1 leash=Surface(name=Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation)/@0xf60aa19
+> 09-30 15:19:53.672 D/WindowManager( 1248): updateSystemBarAttributes: displayId=0, win=Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity}, navColorWin=Window{e67aa21 u0 Splash Screen com.signaldesk.relay}, focusedCanBeNavColorWin=false, behavior=1, appearance=16, statusBarAppearanceRegions=[AppearanceRegion{LIGHT_STATUS_BARS bounds=[0,0][1080,2400]}], requestedVisibilities=, from=com.android.server.wm.DisplayPolicy.focusChangedLw:3245 com.android.server.wm.DisplayContent.updateFocusedWindowLocked:4618 com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:595 
+  09-30 15:19:53.672 D/StatusBarManagerService( 1248): notifyRequestedSystemKey recent=false home=false
+> 09-30 15:19:53.672 D/SamsungLightBarControlHelper( 2480): onStatusBarAppearanceChanged() -  sbModeChanged:false, statusBarMode:MODE_TRANSPARENT, barState:SHADE, isKeyguardShowing:false, navbarColorManagedByIme:false, stackAppearancesChanged:true, (AppearanceRegion{LIGHT_STATUS_BARS bounds=[0,0][1080,2400]}, ), packageName:com.signaldesk.relay
+> 09-30 15:19:53.672 D/NavigationBar( 2480): onSystemBarAttributesChanged() -  displayId:0, appearance:16, packageName: com.signaldesk.relay (APPEARANCE_LIGHT_NAVIGATION_BARS ), navbarColorManagedByIme:false
+  09-30 15:19:53.673 V/WindowManager( 1248): Relayout hash=8ed53eb, pid=10360, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=pan forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+  09-30 15:19:53.673 V/WindowManager( 1248):   fl=81810100
+  09-30 15:19:53.673 V/WindowManager( 1248):   pfl=12020040
+  09-30 15:19:53.673 V/WindowManager( 1248):   bhv=DEFAULT
+  09-30 15:19:53.673 V/WindowManager( 1248):   fitSides= naviIconColor=0}
+> 09-30 15:19:53.673 D/SamsungLightBarControlHelper( 2480): updateNavigation(Black button) isLightBar:false, hasLightBarNavigationBarFlag:true, packageName:com.signaldesk.relay, DirectReplying:false, NavBarColorManagerdByIme:false, ForceDarkForScrim:false, QsCustomizing:false, PanelHasWhiteBg:false
+  09-30 15:19:53.673 I/TouchInteractionService( 2901): onSystemUiStateChanged, stateFlags : 131072 |allow_gesture|
+  09-30 15:19:53.673 I/RecentsAnimationDeviceState( 2901): setSystemUiFlags, stateFlags : 131072
+  09-30 15:19:53.673 I/TouchInteractionService( 2901): onSystemUiFlagsChanged, lastSysUIFlags : 0
+> 09-30 15:19:53.673 D/SamsungLightBarControlHelper( 2480): updateStatus(BLACK icon) NumStacks:1, StatusBarMode:MODE_TRANSPARENT, lightBarBounds:[Rect(0, 0 - 1080, 2400)], StatusBarState:SHADE, packageName:com.signaldesk.relay, isWhiteKeyguardStatusBarBySettings:true
+  09-30 15:19:53.673 I/ViewRootImpl@9886924[MainActivity](10360): updateBlastSurfaceIfNeeded mBlastBufferQueue=null isSameSurfaceControl=false
+  09-30 15:19:53.674 E/BufferQueueProducer(10360): Unable to open libpenguin.so: dlopen failed: library "libpenguin.so" not found.
+  09-30 15:19:53.674 I/BLASTBufferQueue(10360): new BLASTBufferQueue, mName= ViewRootImpl@9886924[MainActivity] mNativeObject= 0xb4000072ba81f850 sc.mNativeObject= 0xb40000724a83ec30 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2909 android.view.ViewRootImpl.relayoutWindow:9847 android.view.ViewRootImpl.performTraversals:3884 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 android.view.Choreographer.doCallbacks:923 android.view.Choreographer.doFrame:852 android.view.Choreographer$FrameDisplayEventReceiver.run:1283 
+  09-30 15:19:53.674 I/BLASTBufferQueue(10360): update, w= 1080 h= 2400 mName = ViewRootImpl@9886924[MainActivity] mNativeObject= 0xb4000072ba81f850 sc.mNativeObject= 0xb40000724a83ec30 format= -1 caller= android.graphics.BLASTBufferQueue.<init>:84 android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2909 android.view.ViewRootImpl.relayoutWindow:9847 android.view.ViewRootImpl.performTraversals:3884 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 
+  09-30 15:19:53.675 I/ViewRootImpl@9886924[MainActivity](10360): Relayout returned: old=(0,0,1080,2400) new=(0,0,1080,2400) req=(1080,2400)0 dur=6 res=0x3 s={true 0xb40000734a823b60} ch=true seqId=0
+  09-30 15:19:53.675 I/ViewRootImpl@9886924[MainActivity](10360): mThreadedRenderer.initialize() mSurface={isValid=true 0xb40000734a823b60} hwInitialized=true
+  09-30 15:19:53.676 I/SDM     ( 1031): HWCDisplay::GetColorModeCount: Supported color mode count = 3
+  09-30 15:19:53.676 I/SDM     ( 1031): HWCDisplay::GetColorModes: Color mode = 0 is supported
+  09-30 15:19:53.676 I/SDM     ( 1031): HWCDisplay::GetColorModes: Color mode = 7 is supported
+  09-30 15:19:53.676 I/SDM     ( 1031): HWCDisplay::GetColorModes: Color mode = 9 is supported
+  09-30 15:19:53.676 D/OpenGLRenderer(10360): eglCreateWindowSurface
+  09-30 15:19:53.678 I/HYPER-HAL( 1018): [ResourceManager.cpp]removeResource(): [CPULittleMinFreq] RemoveResource Request ID : 1289172
+  09-30 15:19:53.679 I/servicemanager(  633): Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+  09-30 15:19:53.680 I/HYPER-HAL( 1018): [ResourceManager.cpp]removeResource(): [CPUMinFreq] RemoveResource Request ID : 1289172
+  09-30 15:19:53.680 I/HYPER-HAL( 1018): [RequestManager.cpp]releaseLocked(): Released ID : 1289172
+  09-30 15:19:53.685 I/ViewRootImpl@9886924[MainActivity](10360): reportNextDraw android.view.ViewRootImpl.performTraversals:4438 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 
+  09-30 15:19:53.685 I/ViewRootImpl@9886924[MainActivity](10360): Setup new sync id=0
+  09-30 15:19:53.685 I/ViewRootImpl@9886924[MainActivity](10360): Setting syncFrameCallback
+  09-30 15:19:53.685 I/ViewRootImpl@9886924[MainActivity](10360): registerCallbacksForSync syncBuffer=false
+  09-30 15:19:53.690 I/ViewRootImpl@245642d[NotificationShade]( 2480): performTraversals mFirst=false windowShouldResize=false viewVisibilityChanged=false mForceNextWindowRelayout=false params={(0,0)(fillxfill) gr=TOP CENTER_VERTICAL sim={adjust=resize} layoutInDisplayCutoutMode=always ty=NOTIFICATION_SHADE fmt=TRANSLUCENT
+  09-30 15:19:53.694 I/ViewRootImpl@9886924[MainActivity](10360): Received frameDrawingCallback syncResult=0 frameNum=1.
+  09-30 15:19:53.694 I/ViewRootImpl@9886924[MainActivity](10360): Setting up sync and frameCommitCallback
+  09-30 15:19:53.703 I/Layer   ( 1126): id=15017 removedFromDrawingState Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation#15017 (173)
+  09-30 15:19:53.703 I/Layer   ( 1126): id=15018 removedFromDrawingState Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation#15018 (173)
+> 09-30 15:19:53.703 I/SurfaceFlinger( 1126): [8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity#15029] FrameRatePriority: 1
+  09-30 15:19:53.704 I/SurfaceFlinger( 1126): id=15017 Removed Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation#15017 (173)
+  09-30 15:19:53.704 I/SurfaceFlinger( 1126): id=15018 Removed Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation#15018 (173)
+  09-30 15:19:53.704 I/Layer   ( 1126): id=15017 Destroyed Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation#15017
+  09-30 15:19:53.704 I/Layer   ( 1126): id=15018 Destroyed Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation#15018
+> 09-30 15:19:53.707 D/InputDispatcher( 1248): Focus request (0): 8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity but waiting because NOT_VISIBLE
+  09-30 15:19:53.713 I/BLASTBufferQueue(10360): [ViewRootImpl@9886924[MainActivity]#0](f:0,a:0) onFrameAvailable the first frame is available
+  09-30 15:19:53.713 I/ViewRootImpl@9886924[MainActivity](10360): Received frameCommittedCallback lastAttemptedDrawFrameNum=1 didProduceBuffer=true
+  09-30 15:19:53.713 D/Native_CFMS( 1248): CFMS Add Task Tid(10378)
+  09-30 15:19:53.713 D/Native_CFMS( 1248): CFMS Add Task Tid(10389)
+  09-30 15:19:53.714 D/Native_CFMS( 1248): CFMS Add Task Tid(10390)
+  09-30 15:19:53.714 D/OpenGLRenderer(10360): CFMS:: SetUp Pid : 10360    Tid : 10378
+  09-30 15:19:53.715 W/Parcel  (10360): Expecting binder but got null!
+  09-30 15:19:53.715 I/ViewRootImpl@9886924[MainActivity](10360): onSyncComplete
+  09-30 15:19:53.716 I/ViewRootImpl@9886924[MainActivity](10360): setupSync seqId=0 mSyncId=0 fn=1 caller=android.view.ViewRootImpl$$ExternalSyntheticLambda11.accept:6 android.window.SurfaceSyncer.lambda$setupSync$1$android-window-SurfaceSyncer:128 android.window.SurfaceSyncer$$ExternalSyntheticLambda1.accept:8 android.window.SurfaceSyncer$SyncSet.checkIfSyncIsComplete:382 android.window.SurfaceSyncer$SyncSet.markSyncReady:359 android.window.SurfaceSyncer.markSyncReady:151 android.view.ViewRootImpl.performTraversals:4503 
+  09-30 15:19:53.716 I/ViewRootImpl@9886924[MainActivity](10360): reportDrawFinished seqId=0 mSyncId=-1 fn=1 mSurfaceChangedTransaction=0xb40000727a8130f0
+> 09-30 15:19:53.716 D/WindowManager( 1248): finishDrawingWindow: Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity} mDrawState=DRAW_PENDING seqId=0
+> 09-30 15:19:53.717 V/WindowManager( 1248): Finish starting ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}: first real window is shown, no animation
+> 09-30 15:19:53.718 V/WindowManager( 1248): Schedule remove starting ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919} startingWindow=null startingView=null Callers=com.android.server.wm.ActivityRecord.removeStartingWindow:3224 com.android.server.wm.ActivityRecord.onFirstWindowDrawn:7450 com.android.server.wm.WindowState.performShowLocked:5469 com.android.server.wm.WindowStateAnimator.commitFinishDrawingLocked:351 com.android.server.wm.DisplayContent.lambda$new$8:1184 
+  09-30 15:19:53.718 I/SemDvfsHyPerManager( 1248): acquire hyper - AMS_RESUME_TAIL/1248@20, type = -999
+  09-30 15:19:53.718 I/SemDvfsHyPerManager( 1248): acquire hyper - AMS_ACT_LAZY/1248@21, type = -999
+  09-30 15:19:53.718 D/ActivityManagerPerformance( 1248): AMP_acquire() TAIL
+  09-30 15:19:53.718 D/ActivityManagerPerformance( 1248): AMP_release() APP_SWITCH
+> 09-30 15:19:53.718 V/WindowManager( 1248): performShowLocked: mDrawState=HAS_DRAWN in Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity}
+  09-30 15:19:53.718 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 804566  [1248 / 20]    HINT : AMS_RESUME_TAIL    list : 
+  09-30 15:19:53.719 D/[secipm]( 1248): mSecIpmManager report to nap
+> 09-30 15:19:53.719 I/PkgPredictorService-SecIpmManagerServiceImpl( 1248): reportToNAP uid:10396 com.signaldesk.relay/com.signaldesk.relay.MainActivity thisTime:740
+  09-30 15:19:53.720 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPUMinFreq] UpdateResource Request ID : 804566    Value : 1747200
+  09-30 15:19:53.720 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 805836  [1248 / 21]    HINT : AMS_ACT_LAZY    list : 
+  09-30 15:19:53.720 I/HYPER-HAL( 1018): [ResourceManager.cpp]removeResource(): [CPULittleMinFreq] RemoveResource Request ID : 807107
+> 09-30 15:19:53.723 I/ActivityTaskManager( 1248): Displayed com.signaldesk.relay/.MainActivity: +740ms
+> 09-30 15:19:53.723 I/Pageboost( 1248): Launch time gathered : pid 10360 com.signaldesk.relay 740
+> 09-30 15:19:53.723 D/InputDispatcher( 1248): Focus entered window (0): 8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity
+  09-30 15:19:53.723 I/HYPER-HAL( 1018): [ResourceManager.cpp]removeResource(): [CPUMinFreq] RemoveResource Request ID : 807107
+  09-30 15:19:53.723 I/HYPER-HAL( 1018): [RequestManager.cpp]releaseLocked(): Released ID : 807107
+  09-30 15:19:53.723 E/pageboostd( 3412): Received HALT command code 2
+  09-30 15:19:53.726 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): stopped(true) old = false
+  09-30 15:19:53.726 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): WindowStopped on com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity set to true
+  09-30 15:19:53.726 I/Launcher( 2901): !@Boot_DEBUG: Launcher.onStop()
+  09-30 15:19:53.726 I/Launcher( 2901): !@Boot_EBS_D: Launcher.onStop()
+  09-30 15:19:53.726 I/BaseActivity( 2901): removeActivityFlags, flags : 17
+  09-30 15:19:53.726 I/WallpaperBlurController( 2901): dispatchTransactionSurface: mCurrentBlur = 150
+  09-30 15:19:53.726 D/SurfaceFlinger( 1126): Display 4630947232161729153 HWC layers:
+> 09-30 15:19:53.726 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3dae70 | 0102 | RGBA_8888    |    0.0    0.0 1080.0 2400.0 |    0    0 1080 2400 | com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360#15030
+> 09-30 15:19:53.726 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3f4400 | 0100 | RGBA_8888    |    0.0    0.0 1080.0 2400.0 |    0    0 1080 2400 | Splash Screen com.signaldesk.relay$_2480#15025
+  09-30 15:19:53.726 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3e25b0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0   78.0 |    0    0 1080   78 | StatusBar$_2480#84
+  09-30 15:19:53.726 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3caa90 | 0100 | RGBA_8888    |    0.0    0.0   67.0  342.0 | 1013  824 1080 1166 | com.samsung.android.app.cocktailbars[...]rvice.CocktailBarService$_4801#14995
+  09-30 15:19:53.726 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3d3cd0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0  144.0 |    0 2256 1080 2400 | NavigationBar0$_2480#79
+  09-30 15:19:53.726 D/SurfaceFlinger( 1126): 
+  09-30 15:19:53.727 W/LauncherAppWidgetHost( 2901): setShouldListenFlag, mFlags:7 flag:start on:false isFront:false
+  09-30 15:19:53.727 I/IMM_LC  ( 2901): hsifw() - flag : 0
+  09-30 15:19:53.727 I/IMM_LC  ( 2901): hsifw() - mService.hideSoftInput
+  09-30 15:19:53.727 D/InputMethodManagerService( 1248): hideSoftInput
+  09-30 15:19:53.728 V/InputMethodManagerService( 1248): Client requesting input be hidden
+  09-30 15:19:53.728 V/InputMethodManagerService( 1248): hideCurrentInputLocked : canceled, shouldHideSoftInput=false, mInputShown=false, mImeWindowVis=0
+  09-30 15:19:53.728 I/InputMethodBindingController( 1248): setCurrentMethodNotVisible: mVisibleBound=false, mHasConnection=true, caller = com.android.server.inputmethod.InputMethodManagerService.hideCurrentInputLocked:4339 com.android.server.inputmethod.InputMethodManagerService.hideSoftInput:4277 com.android.internal.view.IInputMethodManager$Stub.onTransact:488 com.android.server.inputmethod.InputMethodManagerService.onTransact:2285 android.os.Binder.execTransactInternal:1316 android.os.Binder.execTransact:1280 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+  09-30 15:19:53.728 I/AppWidgetServiceImpl( 1248): stopListening callbacks : null
+  09-30 15:19:53.728 V/WindowManager( 1248): Removing startingView=com.android.server.wm.StartingSurfaceController$StartingSurface@a02042b
+> 09-30 15:19:53.729 D/TaskOrganizerController( 1248): applyStartingWindowAnimation, window=Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity}, caller=com.android.server.wm.TaskOrganizerController.removeStartingWindow:573 com.android.server.wm.StartingSurfaceController$StartingSurface.remove:280 com.android.server.wm.ActivityRecord.lambda$removeStartingWindowAnimation$6:3286 
+> 09-30 15:19:53.729 I/WindowManager( 1248): Reparenting to leash, surface=Surface(name=8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity)/@0x462bbc, leashParent=Surface(name=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919})/@0xe9c1745
+  09-30 15:19:53.729 W/LauncherAppWidgetHost( 2901): stopListening, mFlags:2 isFront:false
+  09-30 15:19:53.729 W/Launcher.NotificationListener( 2901): removeNotificationsChangedListener
+  09-30 15:19:53.729 I/Launcher.NotificationListener( 2901): unregisterObserver, this is not notificationService!!
+> 09-30 15:19:53.729 I/SurfaceFlinger( 1126): id=15033 createSurf, flag=24000, Surface(name=8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity)/@0x462bbc - animation-leash of starting_reveal#15033
+  09-30 15:19:53.729 I/BadgeCountUpdaterImpl( 2901): onNotificationsChangedDisConnected
+  09-30 15:19:53.729 W/PageOverlayMover( 2901): updateActivityLifecycleState : 4
+> 09-30 15:19:53.729 D/WindowManager( 1248): makeSurface duration=1 leash=Surface(name=Surface(name=8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity)/@0x462bbc - animation-leash of starting_reveal)/@0x92847a8
+  09-30 15:19:53.729 I/ViewRootImpl@9886924[MainActivity](10360): MSG_WINDOW_FOCUS_CHANGED 1 0
+  09-30 15:19:53.729 I/PageOverlayServiceImpl( 5225): [FROM HOME] updateActivityLifecycleState : [4] : onStopped
+  09-30 15:19:53.730 I/ViewRootImpl@9886924[MainActivity](10360): mThreadedRenderer.initializeIfNeeded()#2 mSurface={isValid=true 0xb40000734a823b60}
+  09-30 15:19:53.730 I/PageOverlayCoordinator( 5225): onUiStopped
+  09-30 15:19:53.730 I/PageOverlayRootLayout( 5225): onUiStopped
+  09-30 15:19:53.730 I/PageOverlay-LM( 5225): mState : 2, toState : 2
+> 09-30 15:19:53.730 D/ActivityTaskManager( 1248): mStartingWindow and mStartingData is null for token=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}
+  09-30 15:19:53.730 D/InputMethodManager(10360): startInputInner - Id : 0
+  09-30 15:19:53.730 I/LiveIconUpdateEventHandler( 2901): cancelDateChangeAlarm
+  09-30 15:19:53.730 I/InputMethodManager(10360): startInputInner - mService.startInputOrWindowGainedFocus
+  09-30 15:19:53.731 I/MSHandlerLifeCycle( 2901): removeMultiSplitHandler: no exist. decor=DecorView@1f340c3[LauncherActivity]
+  09-30 15:19:53.732 D/CompatibilityChangeReporter( 1248): Compat change id reported: 214016041; UID 10396; state: ENABLED
+  09-30 15:19:53.732 V/InputMethodManagerService( 1248): Unspecified window will hide input
+  09-30 15:19:53.732 V/InputMethodManagerService( 1248): hideCurrentInputLocked : canceled, shouldHideSoftInput=false, mInputShown=false, mImeWindowVis=0
+  09-30 15:19:53.732 I/InputMethodBindingController( 1248): setCurrentMethodNotVisible: mVisibleBound=false, mHasConnection=true, caller = com.android.server.inputmethod.InputMethodManagerService.hideCurrentInputLocked:4339 com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocusInternalLocked:4645 com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocusInternal:4423 com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocus:4362 com.android.internal.view.IInputMethodManager$Stub.onTransact:518 com.android.server.inputmethod.InputMethodManagerService.onTransact:2285 android.os.Binder.execTransactInternal:1316 android.os.Binder.execTransact:1280 <bottom of call stack> <bottom of call stack> 
+  09-30 15:19:53.732 D/InputMethodManagerService( 1248): DESKTOP MODE! : 2
+  09-30 15:19:53.732 D/InputMethodManagerService( 1248): NOT IN KNOX DESKTOP MODE!
+  09-30 15:19:53.732 V/InputMethodManagerService( 1248): getDisplayIdOfInputMethodWindowToBeAdded: displayId=0
+  09-30 15:19:53.732 V/InputMethodManagerService( 1248): Creating new session for client ClientState{97a4143 uid=10396 pid=10360 displayId=0}
+  09-30 15:19:53.732 D/InputTransport( 1248): Input channel constructed: 'ClientS', fd=962
+  09-30 15:19:53.732 D/InputTransport( 1248): Input channel constructed: 'ClientS', fd=972
+  09-30 15:19:53.733 D/InputTransport( 1248): Input channel destroyed: 'ClientS', fd=972
+  09-30 15:19:53.734 D/InputMethodManagerService( 1248): isImeSwitcherDisabledPackage : false
+  09-30 15:19:53.734 D/InputMethodManagerService( 1248): shouldShowImeSwitcherLocked : checking vis : 3
+  09-30 15:19:53.737 I/ViewRootImpl@7fa7edd[relay]( 2480): performTraversals params={(0,0)(fillxfill) sim={adjust=pan} ty=APPLICATION_STARTING fmt=TRANSLUCENT wanim=0x1030309
+  09-30 15:19:53.737 I/ViewRootImpl@7fa7edd[relay]( 2480):   fl=81030118
+  09-30 15:19:53.737 I/ViewRootImpl@7fa7edd[relay]( 2480):   pfl=16000010
+  09-30 15:19:53.738 I/ViewRootImpl@7fa7edd[relay]( 2480):   pfl=16000010
+  09-30 15:19:53.738 I/ViewRootImpl@7fa7edd[relay]( 2480):   bhv=DEFAULT
+  09-30 15:19:53.738 I/ViewRootImpl@7fa7edd[relay]( 2480):   fitSides= naviIconColor=0}
+  09-30 15:19:53.739 I/LiveIconUpdateEventHandler( 2901): cancelMinuteChangeAlarm
+> 09-30 15:19:53.739 V/WindowManager( 1248): Relayout Window{e67aa21 u0 Splash Screen com.signaldesk.relay}: viewVisibility=0 req=1080x2400 d0
+> 09-30 15:19:53.740 D/WindowManager( 1248): updateSystemBarAttributes: displayId=0, win=Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity}, navColorWin=Window{e67aa21 u0 Splash Screen com.signaldesk.relay}, focusedCanBeNavColorWin=false, behavior=1, appearance=0, statusBarAppearanceRegions=[AppearanceRegion{ bounds=[0,0][1080,2400]}], requestedVisibilities=, from=com.android.server.wm.DisplayPolicy.finishPostLayoutPolicyLw:2527 com.android.server.wm.DisplayContent.applySurfaceChangesTransaction:5693 com.android.server.wm.RootWindowContainer.applySurfaceChangesTransaction:1234 
+  09-30 15:19:53.741 D/InputMethodManagerService( 1248): checkDisplayOfStartInputAndUpdateKeyboard: displayId=0, mFocusedDisplayId=0
+  09-30 15:19:53.741 D/InputTransport( 1248): Input channel constructed: 'ClientS', fd=959
+  09-30 15:19:53.741 D/InputTransport( 1248): Input channel destroyed: 'ClientS', fd=959
+  09-30 15:19:53.741 I/AppOps  ( 1248): updateUidProcState uid: 10236 procState: 5 capability:15
+  09-30 15:19:53.741 I/AppOps  ( 1248): updateUidProcState uid: 10234 procState: 5 capability:15
+  09-30 15:19:53.741 I/ActivityManager( 1248): Changes in 10129 2 to 5, 15 to 8
+  09-30 15:19:53.741 I/HBD     ( 5228): HoneyBoardService onFinishInput 
+  09-30 15:19:53.742 I/CameraService( 1278): onUidStateChanged: uid=10236, procState is changed. (3 -> 5)
+  09-30 15:19:53.742 I/CameraService( 1278): onUidStateChanged: uid=10234, procState is changed. (3 -> 5)
+  09-30 15:19:53.742 I/CameraService( 1278): onUidStateChanged: uid=10155, procState is changed. (3 -> 5)
+  09-30 15:19:53.742 I/HBD     ( 5228): a IC have been unbinding,  RemoteInputConnection{idHash=#24e1730}
+  09-30 15:19:53.742 I/HBD     ( 5228): HoneyBoardService [PF_CL][onFinishInput]  1 ms 
+  09-30 15:19:53.743 I/HBD     ( 5228): HoneyBoardService [IMI] onStartInput - caller pid : 10360 , caller uid : 10396 
+  09-30 15:19:53.743 I/HBD     ( 5228): j updateConfigs 
+  09-30 15:19:53.743 I/HBD     ( 5228): j isEnabledNightMode : true 
+  09-30 15:19:53.743 I/HBD     ( 5228): a IC have been binding, RemoteInputConnection{idHash=#570afa9} 
+  09-30 15:19:53.743 I/HBD     ( 5228): h [EditorInputType]setPrivateImeOptionsToTable privateImeOptions ( null )
+  09-30 15:19:53.743 I/HBD     ( 5228): b incognitoMode : false 
+  09-30 15:19:53.743 I/HBD     ( 5228): b needOff = true , isForceOff = false, isNullInputClass : true 
+  09-30 15:19:53.743 I/HBD     ( 5228): h getDefaultInputRange : UNKNOWN 
+  09-30 15:19:53.743 I/HBD     ( 5228): h getDefaultInputRange : UNKNOWN 
+> 09-30 15:19:53.743 D/SamsungLightBarControlHelper( 2480): onStatusBarAppearanceChanged() -  sbModeChanged:false, statusBarMode:MODE_TRANSPARENT, barState:SHADE, isKeyguardShowing:false, navbarColorManagedByIme:false, stackAppearancesChanged:true, (AppearanceRegion{ bounds=[0,0][1080,2400]}, ), packageName:com.signaldesk.relay
+  09-30 15:19:53.743 I/HBD     ( 5228): h getDefaultInputRange : UNKNOWN 
+> 09-30 15:19:53.744 D/NavigationBar( 2480): onSystemBarAttributesChanged() -  displayId:0, appearance:0, packageName: com.signaldesk.relay, navbarColorManagedByIme:false
+> 09-30 15:19:53.744 D/SamsungLightBarControlHelper( 2480): updateNavigation(White button) isLightBar:false, hasLightBarNavigationBarFlag:false, packageName:com.signaldesk.relay, DirectReplying:false, NavBarColorManagerdByIme:false, ForceDarkForScrim:false, QsCustomizing:false, PanelHasWhiteBg:false
+> 09-30 15:19:53.744 D/SamsungLightBarControlHelper( 2480): updateStatus(WHITE icon) NumStacks:1, StatusBarMode:MODE_TRANSPARENT, lightBarBounds:[], StatusBarState:SHADE, packageName:com.signaldesk.relay, isWhiteKeyguardStatusBarBySettings:true
+  09-30 15:19:53.745 I/HBD     ( 5228): b needOff = true , isForceOff = false, isNullInputClass : true 
+  09-30 15:19:53.745 I/HBD     ( 5228): b update cached prediction status : false 
+  09-30 15:19:53.745 I/HBD     ( 5228): h getDefaultInputRange : UNKNOWN 
+  09-30 15:19:53.745 I/HBD     ( 5228): a currentState : 0 
+  09-30 15:19:53.745 I/HBD     ( 5228): a [UpdatePolicy] [post] a: 0 cl: 65537 kit: [0/0] vt: 0 ir: 1 
+  09-30 15:19:53.745 I/HBD     ( 5228): a [NRIC] resetNoResponseState 
+  09-30 15:19:53.745 I/HBD     ( 5228): b needOff = true , isForceOff = false, isNullInputClass : true 
+  09-30 15:19:53.745 I/HBD     ( 5228): b update cached prediction status : false 
+  09-30 15:19:53.746 I/HBD     ( 5228): HoneyBoardService [PF_OP][onStartInput]  3 ms 
+  09-30 15:19:53.746 E/WindowManager( 1248): win=Window{40fbcc6 u0 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity} destroySurfaces: appStopped=true cleanupOnResume=false win.mWindowRemovalAllowed=false win.mRemoveOnExit=false win.mViewVisibility=8 caller=com.android.server.wm.ActivityRecord.destroySurfaces:6529 com.android.server.wm.ActivityRecord.destroySurfaces:6510 com.android.server.wm.ActivityRecord.notifyAppStopped:6574 com.android.server.wm.ActivityRecord.activityStopped:7162 com.android.server.wm.ActivityClientController.activityStopped:258 android.app.IActivityClientController$Stub.onTransact:613 com.android.server.wm.ActivityClientController.onTransact:136 
+  09-30 15:19:53.746 V/WindowManager( 1248): Relayout hash=e67aa21, pid=2480, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=pan} ty=APPLICATION_STARTING fmt=TRANSLUCENT wanim=0x1030309
+  09-30 15:19:53.746 V/WindowManager( 1248):   fl=81030118
+  09-30 15:19:53.746 V/WindowManager( 1248):   pfl=16000010
+  09-30 15:19:53.746 V/WindowManager( 1248):   bhv=DEFAULT
+  09-30 15:19:53.746 V/WindowManager( 1248):   fitSides= naviIconColor=0}
+  09-30 15:19:53.746 I/WindowManager( 1248): Destroying surface Surface(name=com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity$_2901)/@0x791fe31 called by com.android.server.wm.WindowStateAnimator.destroySurface:942 com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:536 com.android.server.wm.WindowState.destroySurfaceUnchecked:4303 com.android.server.wm.WindowState.destroySurface:4277 com.android.server.wm.ActivityRecord.destroySurfaces:6529 com.android.server.wm.ActivityRecord.destroySurfaces:6510 com.android.server.wm.ActivityRecord.notifyAppStopped:6574 com.android.server.wm.ActivityRecord.activityStopped:7162 
+  09-30 15:19:53.747 D/ActivityTaskManager( 1248): mStartingWindow and mStartingData is null for token=ActivityRecord{d92f309 u0 com.sec.android.app.launcher/.activities.LauncherActivity} t15784}
+  09-30 15:19:53.747 D/RestrictionPolicy( 1248): isScreenCaptureEnabled : ret=true userId=0
+  09-30 15:19:53.747 I/ViewRootImpl@7fa7edd[relay]( 2480): updateBlastSurfaceIfNeeded mBlastBufferQueue=0xb4000072ba92cdb0 isSameSurfaceControl=true
+  09-30 15:19:53.747 I/BLASTBufferQueue( 2480): update, w= 1080 h= 2400 mName = ViewRootImpl@7fa7edd[relay] mNativeObject= 0xb4000072ba92cdb0 sc.mNativeObject= 0xb40000724a8463d0 format= -3 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2898 android.view.ViewRootImpl.relayoutWindow:9847 android.view.ViewRootImpl.performTraversals:3884 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 android.view.Choreographer$CallbackRecord.run:1301 
+  09-30 15:19:53.788 I/ViewRootImpl@7fa7edd[relay]( 2480):   fl=81030118
+  09-30 15:19:53.788 I/ViewRootImpl@7fa7edd[relay]( 2480):   pfl=16000010
+  09-30 15:19:53.788 I/ViewRootImpl@7fa7edd[relay]( 2480):   bhv=DEFAULT
+  09-30 15:19:53.788 I/ViewRootImpl@7fa7edd[relay]( 2480):   fitSides= naviIconColor=0}
+> 09-30 15:19:53.789 V/WindowManager( 1248): Relayout Window{e67aa21 u0 Splash Screen com.signaldesk.relay}: viewVisibility=8 req=1080x2400 d0
+  09-30 15:19:53.789 I/AppOps  ( 1248): updateUidProcState uid: 10041 procState: 0 capability:15
+  09-30 15:19:53.790 I/CameraService( 1278): onUidStateChanged: uid=10041, procState is changed. (1 -> 0)
+  09-30 15:19:53.791 V/WindowManager( 1248): Relayout hash=e67aa21, pid=2480, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=pan} ty=APPLICATION_STARTING fmt=TRANSLUCENT wanim=0x1030309 alpha=0.0
+  09-30 15:19:53.791 V/WindowManager( 1248):   fl=81030118
+  09-30 15:19:53.791 V/WindowManager( 1248):   pfl=16000010
+  09-30 15:19:53.791 V/WindowManager( 1248):   bhv=DEFAULT
+  09-30 15:19:53.791 V/WindowManager( 1248):   fitSides= naviIconColor=0}
+  09-30 15:19:53.792 I/ViewRootImpl@7fa7edd[relay]( 2480): Relayout returned: old=(0,0,1080,2400) new=(0,0,1080,2400) req=(1080,2400)8 dur=4 res=0x2 s={false 0x0} ch=true seqId=0
+  09-30 15:19:53.792 I/ViewRootImpl@7fa7edd[relay]( 2480): dispatchDetachedFromWindow
+> 09-30 15:19:53.792 D/CoreBackPreview( 1248): Window{e67aa21 u0 Splash Screen com.signaldesk.relay}: Setting back callback null
+> 09-30 15:19:53.792 D/WindowManager( 1248): Starting window removed Window{e67aa21 u0 Splash Screen com.signaldesk.relay}
+> 09-30 15:19:53.792 I/WindowManager( 1248): Cancelling animation restarting=false, leash=Surface(name=Surface(name=8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity)/@0x462bbc - animation-leash of starting_reveal)/@0x92847a8
+> 09-30 15:19:53.792 I/WindowManager( 1248): Reparenting to original parent: Surface(name=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919})/@0xe9c1745, destroy=false, surface=Surface(name=8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity)/@0x462bbc
+  09-30 15:19:53.793 D/InputTransport( 1248): Input channel destroyed: 'e67aa21', fd=974
+> 09-30 15:19:53.793 W/InputManager-JNI( 1248): Input channel object 'e67aa21 Splash Screen com.signaldesk.relay (client)' was disposed without first being removed with the input manager!
+  09-30 15:19:53.793 D/InputTransport( 1248): Input channel destroyed: 'e67aa21', fd=976
+> 09-30 15:19:53.793 V/WindowManager( 1248): Remove Window{e67aa21 u0 Splash Screen com.signaldesk.relay}: mSurfaceController=Surface(name=Splash Screen com.signaldesk.relay$_2480)/@0x7574c6d mAnimatingExit=false mRemoveOnExit=false mHasSurface=true surfaceShowing=false animating=false app-animation=false mWillReplaceWindow=false mDisplayFrozen=false callers=com.android.server.wm.WindowState.removeIfPossible:3040 com.android.server.wm.WindowManagerService.removeWindow:2282 com.android.server.wm.Session.remove:236 android.view.IWindowSession$Stub.onTransact:743 com.android.server.wm.Session.onTransact:188 android.os.Binder.execTransactInternal:1321 
+> 09-30 15:19:53.793 I/WindowManager( 1248): Destroying surface Surface(name=Splash Screen com.signaldesk.relay$_2480)/@0x7574c6d called by com.android.server.wm.WindowStateAnimator.destroySurface:942 com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:536 com.android.server.wm.WindowState.removeImmediately:2969 com.android.server.wm.WindowState.removeIfPossible:3227 com.android.server.wm.WindowState.removeIfPossible:3040 com.android.server.wm.WindowManagerService.removeWindow:2282 com.android.server.wm.Session.remove:236 android.view.IWindowSession$Stub.onTransact:743 
+  09-30 15:19:53.794 D/InputTransport( 2480): Input channel destroyed: 'e67aa21', fd=224
+> 09-30 15:19:53.803 I/Layer   ( 1126): Layer [Splash Screen com.signaldesk.relay$_2480#15025] hidden!! flag(1)
+> 09-30 15:19:53.803 I/Layer   ( 1126): id=15024 removedFromDrawingState e67aa21 Splash Screen com.signaldesk.relay#15024 (171)
+> 09-30 15:19:53.803 I/Layer   ( 1126): id=15025 removedFromDrawingState Splash Screen com.signaldesk.relay$_2480#15025 (171)
+> 09-30 15:19:53.804 I/Layer   ( 1126): id=15033 removedFromDrawingState Surface(name=8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity)/@0x462bbc - animation-leash of starting_reveal#15033 (171)
+> 09-30 15:19:53.804 I/Layer   ( 1126): id=15025 removedFromDrawingState Splash Screen com.signaldesk.relay$_2480#15025 (171)
+> 09-30 15:19:53.804 I/SurfaceFlinger( 1126): id=15024 Removed e67aa21 Splash Screen com.signaldesk.relay#15024 (171)
+> 09-30 15:19:53.804 I/SurfaceFlinger( 1126): id=15025 Removed Splash Screen com.signaldesk.relay$_2480#15025 (171)
+> 09-30 15:19:53.804 I/Layer   ( 1126): id=15024 Destroyed e67aa21 Splash Screen com.signaldesk.relay#15024
+> 09-30 15:19:53.807 I/Layer   ( 1126): id=15025 Destroyed Splash Screen com.signaldesk.relay$_2480#15025
+  09-30 15:19:53.809 D/SurfaceFlinger( 1126): Display 4630947232161729153 HWC layers:
+> 09-30 15:19:53.809 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3f7bb0 | 0102 | RGBA_8888    |    0.0    0.0 1080.0 2400.0 |    0    0 1080 2400 | com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360#15030
+  09-30 15:19:53.809 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3d09a0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0   78.0 |    0    0 1080   78 | StatusBar$_2480#84
+  09-30 15:19:53.809 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3caa90 | 0100 | RGBA_8888    |    0.0    0.0   67.0  342.0 | 1013  824 1080 1166 | com.samsung.android.app.cocktailbars[...]rvice.CocktailBarService$_4801#14995
+  09-30 15:19:53.809 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3e91b0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0  144.0 |    0 2256 1080 2400 | NavigationBar0$_2480#79
+  09-30 15:19:53.809 D/SurfaceFlinger( 1126): 
+  09-30 15:19:53.860 I/AppOps  ( 1248): updateUidProcState uid: 10234 procState: 3 capability:15
+  09-30 15:19:53.860 I/CameraService( 1278): onUidStateChanged: uid=10234, procState is changed. (5 -> 3)
+  09-30 15:19:53.862 I/FontLog (19758): (REDACTED) Received query %s, URI %s
+  09-30 15:19:53.862 I/FontLog (19758): (REDACTED) Query [%s] resolved to %s
+  09-30 15:19:53.863 I/FontLog (19758): (REDACTED) Fetch %s end status %s
+  09-30 15:19:53.864 I/FontLog (19758): (REDACTED) Pulling font file for id = %d, cache size = %d
+  09-30 15:19:53.866 I/FontLog (19758): (REDACTED) Pulling font file for id = %d, cache size = %d
+> 09-30 15:19:53.882 D/MdnieScenarioControlService( 1248):  packageName : com.signaldesk.relay    className : com.signaldesk.relay.MainActivity
+  09-30 15:19:53.882 V/MdnieScenarioControlService( 1248): setUIMode from UI function(3)
+  09-30 15:19:53.983 V/MdnieScenarioControlService( 1248): mAclOffEnabled : false mAclPreviewState : false mAclCompensationState : false
+  09-30 15:19:54.001 I/HYPER-HAL( 1018): [ResourceManager.cpp]removeResource(): [CPULittleMinFreq] RemoveResource Request ID : 803297
+  09-30 15:19:54.004 I/HYPER-HAL( 1018): [ResourceManager.cpp]removeResource(): [CPUMinFreq] RemoveResource Request ID : 803297
+  09-30 15:19:54.004 I/HYPER-HAL( 1018): [RequestManager.cpp]releaseLocked(): Released ID : 803297
+  09-30 15:19:54.021 I/HYPER-HAL( 1018): [ResourceManager.cpp]removeResource(): [CPUMinFreq] RemoveResource Request ID : 804566
+  09-30 15:19:54.022 I/HYPER-HAL( 1018): [RequestManager.cpp]releaseLocked(): Released ID : 804566
+  09-30 15:19:54.068 I/SQLiteOpenHelper(10360): DB version upgrading from 7 to 8
+  09-30 15:19:54.069 W/ignaldesk.relay(10360): Long monitor contention with owner arch_disk_io_0 (10381) at java.lang.Object kotlin.SynchronizedLazyImpl.getValue()(LazyJVM.kt:81) waiters=0 in java.lang.Object kotlin.SynchronizedLazyImpl.getValue() for 501ms
+  09-30 15:19:54.073 I/SQLiteOpenHelper(10360): DB version upgrading from 7 to 8
+  --------- beginning of crash
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): FATAL EXCEPTION: main
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): Process: com.signaldesk.relay, PID: 10360
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): java.lang.IllegalStateException: A migration from 7 to 8 was required but not found. Please provide the necessary Migration path via RoomDatabase.Builder.addMigration(...) or allow for destructive migrations via one of the RoomDatabase.Builder.fallbackToDestructiveMigration* functions.
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.room.BaseRoomConnectionManager.onMigrate(RoomConnectionManager.kt:224)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.room.RoomConnectionManager$SupportOpenHelperCallback.onUpgrade(RoomConnectionManager.android.kt:165)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.sqlite.db.framework.FrameworkSQLiteOpenHelper$OpenHelper.onUpgrade(FrameworkSQLiteOpenHelper.android.kt:245)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at android.database.sqlite.SQLiteOpenHelper.getDatabaseLocked(SQLiteOpenHelper.java:515)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at android.database.sqlite.SQLiteOpenHelper.getWritableDatabase(SQLiteOpenHelper.java:413)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.sqlite.db.framework.FrameworkSQLiteOpenHelper$OpenHelper.getWritableOrReadableDatabase(FrameworkSQLiteOpenHelper.android.kt:224)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.sqlite.db.framework.FrameworkSQLiteOpenHelper$OpenHelper.innerGetDatabase(FrameworkSQLiteOpenHelper.android.kt:180)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.sqlite.db.framework.FrameworkSQLiteOpenHelper$OpenHelper.getSupportDatabase(FrameworkSQLiteOpenHelper.android.kt:141)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.sqlite.db.framework.FrameworkSQLiteOpenHelper.getWritableDatabase(FrameworkSQLiteOpenHelper.android.kt:96)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.sqlite.driver.SupportSQLiteDriver.open(SupportSQLiteDriver.android.kt:57)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.sqlite.driver.SupportSQLiteDriver.open(SupportSQLiteDriver.android.kt:33)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.room.coroutines.PassthroughConnectionPool.connection$lambda$0(PassthroughConnectionPool.kt:47)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.room.coroutines.PassthroughConnectionPool$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:86)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.room.coroutines.PassthroughConnectionPool.useConnection(PassthroughConnectionPool.kt:58)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.room.RoomConnectionManager.useConnection(RoomConnectionManager.android.kt:138)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.room.RoomDatabase.useConnection(RoomDatabase.android.kt:620)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at androidx.room.util.DBUtil__DBUtil_androidKt$performSuspending$$inlined$compatCoroutineExecute$DBUtil__DBUtil_androidKt$1.invokeSuspend(DBUtil.android.kt:261)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:101)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1100)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	at java.lang.Thread.run(Thread.java:1571)
+> 09-30 15:19:54.088 E/AndroidRuntime(10360): 	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@44f46ed, Dispatchers.Main.immediate]
+  09-30 15:19:54.096 D/Debug   ( 1248): low && ship && 3rdparty app crash, do not dump
+  09-30 15:19:54.097 W/ContextImpl( 1248): Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1252 com.android.server.am.AppErrors.crashApplicationInner:722 com.android.server.am.AppErrors.crashApplication:598 com.android.server.am.ActivityManagerService.handleApplicationCrashInner:10385 com.android.server.am.ActivityManagerService.handleApplicationCrash:10254 
+> 09-30 15:19:54.097 W/ActivityManager( 1248): crash : com.signaldesk.relay,10396
+> 09-30 15:19:54.098 W/ActivityTaskManager( 1248):   Force finishing activity com.signaldesk.relay/.MainActivity
+  09-30 15:19:54.099 W/WindowManager( 1248): Prepare app transition: mNextAppTransitionRequests=[TRANSIT_CLOSE], mNextAppTransitionFlags=TRANSIT_FLAG_KEYGUARD_GOING_AWAY_TO_LAUNCHER_WITH_IN_WINDOW_ANIMATIONS | TRANSIT_FLAG_APP_CRASHED, displayId: 0 Callers=com.android.server.wm.DisplayContent.prepareAppTransition:6470 com.android.server.wm.DisplayContent.requestTransitionAndLegacyPrepare:6486 com.android.server.wm.Task.finishTopCrashedActivityLocked:6718 com.android.server.wm.RootWindowContainer.lambda$finishTopCrashedActivities$19:2688 com.android.server.wm.RootWindowContainer.$r8$lambda$4nB35TzseTo6qyVD9NxDieoJN1Y:0 
+> 09-30 15:19:54.100 D/ActivityTaskManager( 1248): scheduleTopResumedActivityChanged, onTop=false r=ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919 f}} caller=com.android.server.wm.ActivityTaskSupervisor.updateTopResumedActivityIfNeeded:2508 com.android.server.wm.TaskDisplayArea.positionChildTaskAt:602 com.android.server.wm.TaskDisplayArea.positionChildAt:537 com.android.server.wm.WindowContainer.positionChildAt:970 com.android.server.wm.Task.positionChildAt:3323 com.android.server.wm.Task.moveToFrontInner:5974 
+  09-30 15:19:54.101 D/InputDispatcher( 1248): Focused application(0): ActivityRecord{d92f309 u0 com.sec.android.app.launcher/.activities.LauncherActivity} t15784}
+> 09-30 15:19:54.102 V/WindowManager( 1248): Changing focus from Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity} to null displayId=0 Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:595 com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6803 com.android.server.wm.ActivityTaskManagerService.setResumedActivityUncheckLocked:5755 com.android.server.wm.ActivityRecord.moveFocusableActivityToTop:3865 
+> 09-30 15:19:54.102 D/MARsPolicyManager( 1248): onPackageResumedFG pkgName = com.signaldesk.relay, userId = 0
+  09-30 15:19:54.103 D/StatusBarManagerService( 1248): notifyRequestedSystemKey recent=false home=false
+  09-30 15:19:54.103 D/SGM:FgCheckThread( 1248): TaskStackListener.onTaskFocusChanged(), taskId=15919, focused=false
+  09-30 15:19:54.103 D/SGM:FgCheckThread( 1248): TaskStackListener.onTaskFocusChanged(), taskId=15784, focused=true
+  09-30 15:19:54.104 D/SGM:FgCheckThread( 1248):   sendRunningComponentFocus(), pkgName: com.sec.android.app.launcher, userId: 0
+  09-30 15:19:54.104 D/SGM:FgCheckThread( 1248): onLooperPrepared(), msg: MSG_TASK_FOCUSED, pkgName: com.sec.android.app.launcher, userId: 0
+  09-30 15:19:54.104 D/SGM:FgCheckThread( 1248): handleTaskFocused().
+  09-30 15:19:54.104 D/SGM:FgCheckThread( 1248): sendFocusOutConditionally() - mPrevNotiPkg: KILL_YOURSELF, userId: 0
+  09-30 15:19:54.104 D/SGM:FgCheckThread( 1248):   handleTaskFocused(), pkgName: com.sec.android.app.launcher, userID:0 mResumedPkgMap does not containsKey.
+  09-30 15:19:54.106 W/WindowManager( 1248): Prepare app transition: mNextAppTransitionRequests=[TRANSIT_CLOSE, TRANSIT_CLOSE], mNextAppTransitionFlags=TRANSIT_FLAG_KEYGUARD_GOING_AWAY_TO_LAUNCHER_WITH_IN_WINDOW_ANIMATIONS | TRANSIT_FLAG_APP_CRASHED, displayId: 0 Callers=com.android.server.wm.DisplayContent.prepareAppTransition:6470 com.android.server.wm.DisplayContent.prepareAppTransition:6461 com.android.server.wm.ActivityRecord.finishIfPossible:4142 com.android.server.wm.ActivityRecord.finishIfPossible:3957 com.android.server.wm.Task.finishTopCrashedActivityLocked:6719 
+  09-30 15:19:54.106 D/RestrictionPolicy( 1248): isScreenCaptureEnabled : ret=true userId=0
+  09-30 15:19:54.106 D/RestrictionPolicy( 1248): isScreenCaptureEnabled : ret=true userId=0
+  09-30 15:19:54.108 I/Layer   ( 1126): id=15035 Destroyed Screenshot Parent#15035
+> 09-30 15:19:54.119 I/SurfaceFlinger( 1126): [8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity#15029] FrameRatePriority: -1
+  09-30 15:19:54.121 I/Process (10360): Sending signal. PID: 10360 SIG: 9
+  09-30 15:19:54.123 I/TopTaskTracker( 2901): onTaskMovedToFront : taskId = 15784
+  09-30 15:19:54.136 D/Native_CFMS( 1248): CFMS Delete Task Tid(10378)
+  09-30 15:19:54.136 E/ANDR-PERF-UTIL( 1034): Failed to read /proc/sys/kernel/walt_low_latency_task_threshold
+  09-30 15:19:54.136 E/ANDR-PERF-OPTSHANDLER( 1034): Failed to read /proc/sys/kernel/walt_low_latency_task_threshold
+  09-30 15:19:54.136 E/ANDR-PERF-RESOURCEQS( 1034): Failed to apply optimization [3, 54]
+  09-30 15:19:54.137 I/Rubin   (20998): [193] s9.a.c(SourceFile:1) : Notify com.samsung.android.rubin.inferenceengine.contextanalytics.engine.loggers.d's database is updated.
+  09-30 15:19:54.138 D/SGM:GameManager( 1248): identifyForegroundApp. com.sec.android.app.launcher, mCurrentUserId: 0, callerUserId: 0
+  09-30 15:19:54.138 D/SGM:PkgDataHelper( 1248): getGamePkgData(). com.sec.android.app.launcher
+  09-30 15:19:54.139 D/Native_CFMS( 1248): CFMS Delete Task Tid(10389)
+  09-30 15:19:54.140 D/Native_CFMS( 1248): CFMS Delete Task Tid(10390)
+  09-30 15:19:54.140 D/Native_CFMS( 1248): CFMS Delete Task Tid(10360)
+  09-30 15:19:54.141 D/Native_CFMS( 1248): CFMS Add Task Tid(2901)
+  09-30 15:19:54.141 D/Native_CFMS( 1248): CFMS Add Task Tid(4792)
+  09-30 15:19:54.141 D/Native_CFMS( 1248): CFMS Add Task Tid(5241)
+  09-30 15:19:54.141 D/SGM:GameManager( 1248): identifyGamePackage. com.sec.android.app.launcher, mCurrentUserId: 0, callerUserId: 0, callingMethodInfo: com.samsung.android.game.IGameManagerService$Stub.onTransact(IGameManagerService.java:233)
+  09-30 15:19:54.141 D/Native_CFMS( 1248): CFMS Add Task Tid(5240)
+  09-30 15:19:54.141 D/SGM:PkgDataHelper( 1248): getGamePkgData(). com.sec.android.app.launcher
+  09-30 15:19:54.141 D/Native_CFMS( 1248): CFMS Add Task Tid(10360)
+  09-30 15:19:54.141 D/Native_CFMS( 1248): CFMS Add Task Tid(10378)
+  09-30 15:19:54.141 D/Native_CFMS( 1248): CFMS Add Task Tid(10390)
+  09-30 15:19:54.141 D/Native_CFMS( 1248): CFMS Add Task Tid(10389)
+  09-30 15:19:54.143 I/Rubin   (20998): [193] ga.e.m(SourceFile:6) : isSatisfiedByCmh is false
+> 09-30 15:19:54.143 I/SDHMS:BarTender:Gatherer:AppError( 4541): update AppError : uid=10396, pkg=com.signaldesk.relay, errorType=crash
+  09-30 15:19:54.145 I/ActivityManager( 1248): Changes in 10129 5 to 2, 8 to 15
+  09-30 15:19:54.145 I/AppOps  ( 1248): updateUidProcState uid: 10129 procState: 2 capability:15
+  09-30 15:19:54.146 I/cimd    ( 5570): onStop
+  09-30 15:19:54.148 I/CameraService( 1278): onUidStateChanged: uid=10155, procState is changed. (5 -> 3)
+  09-30 15:19:54.153 D/InputDispatcher( 1248): Focus request (0): <null> but waiting because NOT_FOCUSABLE
+> 09-30 15:19:54.153 D/InputDispatcher( 1248): Focus left window (0): 8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity
+  09-30 15:19:54.155 D/InputMethodManagerService( 1248): removeClient
+  09-30 15:19:54.155 D/InputTransport( 1248): Input channel destroyed: 'ClientS', fd=962
+  09-30 15:19:54.155 V/InputMethodManagerService( 1248): hideCurrentInputLocked : canceled, shouldHideSoftInput=false, mInputShown=false, mImeWindowVis=0
+  09-30 15:19:54.155 I/InputMethodBindingController( 1248): setCurrentMethodNotVisible: mVisibleBound=false, mHasConnection=true, caller = com.android.server.inputmethod.InputMethodManagerService.hideCurrentInputLocked:4339 com.android.server.inputmethod.InputMethodManagerService.removeClient:2824 com.android.server.inputmethod.InputMethodManagerService$ClientDeathRecipient.binderDied:680 android.os.IBinder$DeathRecipient.binderDied:323 android.os.BinderProxy.sendDeathNotice:781 <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> <bottom of call stack> 
+> 09-30 15:19:54.155 I/WindowManager( 1248): WIN DEATH: Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity}
+  09-30 15:19:54.155 D/InputTransport( 1248): Input channel destroyed: '8ed53eb', fd=872
+> 09-30 15:19:54.155 W/InputManager-JNI( 1248): Input channel object '8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity (client)' was disposed without first being removed with the input manager!
+  09-30 15:19:54.155 D/InputTransport( 1248): Input channel destroyed: '8ed53eb', fd=958
+> 09-30 15:19:54.155 I/ActivityManager( 1248): Process com.signaldesk.relay (pid 10360) has died: prcp TOP (489,3641)
+> 09-30 15:19:54.155 V/WindowManager( 1248): Remove Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity}: mSurfaceController=Surface(name=com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360)/@0x16dd5a1 mAnimatingExit=false mRemoveOnExit=false mHasSurface=true surfaceShowing=true animating=true app-animation=true mWillReplaceWindow=false mDisplayFrozen=false callers=com.android.server.wm.WindowState.-$$Nest$mremoveIfPossible:0 com.android.server.wm.WindowState$DeathRecipient.binderDied:3805 android.os.IBinder$DeathRecipient.binderDied:323 android.os.BinderProxy.sendDeathNotice:781 <bottom of call stack> <bottom of call stack> 
+  09-30 15:19:54.156 I/libprocessgroup( 1248): Successfully killed process cgroup uid 10396 pid 10360 in 0ms
+  09-30 15:19:54.157 V/WindowManager( 1248): Unknown focus tokens, dropping reportFocusChanged
+  09-30 15:19:54.157 D/Native_CFMS( 1248): CFMS Delete Task Tid(10360)
+  09-30 15:19:54.157 D/Native_CFMS( 1248): CFMS Delete Task Tid(10378)
+  09-30 15:19:54.157 D/Native_CFMS( 1248): CFMS Delete Task Tid(10390)
+  09-30 15:19:54.158 D/Native_CFMS( 1248): CFMS Delete Task Tid(10389)
+  09-30 15:19:54.158 I/adbd    ( 3363): Remote process closed the socket (on MSG_PEEK)
+  09-30 15:19:54.158 I/Zygote  (  916): Process 10360 exited due to signal 9 (Killed)
+  09-30 15:19:54.159 V/MARsPolicyManager( 1248): Current Home Package com.sec.android.app.launcher Resumed
+  09-30 15:19:54.159 D/MARsPolicyManager( 1248): onPackageResumedFG pkgName = com.sec.android.app.launcher, userId = 0
+  09-30 15:19:54.159 I/SemDvfsHyPerManager( 1248): acquire hyper - AMS_APP_HOME/1248@23, type = -999
+  09-30 15:19:54.160 I/HYPER-HAL( 1018): [RequestManager.cpp]acquire(): Acquired ID : 808379  [1248 / 23]    HINT : AMS_APP_HOME    list : 
+  09-30 15:19:54.160 I/HYPER-HAL( 1018): [ResourceManager.cpp]updateResource(): [CPUMinFreq] UpdateResource Request ID : 808379    Value : 2841600
+> 09-30 15:19:54.161 I/SDHMS:BarTender:Analyzer:AppError( 4541): analyze app error : uid=10396, pkg=com.signaldesk.relay, appErrorCount=10
+> 09-30 15:19:54.161 I/SDHMS:BarTender:Analyzer:AppError( 4541): detected app error : uid=10396, pkg=com.signaldesk.relay
+  09-30 15:19:54.165 D/ActivityManagerPerformance( 1248): AMP_acquire() HOME
+  09-30 15:19:54.165 W/WindowManager( 1248): Prepare app transition: mNextAppTransitionRequests=[TRANSIT_CLOSE, TRANSIT_CLOSE, TRANSIT_OPEN], mNextAppTransitionFlags=TRANSIT_FLAG_KEYGUARD_GOING_AWAY_TO_LAUNCHER_WITH_IN_WINDOW_ANIMATIONS | TRANSIT_FLAG_APP_CRASHED, displayId: 0 Callers=com.android.server.wm.DisplayContent.prepareAppTransition:6470 com.android.server.wm.DisplayContent.prepareAppTransition:6461 com.android.server.wm.TaskFragment.resumeTopActivity:1583 com.android.server.wm.TaskFragment.resumeTopActivity:1307 com.android.server.wm.Task.resumeTopActivityInnerLocked:6372 
+  09-30 15:19:54.166 V/WindowManager( 1248): Setting visibility of Window{dd791ca u0 com.samsung.android.app.spage}: true, caller=com.android.server.wm.WindowContainer.sendAppVisibilityToClients:1246 com.android.server.wm.WindowState.sendAppVisibilityToClients:4177 com.android.server.wm.WindowContainer.sendAppVisibilityToClients:1246 com.android.server.wm.WindowToken.setClientVisible:431 com.android.server.wm.ActivityRecord.setClientVisible:7682 
+  09-30 15:19:54.166 V/WindowManager( 1248): Setting visibility of Window{40fbcc6 u0 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity}: true, caller=com.android.server.wm.WindowContainer.sendAppVisibilityToClients:1246 com.android.server.wm.WindowToken.setClientVisible:431 com.android.server.wm.ActivityRecord.setClientVisible:7682 com.android.server.wm.ActivityRecord.setVisibility:6082 com.android.server.wm.ActivityRecord.setVisibility:5975 
+  09-30 15:19:54.166 I/ViewRootImpl@4f10b53[]( 5225): handleAppVisibility mAppVisible = false visible = true
+  09-30 15:19:54.166 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): handleAppVisibility mAppVisible = false visible = true
+  09-30 15:19:54.166 D/WindowManagerServiceExt( 1248): notifyOccludeChangeNotice: reset caller=com.android.server.wm.WindowManagerServiceExt.updateOccludeTargetIfNeeded:1402 com.android.server.wm.DisplayContent.ensureActivitiesVisible:7509 com.android.server.wm.RootWindowContainer.ensureActivitiesVisible:2248 com.android.server.wm.RootWindowContainer.ensureVisibilityAndConfig:2126 com.android.server.wm.TaskFragment.resumeTopActivity:1652 
+  09-30 15:19:54.167 V/WindowManager( 1248): rotationForOrientation(orient=SCREEN_ORIENTATION_NOSENSOR (5), last=ROTATION_0 (0)); user=ROTATION_0 (0) USER_ROTATION_LOCKED
+  09-30 15:19:54.167 D/WindowManager( 1248): rotationForOrientation, orientationSource=ActivityRecord{d92f309 u0 com.sec.android.app.launcher/.activities.LauncherActivity} t15784}
+  09-30 15:19:54.167 V/WindowManager( 1248): Computed rotation=ROTATION_0 (0) for display id=0 based on lastOrientation=SCREEN_ORIENTATION_NOSENSOR (5) and oldRotation=ROTATION_0 (0), caller=com.android.server.wm.DisplayRotation.updateOrientation:414 com.android.server.wm.DisplayContent.updateOrientation:1981 com.android.server.wm.DisplayContent.updateOrientation:1882 com.android.server.wm.RootWindowContainer.ensureVisibilityAndConfig:2139 com.android.server.wm.TaskFragment.resumeTopActivity:1652 com.android.server.wm.TaskFragment.resumeTopActivity:1307 
+  09-30 15:19:54.167 V/WindowManager( 1248): updateDisplayAndOrientation: Change 571.5x564.444dpi to 428.625x423.33298dpi, BaseDpi=571.5x564.444, DisplayRatio=0.75x0.75
+  09-30 15:19:54.167 D/TspStateManager( 1248): updateCustomValue customSetting=
+  09-30 15:19:54.168 V/WindowManager( 1248): updateDisplayAndOrientation: Change 571.5x564.444dpi to 428.625x423.33298dpi, BaseDpi=571.5x564.444, DisplayRatio=0.75x0.75
+  09-30 15:19:54.168 D/TspStateManager( 1248): updateCustomValue customSetting=
+  09-30 15:19:54.168 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): stopped(false) old = true
+  09-30 15:19:54.168 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): WindowStopped on com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity set to false
+  09-30 15:19:54.169 W/WindowManager( 1248): Execute app transition: mNextAppTransitionRequests=[TRANSIT_CLOSE, TRANSIT_CLOSE, TRANSIT_OPEN], mNextAppTransitionFlags=TRANSIT_FLAG_KEYGUARD_GOING_AWAY_TO_LAUNCHER_WITH_IN_WINDOW_ANIMATIONS | TRANSIT_FLAG_APP_CRASHED, displayId: 0 Callers=com.android.server.wm.RootWindowContainer.executeAppTransitionForAllDisplay:2580 com.android.server.wm.ActivityTaskSupervisor.reportResumedActivityLocked:2285 com.android.server.wm.ActivityRecord.completeResumeLocked:6977 com.android.server.wm.TaskFragment.resumeTopActivity:1743 com.android.server.wm.TaskFragment.resumeTopActivity:1307 
+  09-30 15:19:54.169 I/Launcher( 2901): !@Boot_DEBUG: Launcher.onStart()
+  09-30 15:19:54.169 I/Launcher( 2901): !@Boot_EBS_D: Launcher.onStart()
+  09-30 15:19:54.169 I/BaseActivity( 2901): addActivityFlags, flags : 1
+  09-30 15:19:54.189 I/SurfaceFlinger( 1126): id=15037 createSurf, flag=24000, Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation#15037
+  09-30 15:19:54.189 I/ActivityManager( 1248): updateOomAdj start time is before than pendingPid added, don't delete it
+  09-30 15:19:54.189 D/WindowManager( 1248): makeSurface duration=1 leash=Surface(name=Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation)/@0x250024e
+  09-30 15:19:54.189 I/WindowManager( 1248): Cancelling animation restarting=true, leash=Surface(name=Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation)/@0xf60aa19
+> 09-30 15:19:54.189 I/DC.AnomalyNotiService( 9343): pkg:com.signaldesk.relay,uid:10396,auto:0,type:1008,reason:4
+  09-30 15:19:54.190 I/WindowManager( 1248): Reparenting to original parent: Surface(name=WindowToken{64d6ddc type=2019 android.os.BinderProxy@d94c4ae})/@0x42ac313, destroy=false, surface=Surface(name=a98fee5 NavigationBar0)/@0x5240e02
+  09-30 15:19:54.190 I/WindowManager( 1248): Reparenting to leash, surface=Surface(name=a98fee5 NavigationBar0)/@0x5240e02, leashParent=Surface(name=WindowToken{64d6ddc type=2019 android.os.BinderProxy@d94c4ae})/@0x42ac313
+  09-30 15:19:54.190 I/SurfaceFlinger( 1126): id=15038 createSurf, flag=24000, Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation#15038
+  09-30 15:19:54.190 D/WindowManager( 1248): makeSurface duration=1 leash=Surface(name=Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation)/@0x96bf47c
+  09-30 15:19:54.191 D/WindowManager( 1248): updateSystemBarAttributes: displayId=0, win=Window{40fbcc6 u0 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity}, navColorWin=null, focusedCanBeNavColorWin=false, behavior=2, appearance=0, statusBarAppearanceRegions=[AppearanceRegion{ bounds=[0,0][1080,2400]}], requestedVisibilities=ITYPE_STATUS_BAR: visible, ITYPE_CLIMATE_BAR: visible, from=com.android.server.wm.DisplayPolicy.focusChangedLw:3245 com.android.server.wm.DisplayContent.updateFocusedWindowLocked:4618 com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:595 
+  09-30 15:19:54.191 D/StatusBarManagerService( 1248): notifyRequestedSystemKey recent=false home=false
+  09-30 15:19:54.191 V/WindowManager( 1248): Relayout hash=40fbcc6, pid=2901, syncId=-1: mAttrs={(0,0)(fillxfill) sim={adjust=nothing forwardNavigation} layoutInDisplayCutoutMode=shortEdges ty=BASE_APPLICATION fmt=TRANSPARENT wanim=0x10302f4
+  09-30 15:19:54.191 V/WindowManager( 1248):   fl=81910100
+  09-30 15:19:54.191 V/WindowManager( 1248):   pfl=1e020040
+  09-30 15:19:54.191 V/WindowManager( 1248):   vsysui=1700
+  09-30 15:19:54.191 V/WindowManager( 1248):   bhv=SHOW_TRANSIENT_BARS_BY_SWIPE
+  09-30 15:19:54.191 V/WindowManager( 1248):   fitSides= naviIconColor=0}
+  09-30 15:19:54.192 I/TouchInteractionService( 2901): onSystemUiStateChanged, stateFlags : 0 |
+  09-30 15:19:54.192 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): updateBlastSurfaceIfNeeded mBlastBufferQueue=null isSameSurfaceControl=false
+  09-30 15:19:54.192 I/BLASTBufferQueue( 2901): new BLASTBufferQueue, mName= ViewRootImpl@c78f1ea[LauncherActivity] mNativeObject= 0xb4000072ba852e30 sc.mNativeObject= 0xb40000724a8f0f40 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2909 android.view.ViewRootImpl.relayoutWindow:9847 android.view.ViewRootImpl.performTraversals:3884 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 android.view.Choreographer.doCallbacks:923 android.view.Choreographer.doFrame:852 android.view.Choreographer$FrameDisplayEventReceiver.run:1283 
+  09-30 15:19:54.192 I/BLASTBufferQueue( 2901): update, w= 1080 h= 2400 mName = ViewRootImpl@c78f1ea[LauncherActivity] mNativeObject= 0xb4000072ba852e30 sc.mNativeObject= 0xb40000724a8f0f40 format= -2 caller= android.graphics.BLASTBufferQueue.<init>:84 android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2909 android.view.ViewRootImpl.relayoutWindow:9847 android.view.ViewRootImpl.performTraversals:3884 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 
+  09-30 15:19:54.192 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): Relayout returned: old=(0,0,1080,2400) new=(0,0,1080,2400) req=(1080,2400)0 dur=6 res=0x3 s={true 0xb40000734a9254f0} ch=true seqId=0
+  09-30 15:19:54.193 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): mThreadedRenderer.initialize() mSurface={isValid=true 0xb40000734a9254f0} hwInitialized=true
+  09-30 15:19:54.193 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): reportNextDraw android.view.ViewRootImpl.performTraversals:4438 android.view.ViewRootImpl.doTraversal:3116 android.view.ViewRootImpl$TraversalRunnable.run:10885 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 
+  09-30 15:19:54.193 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): Setup new sync id=275
+  09-30 15:19:54.197 D/WallpaperService( 2480): dispatchAppVisibility onVisibilityChanged(): true
+  09-30 15:19:54.197 I/LauncherActivityInfo( 2901): Trying to load live icon for com.samsung.android.calendar
+  09-30 15:19:54.197 D/WallpaperService( 2480): updateSurface forceRelayout=true forceReport=false redrawNeeded=false myWidth=1214 myHeight=2400 fixedSize=true x = 0 y = 0 mWidth=1214 mHeight=2400 mIsSleepMode=false
+  09-30 15:19:54.197 D/WallpaperService( 2480): mDeviceHeight : 2400, mDeviceWidth : 1080,mDeviceRotation  : 0
+> 09-30 15:19:54.198 W/WindowManager( 1248): Failed to deliver inset state change to w=Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity EXITING}
+  09-30 15:19:54.198 W/WindowManager( 1248): android.os.DeadObjectException
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at android.os.BinderProxy.transactNative(Native Method)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at android.os.BinderProxy.transact(BinderProxy.java:662)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at android.view.IWindow$Stub$Proxy.insetsControlChanged(IWindow.java:595)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.WindowState.notifyInsetsControlChanged(WindowState.java:4779)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.InsetsStateController.lambda$notifyPendingInsetsControlChanged$5(InsetsStateController.java:402)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.InsetsStateController.$r8$lambda$ni7v3ZO6TRbLZqXOFahDjPeXTS0(InsetsStateController.java:0)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.InsetsStateController$$ExternalSyntheticLambda4.run(R8$$SyntheticClass:2)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.WindowAnimator.executeAfterPrepareSurfacesRunnables(WindowAnimator.java:345)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace(RootWindowContainer.java:1020)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.RootWindowContainer.performSurfacePlacement(RootWindowContainer.java:950)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacementLoop(WindowSurfacePlacer.java:185)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:134)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:123)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at com.android.server.wm.WindowSurfacePlacer$Traverser.run(WindowSurfacePlacer.java:65)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at android.os.Handler.handleCallback(Handler.java:942)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at android.os.Looper.loopOnce(Looper.java:226)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at android.os.Looper.loop(Looper.java:313)
+  09-30 15:19:54.198 W/WindowManager( 1248): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+  09-30 15:19:54.199 D/WindowManager( 1248): Loading animation for app transition. transit=TRANSIT_OLD_CRASHING_ACTIVITY_CLOSE enter=false frame=Rect(0, 0 - 1080, 2178) insets=Rect(0, 0 - 0, 0) surfaceInsets=Rect(0, 0 - 0, 0)
+  09-30 15:19:54.199 D/WindowManager( 1248): Loading animation for app transition. transit=TRANSIT_OLD_CRASHING_ACTIVITY_CLOSE enter=true frame=Rect(0, 0 - 1080, 2400) insets=Rect(0, 78 - 0, 144) surfaceInsets=Rect(0, 0 - 0, 0)
+  09-30 15:19:54.199 I/LiveIconLoader( 2901): [Calendar] LiveIcon - stdIconSize : 144 , targetIconSize : 174
+  09-30 15:19:54.199 I/LiveIconLoader( 2901): [Calendar] LiveIcon - sIconDpi : 640 , targetIconDpi : 480
+> 09-30 15:19:54.199 V/WindowManager( 1248): Setting visibility of Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity EXITING}: false, caller=com.android.server.wm.WindowContainer.sendAppVisibilityToClients:1246 com.android.server.wm.WindowToken.setClientVisible:431 com.android.server.wm.ActivityRecord.setClientVisible:7682 com.android.server.wm.ActivityRecord.onAnimationFinished:8552 com.android.server.wm.ActivityRecord.postApplyAnimation:6243 
+> 09-30 15:19:54.199 W/WindowManager( 1248): Exception thrown during dispatchAppVisibility Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity EXITING}
+  09-30 15:19:54.199 W/WindowManager( 1248): android.os.DeadObjectException
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at android.os.BinderProxy.transactNative(Native Method)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at android.os.BinderProxy.transact(BinderProxy.java:662)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:658)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:4197)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1246)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:431)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.ActivityRecord.setClientVisible(ActivityRecord.java:7682)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.ActivityRecord.onAnimationFinished(ActivityRecord.java:8552)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.ActivityRecord.postApplyAnimation(ActivityRecord.java:6243)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:6215)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:6219)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.AppTransitionController.handleClosingApps(AppTransitionController.java:1279)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.AppTransitionController.handleAppTransitionReady(AppTransitionController.java:304)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.RootWindowContainer.checkAppTransitionReady(RootWindowContainer.java:1182)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace(RootWindowContainer.java:1022)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.RootWindowContainer.performSurfacePlacement(RootWindowContainer.java:950)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacementLoop(WindowSurfacePlacer.java:185)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:134)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:123)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at android.os.Looper.loop(Looper.java:313)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+  09-30 15:19:54.199 W/WindowManager( 1248): 	at com.android.server.ServiceThread.run(ServiceThread.java:44)
+  09-30 15:19:54.199 W/LiveIconLoader( 2901): System font not found, reverting to Roboto.
+> 09-30 15:19:54.199 E/WindowManager( 1248): win=Window{8ed53eb u0 com.signaldesk.relay/com.signaldesk.relay.MainActivity EXITING} destroySurfaces: appStopped=false cleanupOnResume=false win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 caller=com.android.server.wm.ActivityRecord.destroySurfaces:6529 com.android.server.wm.ActivityRecord.destroySurfaces:6510 com.android.server.wm.WindowState.onExitAnimationDone:5965 com.android.server.wm.ActivityRecord$$ExternalSyntheticLambda10.accept:2 java.util.ArrayList.forEach:1621 com.android.server.wm.ActivityRecord.onAnimationFinished:8569 com.android.server.wm.ActivityRecord.postApplyAnimation:6243 
+> 09-30 15:19:54.199 I/WindowManager( 1248): Destroying surface Surface(name=com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360)/@0x16dd5a1 called by com.android.server.wm.WindowStateAnimator.destroySurface:942 com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:536 com.android.server.wm.WindowState.destroySurfaceUnchecked:4303 com.android.server.wm.WindowState.destroySurface:4277 com.android.server.wm.ActivityRecord.destroySurfaces:6529 com.android.server.wm.ActivityRecord.destroySurfaces:6510 com.android.server.wm.WindowState.onExitAnimationDone:5965 com.android.server.wm.ActivityRecord$$ExternalSyntheticLambda10.accept:2 
+  09-30 15:19:54.200 D/RestrictionPolicy( 1248): isScreenCaptureEnabled : ret=true userId=0
+  09-30 15:19:54.200 I/WindowManager( 1248): Cancelling animation restarting=true, leash=Surface(name=Surface(name=9446b67 InputMethod)/@0xeb619bd - animation-leash of insets_animation)/@0xea8d297
+  09-30 15:19:54.200 I/WindowManager( 1248): Reparenting to original parent: Surface(name=WindowToken{ebab5e2 type=2011 android.os.Binder@d69dead})/@0x3f3f82, destroy=false, surface=Surface(name=9446b67 InputMethod)/@0xeb619bd
+  09-30 15:19:54.200 I/WindowManager( 1248): Reparenting to leash, surface=Surface(name=9446b67 InputMethod)/@0xeb619bd, leashParent=Surface(name=WindowToken{ebab5e2 type=2011 android.os.Binder@d69dead})/@0x3f3f82
+  09-30 15:19:54.200 I/SurfaceFlinger( 1126): id=15039 createSurf, flag=24004, Surface(name=9446b67 InputMethod)/@0xeb619bd - animation-leash of insets_animation#15039
+  09-30 15:19:54.200 I/LiveIconLoader( 2901): [Calendar] getLiveIcon - Date: 30
+  09-30 15:19:54.201 D/WindowManager( 1248): makeSurface duration=0 leash=Surface(name=Surface(name=9446b67 InputMethod)/@0xeb619bd - animation-leash of insets_animation)/@0xf22b881
+  09-30 15:19:54.201 I/AppIconSolution( 2901): load= live icon for com.samsung.android.calendar, from overlay = false
+  09-30 15:19:54.201 V/WindowManager( 1248): Nulling last startingData
+  09-30 15:19:54.201 I/LauncherActivityInfo( 2901): packageName: com.samsung.android.calendar, useThemeIcon: false, height: 288, width: 288, density: 640
+  09-30 15:19:54.201 D/Layer   ( 1126): [SEC_SF_EFFECTS] setBlurRegions ## com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity$_2901#15036 radius=150
+  09-30 15:19:54.201 D/SurfaceFlinger( 1126): GPIS:: requestGPIS
+  09-30 15:19:54.201 I/Layer   ( 1126): id=15031 removedFromDrawingState Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation#15031 (173)
+  09-30 15:19:54.201 I/SurfaceFlinger( 1126): [40fbcc6 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity#114] FrameRatePriority: 1
+  09-30 15:19:54.201 I/Layer   ( 1126): id=15032 removedFromDrawingState Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation#15032 (173)
+> 09-30 15:19:54.201 I/Layer   ( 1126): id=15030 removedFromDrawingState com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360#15030 (173)
+  09-30 15:19:54.201 I/SurfaceFlinger( 1126): id=15031 Removed Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation#15031 (173)
+  09-30 15:19:54.201 I/SurfaceFlinger( 1126): id=15032 Removed Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation#15032 (173)
+  09-30 15:19:54.202 I/Layer   ( 1126): id=15031 Destroyed Surface(name=7d5cb17 StatusBar)/@0xc33677 - animation-leash of insets_animation#15031
+  09-30 15:19:54.202 I/Layer   ( 1126): id=15032 Destroyed Surface(name=a98fee5 NavigationBar0)/@0x5240e02 - animation-leash of insets_animation#15032
+  09-30 15:19:54.202 D/InputDispatcher( 1248): Focus request (0): 40fbcc6 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity but waiting because NO_WINDOW
+  09-30 15:19:54.203 D/ActivityTaskManager( 1248): mStartingWindow and mStartingData is null for token=ActivityRecord{d92f309 u0 com.sec.android.app.launcher/.activities.LauncherActivity} t15784}
+  09-30 15:19:54.203 V/WindowManager( 1248): performShowLocked: mDrawState=HAS_DRAWN in Window{40fbcc6 u0 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity}
+  09-30 15:19:54.204 W/Launcher( 2901): onEnterAnimationComplete
+  09-30 15:19:54.204 D/SurfaceFlinger( 1126): Display 4630947232161729153 HWC layers:
+  09-30 15:19:54.204 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3c7490 | 0100 | RGBx_8888    |   67.0    0.0 1147.0 2400.0 |    0    0 1080 2400 | Wallpaper BBQ wrapper#78
+  09-30 15:19:54.204 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3f0e00 | 0100 | RGBA_8888    |    0.0    0.0 1080.0   78.0 |    0    0 1080   78 | StatusBar$_2480#84
+  09-30 15:19:54.204 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3caa90 | 0100 | RGBA_8888    |    0.0    0.0   67.0  342.0 | 1013  824 1080 1166 | com.samsung.android.app.cocktailbars[...]rvice.CocktailBarService$_4801#14995
+  09-30 15:19:54.204 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3f89c0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0  144.0 |    0 2256 1080 2400 | NavigationBar0$_2480#79
+  09-30 15:19:54.204 D/SurfaceFlinger( 1126): 
+  09-30 15:19:54.205 W/Launcher( 2901): onEnterAnimationComplete
+  09-30 15:19:54.205 I/LauncherActivityInfo( 2901): Trying to load live icon for com.sec.android.app.clockpackage
+  09-30 15:19:54.206 I/LiveIconUtil( 2901): getLiveIcon was called in ClockPackage
+  09-30 15:19:54.207 D/Bubbles ( 2480): onLocusVisibilityChanged: LocusId[17_chars] visible=true
+  09-30 15:19:54.207 V/WindowManager( 1248): Relayout Window{8e1252d u0 com.android.systemui.ImageWallpaper}: viewVisibility=0 req=1214x2400 d0
+  09-30 15:19:54.207 I/LiveIconUtil( 2901): getLiveIcon res = com.sec.android.app.clockpackage
+  09-30 15:19:54.208 V/WindowManager( 1248):   bhv=DEFAULT naviIconColor=0}
+  09-30 15:19:54.208 I/SurfaceFlinger( 1126): id=15019 Removed Surface(name=9446b67 InputMethod)/@0xeb619bd - animation-leash of insets_animation#15019 (171)
+  09-30 15:19:54.209 I/BLASTBufferQueue( 2480): update, w= 1214 h= 2400 mName = Wallpaper mNativeObject= 0xb4000072ba835010 sc.mNativeObject= 0xb40000724a8ac810 format= 2 caller= android.service.wallpaper.WallpaperService$Engine.getOrCreateBLASTSurface:2575 android.service.wallpaper.WallpaperService$Engine.updateSurface:1527 android.service.wallpaper.WallpaperService$Engine.reportVisibility:1902 android.service.wallpaper.WallpaperService$Engine.doVisibilityChanged:1872 android.service.wallpaper.WallpaperService$IWallpaperEngineWrapper.executeMessage:2842 com.android.internal.os.HandlerCaller$MyHandler.handleMessage:44 
+  09-30 15:19:54.209 D/WallpaperService( 2480): reportVisibility onVisibilityChanged visible: true
+> 09-30 15:19:54.209 I/SurfaceFlinger( 1126): id=15028 Removed 10e4370 ActivityRecordInputSink com.signaldesk.relay/.MainActivity#15028 (171)
+  09-30 15:19:54.209 I/SurfaceFlinger( 1126): id=15040 createSurf, flag=24004, Task=15919#15040
+  09-30 15:19:54.210 I/ImageWallpaper[GLEngine]( 2480):  onVisibilityChanged true , 0
+  09-30 15:19:54.210 D/WALLPAPER_SVC:WallpaperManagerService( 1248): getWallpaperSafeLocked, userId = 0, which = 1, caller = com.android.server.wallpaper.WallpaperManagerService.semGetWallpaperType:6804 
+  09-30 15:19:54.210 D/WallpaperManagerService( 1248): which : 1, return type : 0 (called by userId= 0)
+  09-30 15:19:54.210 I/ImageWallpaperRenderer( 2480): updateWallpaperOffset 0 lastCropOffset 0 , wp Type 0 , rotation 0 , allowed true Do not change Display offset 0
+  09-30 15:19:54.210 I/ActivityManager( 1248): updateOomAdj start time is before than pendingPid added, don't delete it
+  09-30 15:19:54.212 D/ActivityTaskManager( 1248): mStartingWindow and mStartingData is null for token=ActivityRecord{d92f309 u0 com.sec.android.app.launcher/.activities.LauncherActivity} t15784}
+> 09-30 15:19:54.218 I/Layer   ( 1126): Layer [com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360#15030] hidden!! flag(1)
+> 09-30 15:19:54.218 I/Layer   ( 1126): id=15029 removedFromDrawingState 8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity#15029 (172)
+  09-30 15:19:54.218 I/Layer   ( 1126): id=15034 removedFromDrawingState Surface(name=9446b67 InputMethod)/@0xeb619bd - animation-leash of insets_animation#15034 (172)
+  09-30 15:19:54.218 I/Layer   ( 1126): Layer [com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity$_2901#15036] hidden!! flag(0)
+> 09-30 15:19:54.218 I/Layer   ( 1126): id=15023 removedFromDrawingState ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}#15023 (172)
+> 09-30 15:19:54.218 I/Layer   ( 1126): id=15028 removedFromDrawingState 10e4370 ActivityRecordInputSink com.signaldesk.relay/.MainActivity#15028 (172)
+  09-30 15:19:54.218 I/Layer   ( 1126): id=15022 removedFromDrawingState Task=15919#15022 (172)
+  09-30 15:19:54.218 I/Layer   ( 1126): id=15040 removedFromDrawingState Task=15919#15040 (172)
+  09-30 15:19:54.218 I/SurfaceFlinger( 1126): id=15040 Removed Task=15919#15040 (172)
+> 09-30 15:19:54.218 I/SurfaceFlinger( 1126): id=15030 Removed com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360#15030 (172)
+> 09-30 15:19:54.218 I/SurfaceFlinger( 1126): id=15029 Removed 8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity#15029 (172)
+  09-30 15:19:54.218 I/SurfaceFlinger( 1126): id=15034 Removed Surface(name=9446b67 InputMethod)/@0xeb619bd - animation-leash of insets_animation#15034 (172)
+> 09-30 15:19:54.218 I/SurfaceFlinger( 1126): id=15023 Removed ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}#15023 (172)
+  09-30 15:19:54.218 E/ClientCache( 1126): failed to get buffer, invalid process token
+  09-30 15:19:54.218 E/BpTransactionCompletedListener( 1126): Failed to transact (-32)
+  09-30 15:19:54.218 I/BadgeRenderer( 2901): Invalid count : 0
+> 09-30 15:19:54.218 I/Layer   ( 1126): id=15030 Destroyed com.signaldesk.relay/com.signaldesk.relay.MainActivity$_10360#15030
+  09-30 15:19:54.219 I/Layer   ( 1126): id=15040 Destroyed Task=15919#15040
+  09-30 15:19:54.219 I/Layer   ( 1126): id=15019 Destroyed Surface(name=9446b67 InputMethod)/@0xeb619bd - animation-leash of insets_animation#15019
+  09-30 15:19:54.219 I/Layer   ( 1126): id=15034 Destroyed Surface(name=9446b67 InputMethod)/@0xeb619bd - animation-leash of insets_animation#15034
+> 09-30 15:19:54.219 I/Layer   ( 1126): id=15029 Destroyed 8ed53eb com.signaldesk.relay/com.signaldesk.relay.MainActivity#15029
+> 09-30 15:19:54.219 I/Layer   ( 1126): id=15023 Destroyed ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t15919}#15023
+> 09-30 15:19:54.219 I/Layer   ( 1126): id=15028 Destroyed 10e4370 ActivityRecordInputSink com.signaldesk.relay/.MainActivity#15028
+  09-30 15:19:54.222 I/RecentsView( 2901): onTaskRemoved() taskId : 15919
+  09-30 15:19:54.222 I/TopTaskTracker( 2901): onTaskRemoved : taskId = 15919
+  09-30 15:19:54.222 I/RecentsView( 2901): onTaskRemoved() taskId : 15919
+  09-30 15:19:54.222 I/TopTaskTracker( 2901): onTaskRemoved : taskId = 15919
+  09-30 15:19:54.222 D/SurfaceFlinger( 1126): Display 4630947232161729153 HWC layers:
+  09-30 15:19:54.222 D/SurfaceFlinger( 1126):      CLIENT | 0xb400007acd3c7490 | 0100 | RGBx_8888    |   67.0    0.0 1147.0 2400.0 |    0    0 1080 2400 | Wallpaper BBQ wrapper#78
+  09-30 15:19:54.222 D/SurfaceFlinger( 1126):      CLIENT | 0xb400007acd3dc3d0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0 2400.0 |    0    0 1080 2400 | com.sec.android.app.launcher/com.sec[...]erActivity$_2901#15036 (blurRegions)
+  09-30 15:19:54.222 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3f0e00 | 0100 | RGBA_8888    |    0.0    0.0 1080.0   78.0 |    0    0 1080   78 | StatusBar$_2480#84
+  09-30 15:19:54.222 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3caa90 | 0100 | RGBA_8888    |    0.0    0.0   67.0  342.0 | 1013  824 1080 1166 | com.samsung.android.app.cocktailbars[...]rvice.CocktailBarService$_4801#14995
+  09-30 15:19:54.222 D/SurfaceFlinger( 1126):      DEVICE | 0xb400007acd3f89c0 | 0100 | RGBA_8888    |    0.0    0.0 1080.0  144.0 |    0 2256 1080 2400 | NavigationBar0$_2480#79
+  09-30 15:19:54.222 D/SurfaceFlinger( 1126): 
+  09-30 15:19:54.223 D/InputDispatcher( 1248): Focus entered window (0): 40fbcc6 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity
+  09-30 15:19:54.223 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): MSG_WINDOW_FOCUS_CHANGED 1 0
+  09-30 15:19:54.224 I/ViewRootImpl@c78f1ea[LauncherActivity]( 2901): mThreadedRenderer.initializeIfNeeded()#2 mSurface={isValid=true 0xb40000734a9254f0}
+  09-30 15:19:54.224 I/BaseActivity( 2901): addActivityFlags, flags : 8
+  09-30 15:19:54.225 I/InputMethodManager( 2901): startInputInner - mService.startInputOrWindowGainedFocus
+  09-30 15:19:54.225 V/InputMethodManagerService( 1248): Unspecified window will hide input
+  09-30 15:19:54.225 V/InputMethodManagerService( 1248): hideCurrentInputLocked : canceled, shouldHideSoftInput=false, mInputShown=false, mImeWindowVis=0
+  09-30 15:19:54.225 I/InputMethodBindingController( 1248): setCurrentMethodNotVisible: mVisibleBound=false, mHasConnection=true, caller = com.android.server.inputmethod.InputMethodManagerService.hideCurrentInputLocked:4339 com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocusInternalLocked:4645 com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocusInternal:4423 com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocus:4362 com.android.internal.view.IInputMethodManager$Stub.onTransact:518 com.android.server.inputmethod.InputMethodManagerService.onTransact:2285 android.os.Binder.execTransactInternal:1316 android.os.Binder.execTransact:1280 <bottom of call stack> <bottom of call stack> 
+  09-30 15:19:54.225 D/InputMethodManagerService( 1248): DESKTOP MODE! : 2
+  09-30 15:19:54.362 I/SmApplication(10412): onCreate s
+  09-30 15:19:54.362 I/SmApplication(10412): current process is com.samsung.android.sm.provider
+  09-30 15:19:54.362 I/SmApplication(10412): onCreate e
+  09-30 15:19:54.365 V/MdnieScenarioControlService( 1248): mAclOffEnabled : false mAclPreviewState : false mAclCompensationState : false
+> 09-30 15:19:54.368 I/NotifiedWithin1DayAnomalyFilter( 9343): Notifiable entity : com.signaldesk.relay / uid : 10396
+> 09-30 15:19:54.368 I/NotifiedWithin1DayAnomalyFilter( 9343): handleAnomaly : Add to notification :  manually p=com.signaldesk.relay uid=10396
+  09-30 15:19:54.369 W/ContextImpl( 9343): Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1252 android.content.ContextWrapper.sendBroadcast:509 com.samsung.android.sm.anomaly.service.AnomalyNotificationService.onHandleIntent:603 android.app.IntentService$ServiceHandler.handleMessage:78 android.os.Handler.dispatchMessage:106 
+  09-30 15:19:54.377 W/libc    (10412): Access denied finding property "sys.perf.boostopt"
+  09-30 15:19:54.379 W/System  ( 1248): A resource failed to call HardwareBuffer.close. 
+  09-30 15:19:54.380 W/System  ( 1248): A resource failed to call release. 
+  09-30 15:19:54.388 D/ApplicationPolicy( 1248): isStatusBarNotificationAllowedAsUser: packageName = com.samsung.android.lool,userId = 0
+  09-30 15:19:54.388 D/ApplicationPolicy( 1248): isStatusBarNotificationAllowedAsUser: packageName = com.samsung.android.lool,userId = 0
+  09-30 15:19:54.467 I/HqmInfo::HqmManagerService( 1248): MSG_TYPE:MSG_TYPE_PROCESS_LOG_BY_HQM
+  09-30 15:19:54.468 D/CompatibilityChangeReporter( 1248): Compat change id reported: 168419799; UID 1000; state: DISABLED
+  09-30 15:19:54.483 I/HYPER-HAL( 1018): [ResourceManager.cpp]removeResource(): [CPUMaxFreq] RemoveResource Request ID : 10367193
+  09-30 15:19:54.483 I/HYPER-HAL( 1018): [RequestManager.cpp]releaseLocked(): Released ID : 10367193
+  09-30 15:19:54.511 D/AF::TrackHandle( 1104): OpPlayAudio: track:56 usage:2 not muted
+  09-30 15:19:54.512 D/AF::TrackHandle( 1104): OpPlayAudio: track:56 usage:2 not muted
+  09-30 15:19:54.512 D/AF::TrackHandle( 1104): OpPlayAudio: track:56 usage:2 not muted
+  09-30 15:19:54.512 D/AF::TrackHandle( 1104): OpPlayAudio: track:56 usage:2 not muted
+  09-30 15:19:54.513 D/AF::TrackHandle( 1104): OpPlayAudio: track:56 usage:2 not muted
+  09-30 15:19:54.530 I/SdhmsIntegrationWorker( 9343): integrate: 1
+  09-30 15:19:54.534 I/WM-WorkerWrapper( 9343): Worker result SUCCESS for Work [ id=dfe7d71a-fce7-4b95-b8ad-afd32ccf3376, tags={ com.samsung.android.sm.history.SdhmsIntegrationWorker } ]
+  09-30 15:19:54.551 D/SemWifiUsabilityStatsMonitor( 1248): onWifiUsabilityStats - seqNum 4282, isSameBssidAndFreq true
+  09-30 15:19:54.551 I/SemWifiLinkQualityMonitor( 1248): Link Qos Query: 0.013 ms / 604.821 Mbps (650 / 0.001 / 1.000)
+  09-30 15:19:54.581 I/Pageboost( 1248): Launcher Page Up
+  09-30 15:19:54.597 D/BubblesManager( 2480): onEntryAdded : bubbleEntryAdded=false
+  09-30 15:19:54.597 D/InterruptionStateProvider( 2480):  no Heads up : edgelighting enabled app. 0|com.samsung.android.lool|2000|null|1000
+  09-30 15:19:54.600 I/FASProvider( 4541): makeValuesForFasUpdate contentValues = package_name=com.microsoft.skydrive extras=0 reason=deleted_from_mars_auto disableReason=default uid=10093 mode=0 level=1 resetTime=0
+  09-30 15:19:54.600 I/sensors-hal( 1015): activate:297, android.sensor.accelerometer/11 en=1 completed
+> 09-30 15:19:54.600 W/ActivityTaskManager( 1248): Activity top resumed state loss timeout for ActivityRecord{43f06e9 u0 com.signaldesk.relay/.MainActivity} t-1 f}}
+  09-30 15:19:54.600 D/ActivityTaskManager( 1248): scheduleTopResumedActivityChanged, onTop=true r=ActivityRecord{d92f309 u0 com.sec.android.app.launcher/.activities.LauncherActivity} t15784} caller=com.android.server.wm.ActivityTaskSupervisor.scheduleTopResumedActivityStateIfNeeded:2533 com.android.server.wm.ActivityTaskSupervisor.handleTopResumedStateReleased:2562 com.android.server.wm.ActivityTaskSupervisor$ActivityTaskSupervisorHandler.handleMessageInner:2988 com.android.server.wm.ActivityTaskSupervisor$ActivityTaskSupervisorHandler.handleMessage:2886 android.os.Handler.dispatchMessage:106 android.os.Looper.loopOnce:226 
+  09-30 15:19:54.600 V/MediaPlayer-JNI( 2480): setDataSourceFD: fd 289
+  09-30 15:19:54.600 V/MediaPlayerNative( 2480): setDataSource(289, 0, 576460752303423487)
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): Create new client(260) from AttributionSourceState{pid: 2480, uid: 10041, packageName: com.android.systemui, attributionTag: (null), token: {no toString() implemented}, renouncedPermissions: [], next: []}, 
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): setDataSource fd=11, offset=0, length=576460752303423487
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): st_dev  = 66347
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): st_mode = 33216
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): st_uid  = 1000
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): st_gid  = 1000
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): st_size = 14066
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): calculated length = 14066
+  09-30 15:19:54.601 V/MediaPlayerService( 1309): player type = 4
+  09-30 15:19:54.601 D/NuPlayerDriver( 1309): NuPlayerDriver(0xf25c7c90) created, clientPid(2480)
+  09-30 15:19:54.602 I/sensors-hal( 1015): set_config:67, sample_period_ns is adjusted to 20000000 based on min/max delay_ns
+  09-30 15:19:54.602 I/sensors-hal( 1015): batch:363, android.sensor.gyroscope/41, period=20000000, max_latency=0 request completed
+  09-30 15:19:54.602 I/sensors-hal( 1015): activate:279, android.sensor.gyroscope/41 en=1
+  09-30 15:19:54.603 I/sensors-hal( 1015): get_qmi_debug_flag:241, support_qmi_debug : false
+  09-30 15:19:54.604 I/sensors-hal( 1015): handle_indication_realtime:466,  SCHED_FIFO(10) for qmi_cbk
+  09-30 15:19:54.605 V/AudioSink( 1309): AudioOutput(9785)
+  09-30 15:19:54.605 V/NuPlayerDriver( 1309): setDataSource(0xf25c7c90) file(11)

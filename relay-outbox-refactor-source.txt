@@ -1,0 +1,888 @@
+============================================================
+FILE: .\app\src\main\java\com\signaldesk\relay\ui\incidents\IncidentDetailViewModel.kt
+============================================================
+package com.signaldesk.relay.ui.incidents
+import com.signaldesk.relay.data.local.RoomPendingSeverityCommandStore
+import com.signaldesk.relay.data.local.PendingSeverityCommand
+import java.util.UUID
+import com.signaldesk.relay.data.realtime.IncidentCommandResult
+import kotlinx.coroutines.delay
+
+
+import com.signaldesk.relay.data.realtime.WebSocketIncidentCommandSender
+import com.signaldesk.relay.data.session.SessionManager
+import com.signaldesk.relay.data.session.SessionState
+import com.signaldesk.relay.model.IncidentSeverity
+import kotlinx.coroutines.flow.MutableStateFlow
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
+import com.signaldesk.relay.data.local.RelayDatabase
+import com.signaldesk.relay.data.repository.IncidentRepository
+import com.signaldesk.relay.data.realtime.WebSocketTimelineSender
+import com.signaldesk.relay.model.Incident
+import com.signaldesk.relay.model.TimelineEntry
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+
+class IncidentDetailViewModel(
+    application: Application,
+    savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
+
+    private val pendingSeverityStore by lazy {
+        RoomPendingSeverityCommandStore(
+            database
+                .pendingSeverityCommandDao()
+        )
+    }
+    private val severitySender =
+        WebSocketIncidentCommandSender(
+            url =
+                "ws://127.0.0.1:9000",
+            tokenProvider = {
+
+                when (
+                    val session =
+                        SessionManager
+                            .sessionState
+                            .value
+                ) {
+
+                    SessionState.SignedOut ->
+                        null
+
+                    is SessionState.SignedIn ->
+                        session.accessToken
+                }
+            }
+        )
+
+    val severityUpdateInProgress =
+        MutableStateFlow(false)
+
+    val severityUpdateError =
+        MutableStateFlow<String?>(null)
+
+    val optimisticSeverity =
+        MutableStateFlow<IncidentSeverity?>(null)
+
+
+    private val incidentId: String =
+        checkNotNull(
+            savedStateHandle["incidentId"]
+        )
+
+    private val database =
+        RelayDatabase.getInstance(application)
+
+    private val repository =
+        IncidentRepository(
+            incidentDao =
+                database.incidentDao(),
+            timelineEntryDao =
+                database.timelineEntryDao()
+        )
+
+    private val timelineSender =
+        WebSocketTimelineSender(
+            url = "ws://127.0.0.1:9000"
+        )
+
+    val incident: StateFlow<Incident?> =
+        repository
+            .observeIncident(incidentId)
+            .stateIn(
+                scope = viewModelScope,
+                started =
+                    SharingStarted
+                        .WhileSubscribed(5_000),
+                initialValue = null
+            )
+
+    val timeline: StateFlow<List<TimelineEntry>> =
+        repository
+            .observeTimeline(incidentId)
+            .stateIn(
+                scope = viewModelScope,
+                started =
+                    SharingStarted
+                        .WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+
+    fun postUpdate(
+        message: String
+    ) {
+        if (message.isBlank()) {
+            return
+        }
+
+        viewModelScope.launch {
+            val pending =
+                repository
+                    .createPendingTimelineEntry(
+                        incidentId =
+                            incidentId,
+                        message =
+                            message,
+                        author = "You"
+                    )
+
+            sendPendingEntry(
+                pending
+            )
+        }
+    }
+
+    fun retry(
+        entry: TimelineEntry
+    ) {
+        viewModelScope.launch {
+            repository
+                .markTimelineEntryPending(
+                    entry.id
+                )
+
+            sendPendingEntry(
+                entry
+            )
+        }
+    }
+
+    private suspend fun sendPendingEntry(
+        entry: TimelineEntry
+    ) {
+        try {
+            val acknowledgement =
+                withTimeout(10_000) {
+                    timelineSender.send(
+                        entry
+                    )
+                }
+
+            repository
+                .confirmTimelineEntry(
+                    acknowledgement
+                )
+        } catch (error: Throwable) {
+            repository
+                .markTimelineEntryFailed(
+                    entry.id
+                )
+        }
+    }
+
+    // PERSISTENT_SEVERITY_OUTBOX
+
+    init {
+
+        viewModelScope.launch {
+
+            pendingSeverityStore
+                .loadForIncident(
+                    incidentId
+                )
+                ?.let { pending ->
+
+                    severityUpdateInProgress.value =
+                        true
+
+                    severityUpdateError.value =
+                        "Pending severity update restored."
+
+                    deliverPendingSeverity(
+                        pending
+                    )
+                }
+        }
+    }
+    fun updateSeverity(
+        targetIncidentId: String,
+        severity: IncidentSeverity
+    ) {
+
+        if (
+            severityUpdateInProgress.value
+        ) {
+            return
+        }
+
+        val displayedIncident =
+            incident.value
+                ?: return
+
+        if (
+            displayedIncident.id !=
+            targetIncidentId
+        ) {
+            return
+        }
+
+        if (
+            displayedIncident.severity ==
+            severity
+        ) {
+            return
+        }
+
+        val pending =
+            PendingSeverityCommand(
+                commandId =
+                    UUID
+                        .randomUUID()
+                        .toString(),
+
+                incidentId =
+                    targetIncidentId,
+
+                severity =
+                    severity.name,
+
+                baseSeverity =
+                    displayedIncident
+                        .severity
+                        .name
+            )
+
+        /*
+         * Persistence happens BEFORE the first network send.
+         *
+         * Process death after this line cannot lose the
+         * operator's intent.
+         */
+        optimisticSeverity.value =
+            severity
+
+        severityUpdateInProgress.value =
+            true
+
+        severityUpdateError.value =
+            "Severity queued for sync."
+
+        viewModelScope.launch {
+
+            /*
+             * Room commit happens before any network send.
+             */
+            pendingSeverityStore.save(
+                pending
+            )
+
+            deliverPendingSeverity(
+                pending
+            )
+        }
+    }
+
+    private suspend fun deliverPendingSeverity(
+        pending: PendingSeverityCommand
+    ) {
+
+        val requestedSeverity =
+            IncidentSeverity
+                .fromStoredValue(
+                    pending.severity
+                )
+
+        val baseSeverity =
+            IncidentSeverity
+                .fromStoredValue(
+                    pending.baseSeverity
+                )
+
+        while (true) {
+
+            /*
+             * If this detail screen currently represents
+             * the pending incident, restore optimistic UI.
+             */
+            val beforeSend =
+                incident.value
+
+            if (
+                beforeSend?.id ==
+                pending.incidentId
+            ) {
+
+                if (
+                    beforeSend.severity ==
+                    requestedSeverity
+                ) {
+
+                    pendingSeverityStore
+                        .clearIf(
+                            pending.commandId
+                        )
+
+                    optimisticSeverity.value =
+                        null
+
+                    severityUpdateInProgress.value =
+                        false
+
+                    severityUpdateError.value =
+                        null
+
+                    return
+                }
+
+                if (
+                    beforeSend.severity !=
+                    baseSeverity &&
+                    beforeSend.severity !=
+                    requestedSeverity
+                ) {
+
+                    pendingSeverityStore
+                        .clearIf(
+                            pending.commandId
+                        )
+
+                    optimisticSeverity.value =
+                        null
+
+                    severityUpdateInProgress.value =
+                        false
+
+                    severityUpdateError.value =
+                        "Severity was superseded by a newer update: ${beforeSend.severity.name}."
+
+                    return
+                }
+
+                optimisticSeverity.value =
+                    requestedSeverity
+            }
+
+            /*
+             * EVERY retry reuses pending.commandId.
+             */
+            val result =
+                runCatching {
+
+                    severitySender
+                        .updateSeverity(
+                            incidentId =
+                                pending.incidentId,
+
+                            severity =
+                                requestedSeverity,
+
+                            commandId =
+                                pending.commandId
+                        )
+                }
+                    .getOrElse {
+
+                        IncidentCommandResult
+                            .TRANSPORT_FAILURE
+                    }
+
+            if (
+                result ==
+                IncidentCommandResult.REJECTED
+            ) {
+
+                pendingSeverityStore
+                    .clearIf(
+                        pending.commandId
+                    )
+
+                optimisticSeverity.value =
+                    null
+
+                severityUpdateInProgress.value =
+                    false
+
+                severityUpdateError.value =
+                    "Severity update rejected by server."
+
+                return
+            }
+
+            if (
+                result ==
+                IncidentCommandResult
+                    .TRANSPORT_FAILURE
+            ) {
+
+                /*
+                 * The server may have committed the command
+                 * before the transport failed.
+                 *
+                 * Never create a new commandId here.
+                 */
+                val current =
+                    incident.value
+
+                if (
+                    current?.id ==
+                        pending.incidentId &&
+                    current.severity ==
+                        requestedSeverity
+                ) {
+
+                    pendingSeverityStore
+                        .clearIf(
+                            pending.commandId
+                        )
+
+                    optimisticSeverity.value =
+                        null
+
+                    severityUpdateInProgress.value =
+                        false
+
+                    severityUpdateError.value =
+                        null
+
+                    return
+                }
+
+                severityUpdateError.value =
+                    "Offline. Severity queued; retrying automatically."
+
+                delay(
+                    2000L
+                )
+
+                continue
+            }
+
+            /*
+             * command.accepted is not enough to clear the
+             * outbox. Room/realtime remains authoritative.
+             */
+            severityUpdateError.value =
+                "Command accepted. Waiting for authoritative update."
+
+            repeat(30) {
+
+                val current =
+                    incident.value
+
+                if (
+                    current?.id ==
+                    pending.incidentId
+                ) {
+
+                    if (
+                        current.severity ==
+                        requestedSeverity
+                    ) {
+
+                        pendingSeverityStore
+                            .clearIf(
+                                pending.commandId
+                            )
+
+                        optimisticSeverity.value =
+                            null
+
+                        severityUpdateInProgress.value =
+                            false
+
+                        severityUpdateError.value =
+                            null
+
+                        return
+                    }
+
+                    if (
+                        current.severity !=
+                        baseSeverity &&
+                        current.severity !=
+                        requestedSeverity
+                    ) {
+
+                        pendingSeverityStore
+                            .clearIf(
+                                pending.commandId
+                            )
+
+                        optimisticSeverity.value =
+                            null
+
+                        severityUpdateInProgress.value =
+                            false
+
+                        severityUpdateError.value =
+                            "Severity was superseded by a newer update: ${current.severity.name}."
+
+                        return
+                    }
+                }
+
+                delay(
+                    100L
+                )
+            }
+
+            /*
+             * Accepted ACK may have arrived while the
+             * authoritative event was lost.
+             *
+             * Retry SAME commandId.
+             */
+            severityUpdateError.value =
+                "Confirmation delayed. Retrying the same command."
+
+            delay(
+                1000L
+            )
+        }
+    }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+============================================================
+FILE: .\app\src\main\java\com\signaldesk\relay\ui\incidents\IncidentsViewModel.kt
+============================================================
+package com.signaldesk.relay.ui.incidents
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.signaldesk.relay.appstate.AppVisibilityTracker
+import com.signaldesk.relay.data.local.RelayDatabase
+import com.signaldesk.relay.data.realtime.IncidentEventProcessor
+import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
+import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
+import com.signaldesk.relay.data.repository.IncidentRepository
+import com.signaldesk.relay.data.session.SessionManager
+import com.signaldesk.relay.data.session.SessionState
+import com.signaldesk.relay.model.Incident
+import com.signaldesk.relay.notifications.IncidentNotificationManager
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class IncidentsViewModel(
+    application: Application
+) : AndroidViewModel(application) {
+
+    init {
+        AppVisibilityTracker.initialize(
+            application
+        )
+
+        SessionManager.initialize(
+            application
+        )
+    }
+
+    private val database =
+        RelayDatabase.getInstance(
+            application
+        )
+
+    private val repository =
+        IncidentRepository(
+            incidentDao =
+                database.incidentDao(),
+            timelineEntryDao =
+                database.timelineEntryDao()
+        )
+
+    private val notificationManager =
+        IncidentNotificationManager(
+            application
+        )
+
+    val incidents:
+        StateFlow<List<Incident>> =
+        combine(
+            repository.observeIncidents(),
+            database
+                .timelineEntryDao()
+                .observeLatestForAllIncidents()
+        ) { incidents, latestEntries ->
+
+            val latestByIncident =
+                latestEntries.associateBy {
+                    it.incidentId
+                }
+
+            incidents.map { incident ->
+
+                val latest =
+                    latestByIncident[
+                        incident.id
+                    ]
+
+                incident.copy(
+                    latestMessage =
+                        latest?.message,
+                    latestAuthor =
+                        latest?.author,
+                    latestUpdateAt =
+                        latest?.occurredAt
+                )
+            }
+        }
+            .stateIn(
+                scope =
+                    viewModelScope,
+                started =
+                    SharingStarted
+                        .WhileSubscribed(
+                            5_000
+                        ),
+                initialValue =
+                    emptyList()
+            )
+
+    val sessionState =
+        SessionManager.sessionState
+
+    private val realtimeSource =
+        WebSocketRealtimeIncidentSource(
+            url =
+                "ws://127.0.0.1:9000",
+            tokenProvider = {
+
+                when (
+                    val state =
+                        SessionManager
+                            .sessionState
+                            .value
+                ) {
+
+                    SessionState.SignedOut ->
+                        null
+
+                    is SessionState.SignedIn ->
+                        state.accessToken
+                }
+            },
+            onSessionInvalidated = {
+                SessionManager.signOut()
+            }
+        )
+
+    private val realtimeCoordinator =
+        RealtimeIncidentCoordinator(
+            source =
+                realtimeSource,
+            processor =
+                IncidentEventProcessor(
+                    database
+                ),
+            gapDao =
+                database
+                    .incidentSequenceGapDao(),
+            onAppliedEvent = { event ->
+
+                notificationManager
+                    .notifyAppliedEvent(
+                        event
+                    )
+            }
+        )
+
+    val connectionState =
+        realtimeCoordinator
+            .connectionState
+
+    init {
+        viewModelScope.launch {
+            repository.seedIfEmpty()
+        }
+
+        viewModelScope.launch {
+
+            sessionState
+                .collectLatest { state ->
+
+                    when (state) {
+
+                        SessionState.SignedOut -> {
+                            realtimeCoordinator
+                                .stop()
+                        }
+
+                        is SessionState.SignedIn -> {
+                            realtimeCoordinator
+                                .start(
+                                    viewModelScope
+                                )
+                        }
+                    }
+                }
+        }
+    }
+
+    fun signIn() {
+        SessionManager.signIn(
+            userName =
+                "Relay Operator"
+        )
+    }
+
+    fun signOut() {
+        SessionManager.signOut()
+    }
+
+    override fun onCleared() {
+        realtimeCoordinator.stop()
+        super.onCleared()
+    }
+}
+
+============================================================
+FILE: .\app\src\main\java\com\signaldesk\relay\data\local\PendingSeverityCommand.kt
+============================================================
+package com.signaldesk.relay.data.local
+
+import androidx.room.Dao
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+
+@Entity(
+    tableName =
+        "pending_severity_commands"
+)
+data class PendingSeverityCommand(
+    @androidx.room.PrimaryKey
+    val commandId: String,
+
+    val incidentId: String,
+
+    val severity: String,
+
+    val baseSeverity: String,
+
+    val createdAt: Long =
+        System.currentTimeMillis(),
+
+    val deliveryState: String =
+        "PENDING"
+)
+
+@Dao
+interface PendingSeverityCommandDao {
+
+    @Insert(
+        onConflict =
+            OnConflictStrategy.REPLACE
+    )
+    suspend fun upsert(
+        command:
+            PendingSeverityCommand
+    )
+
+    @Query(
+        """
+        SELECT *
+        FROM pending_severity_commands
+        ORDER BY createdAt ASC
+        LIMIT 1
+        """
+    )
+    suspend fun getOldest():
+        PendingSeverityCommand?
+
+    @Query(
+        """
+        SELECT *
+        FROM pending_severity_commands
+        WHERE incidentId = :incidentId
+        ORDER BY createdAt ASC
+        LIMIT 1
+        """
+    )
+    suspend fun getOldestForIncident(
+        incidentId: String
+    ):
+        PendingSeverityCommand?
+
+    @Query(
+        """
+        SELECT *
+        FROM pending_severity_commands
+        ORDER BY createdAt ASC
+        """
+    )
+    suspend fun getAll():
+        List<PendingSeverityCommand>
+
+    @Query(
+        """
+        DELETE FROM pending_severity_commands
+        WHERE commandId = :commandId
+        """
+    )
+    suspend fun deleteByCommandId(
+        commandId: String
+    )
+}
+
+class RoomPendingSeverityCommandStore(
+    private val dao:
+        PendingSeverityCommandDao
+) {
+
+    suspend fun save(
+        command:
+            PendingSeverityCommand
+    ) {
+
+        dao.upsert(
+            command
+        )
+    }
+
+    suspend fun load():
+        PendingSeverityCommand? {
+
+        return dao.getOldest()
+    }
+
+    suspend fun loadForIncident(
+        incidentId: String
+    ):
+        PendingSeverityCommand? {
+
+        return dao.getOldestForIncident(
+            incidentId
+        )
+    }
+
+    suspend fun loadAll():
+        List<PendingSeverityCommand> {
+
+        return dao.getAll()
+    }
+
+    suspend fun clearIf(
+        commandId: String
+    ) {
+
+        dao.deleteByCommandId(
+            commandId
+        )
+    }
+}
+
+

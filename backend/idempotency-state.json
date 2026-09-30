@@ -1,0 +1,8 @@
+{
+  "incidentId": "INC-IDEMP-1790770136248",
+  "title": ">>> IDEMPOTENCY TEST <<< 1790770136248",
+  "status": "Active",
+  "severity": "MEDIUM",
+  "sequence": 1,
+  "processedCommandIds": []
+}
