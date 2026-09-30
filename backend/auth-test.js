@@ -403,6 +403,34 @@ async function main() {
             );
         }
 
+        if (
+            refreshed.refreshToken ===
+                session.refreshToken
+        ) {
+            throw new Error(
+                "Refresh did not rotate refresh token."
+            );
+        }
+
+        const reusedOldRefreshResponse =
+            await postJson(
+                "/auth/refresh",
+                {
+                    refreshToken:
+                        session.refreshToken
+                }
+            );
+
+        if (
+            reusedOldRefreshResponse.status !==
+            401
+        ) {
+            throw new Error(
+                "Consumed refresh token remained reusable: " +
+                    reusedOldRefreshResponse.status
+            );
+        }
+
         const refreshedSocket =
             await openSocket(
                 refreshed.accessToken
@@ -415,6 +443,73 @@ async function main() {
             throw new Error(
                 "Refreshed access token was rejected: " +
                     refreshedSocket
+            );
+        }
+
+        const concurrencyLoginResponse =
+            await postJson(
+                "/auth/login",
+                {
+                    username:
+                        TEST_USERNAME,
+                    password:
+                        TEST_PASSWORD
+                }
+            );
+
+        if (
+            concurrencyLoginResponse.status !==
+            200
+        ) {
+            throw new Error(
+                "Concurrency login failed: " +
+                    concurrencyLoginResponse.status
+            );
+        }
+
+        const concurrencySession =
+            await concurrencyLoginResponse
+                .json();
+
+        const concurrentRefreshResponses =
+            await Promise.all(
+                [
+                    postJson(
+                        "/auth/refresh",
+                        {
+                            refreshToken:
+                                concurrencySession.refreshToken
+                        }
+                    ),
+                    postJson(
+                        "/auth/refresh",
+                        {
+                            refreshToken:
+                                concurrencySession.refreshToken
+                        }
+                    )
+                ]
+            );
+
+        const concurrentStatuses =
+            concurrentRefreshResponses
+                .map(
+                    response =>
+                        response.status
+                )
+                .sort();
+
+        if (
+            concurrentStatuses[0] !==
+                200 ||
+            concurrentStatuses[1] !==
+                401
+        ) {
+            throw new Error(
+                "Concurrent refresh did not produce exactly one success: " +
+                    concurrentStatuses.join(
+                        ","
+                    )
             );
         }
 
