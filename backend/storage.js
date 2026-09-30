@@ -580,6 +580,29 @@ class RelayStorage {
         }
     }
 
+    pruneExpiredSessions(nowMillis = Date.now()) {
+        const expiredRefresh = this.database
+            .prepare("DELETE FROM refresh_sessions WHERE expires_at <= ?")
+            .run(nowMillis);
+
+        const expiredAccess = this.database
+            .prepare("DELETE FROM access_sessions WHERE expires_at <= ?")
+            .run(nowMillis);
+
+        return {
+            refreshSessions: Number(expiredRefresh.changes),
+            accessSessions: Number(expiredAccess.changes)
+        };
+    }
+
+    pruneStalePushRegistrations(staleBeforeMillis) {
+        const result = this.database
+            .prepare("DELETE FROM push_registrations WHERE updated_at < ?")
+            .run(staleBeforeMillis);
+
+        return Number(result.changes);
+    }
+
     getUserByUsername(
         username
     ) {
