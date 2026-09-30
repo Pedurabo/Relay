@@ -11,6 +11,7 @@ import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
 import com.signaldesk.relay.data.repository.IncidentRepository
 import com.signaldesk.relay.data.session.AuthSessionClient
 import com.signaldesk.relay.data.session.SessionManager
+import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.notifications.IncidentNotificationManager
@@ -125,9 +126,14 @@ class IncidentsViewModel(
                 }
             },
             onSessionInvalidated = {
+                rejectedAccessToken ->
 
                 viewModelScope.launch {
-                    refreshSessionOrSignOut()
+
+                    SessionRefreshCoordinator
+                        .refreshOrSignOut(
+                            rejectedAccessToken
+                        )
                 }
             }
         )
@@ -255,48 +261,6 @@ class IncidentsViewModel(
             signInInProgress.value =
                 false
         }
-    }
-
-    private suspend fun refreshSessionOrSignOut() {
-
-        val current =
-            SessionManager
-                .sessionState
-                .value
-
-        if (
-            current !is
-            SessionState.SignedIn
-        ) {
-            return
-        }
-
-        val refreshed =
-            runCatching {
-
-                authSessionClient
-                    .refreshSession(
-                        current.refreshToken
-                    )
-            }
-                .getOrNull()
-
-        if (
-            refreshed == null ||
-            refreshed.userId !=
-                current.userId
-        ) {
-
-            SessionManager
-                .signOut()
-
-            return
-        }
-
-        SessionManager
-            .establishSession(
-                refreshed
-            )
     }
 
     fun signOut() {
