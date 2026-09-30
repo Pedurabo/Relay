@@ -6,6 +6,7 @@ const { WebSocketServer } = require("ws");
 const { createStorage } = require("./storage");
 const { loadConfig } = require("./config");
 const { createUserRecord, verifyPassword } = require("./credentials");
+const { buildIncidentPushPayload, createPushSender } = require("./push");
 
 const config =
     loadConfig(
@@ -50,6 +51,11 @@ const storage =
     createStorage(
         __dirname,
         config.databasePath
+    );
+
+const pushSender =
+    createPushSender(
+        process.env
     );
 
 function issueSession(
@@ -430,6 +436,76 @@ function canAccessIncident(
         .canAccessIncident(
             authenticatedSession.userId,
             incidentId
+        );
+}
+
+
+function sendPushForIncidentEvent(
+    event,
+    content
+) {
+
+    const severity =
+        String(
+            event.severity ||
+            ""
+        )
+            .toUpperCase();
+
+    if (
+        severity !==
+            "HIGH" &&
+        severity !==
+            "CRITICAL"
+    ) {
+        return;
+    }
+
+    const targets =
+        storage
+            .getPushTargetsForIncident(
+                event.incidentId
+            );
+
+    if (
+        targets.length ===
+        0
+    ) {
+        return;
+    }
+
+    pushSender
+        .sendToTokens(
+            targets.map(
+                target =>
+                    target.token
+            ),
+            buildIncidentPushPayload(
+                event,
+                content
+            )
+        )
+        .then(
+            () => {
+
+                console.log(
+                    "PUSH_SENT|" +
+                    event.eventId +
+                    "|targets=" +
+                    targets.length
+                );
+            }
+        )
+        .catch(
+            error => {
+
+                console.error(
+                    "PUSH_SEND_FAILED|" +
+                    event.eventId +
+                    "|" +
+                    error.message
+                );
+            }
         );
 }
 
@@ -837,6 +913,134 @@ const server =
 
                             console.log(
                                 "AUTH_SESSION_REVOKED"
+                            );
+                        }
+
+                        response.writeHead(
+                            204
+                        );
+
+                        response.end();
+                    }
+                );
+
+                return;
+            }
+
+            if (
+                request.method ===
+                    "POST" &&
+                (
+                    request.url ===
+                        "/push/register" ||
+                    request.url ===
+                        "/push/unregister"
+                )
+            ) {
+
+                const session =
+                    resolveBearerSession(
+                        request.headers[
+                            "authorization"
+                        ]
+                    );
+
+                if (
+                    !session
+                ) {
+
+                    response.writeHead(
+                        401
+                    );
+
+                    response.end();
+
+                    return;
+                }
+
+                let rawBody =
+                    "";
+
+                request.on(
+                    "data",
+                    chunk => {
+                        rawBody +=
+                            chunk.toString();
+                    }
+                );
+
+                request.on(
+                    "end",
+                    () => {
+
+                        let body;
+
+                        try {
+
+                            body =
+                                JSON.parse(
+                                    rawBody ||
+                                    "{}"
+                                );
+
+                        } catch (error) {
+
+                            response.writeHead(
+                                400
+                            );
+
+                            response.end();
+
+                            return;
+                        }
+
+                        const token =
+                            String(
+                                body.token ||
+                                ""
+                            )
+                                .trim();
+
+                        if (
+                            !token
+                        ) {
+
+                            response.writeHead(
+                                400
+                            );
+
+                            response.end();
+
+                            return;
+                        }
+
+                        if (
+                            request.url ===
+                            "/push/register"
+                        ) {
+
+                            storage
+                                .upsertPushRegistration(
+                                    session.userId,
+                                    token
+                                );
+
+                            console.log(
+                                "PUSH_REGISTERED|" +
+                                session.userId
+                            );
+
+                        } else {
+
+                            storage
+                                .removePushRegistration(
+                                    session.userId,
+                                    token
+                                );
+
+                            console.log(
+                                "PUSH_UNREGISTERED|" +
+                                session.userId
                             );
                         }
 
@@ -1276,6 +1480,15 @@ wss.on(
                         event
                     );
 
+                    sendPushForIncidentEvent(
+                        event,
+                        severity +
+                            ": " +
+                            incidentId +
+                            " · severity changed to " +
+                            severity
+                    );
+
                     return;
                 }
 
@@ -1358,6 +1571,9 @@ wss.on(
                                 entryId
                             );
 
+                    var created =
+                        false;
+
                     if (
                         !event
                     ) {
@@ -1380,6 +1596,9 @@ wss.on(
                                     author
                                 });
 
+                        created =
+                            true;
+
                         console.log(
                             "TIMELINE_APPLIED|" +
                             entryId +
@@ -1398,6 +1617,35 @@ wss.on(
                     broadcast(
                         event
                     );
+
+                    if (
+                        created
+                    ) {
+
+                        const incident =
+                            storage
+                                .getIncident(
+                                    incidentId
+                                );
+
+                        if (
+                            incident
+                        ) {
+
+                            sendPushForIncidentEvent(
+                                {
+                                    ...event,
+                                    severity:
+                                        incident.severity
+                                },
+                                incident.severity +
+                                    ": " +
+                                    author +
+                                    ": " +
+                                    text
+                            );
+                        }
+                    }
 
                     return;
                 }
