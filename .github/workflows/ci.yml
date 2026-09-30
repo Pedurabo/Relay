@@ -71,6 +71,9 @@ jobs:
       - name: Verify backend authentication
         run: npm run test:auth
 
+      - name: Verify session and push pruning
+        run: npm run test:pruning
+
       - name: Verify session tokens are protected at rest
         run: npm run test:token-storage
 
