@@ -4,7 +4,6 @@ import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.UUID
 
 object SessionManager {
 
@@ -88,30 +87,31 @@ object SessionManager {
         initialized = true
     }
 
-    fun signIn(
-        userId: String,
-        userName: String
+    fun establishSession(
+        session:
+            AuthenticatedSession
     ) {
+
         require(
-            userId.isNotBlank()
+            session.userId.isNotBlank()
         )
 
         require(
-            userName.isNotBlank()
+            session.userName.isNotBlank()
         )
 
-        val token =
-            "demo:" +
-                userId +
-                ":" +
-                UUID.randomUUID()
-                    .toString()
+        require(
+            session.accessToken.isNotBlank()
+        )
 
         val signedIn =
             SessionState.SignedIn(
-                userId = userId,
-                userName = userName,
-                accessToken = token
+                userId =
+                    session.userId,
+                userName =
+                    session.userName,
+                accessToken =
+                    session.accessToken
             )
 
         appContext
