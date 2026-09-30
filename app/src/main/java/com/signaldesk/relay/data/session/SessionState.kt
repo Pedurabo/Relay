@@ -8,6 +8,8 @@ sealed interface SessionState {
     data class SignedIn(
         val userId: String,
         val userName: String,
-        val accessToken: String
+        val accessToken: String,
+        val refreshToken: String,
+        val accessTokenExpiresAt: Long
     ) : SessionState
 }
