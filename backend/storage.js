@@ -38,6 +38,161 @@ function isTokenDigest(
         );
 }
 
+const CURRENT_SCHEMA_VERSION =
+    1;
+
+const REQUIRED_LEGACY_TABLES = [
+    "users",
+    "refresh_sessions",
+    "access_sessions",
+    "incidents",
+    "incident_events",
+    "processed_commands",
+    "timeline_entries",
+    "incident_access",
+    "push_registrations"
+];
+
+const SCHEMA_MIGRATIONS = new Map([
+    [
+        1,
+        database => {
+
+            database.exec(
+                `
+                CREATE TABLE users (
+                    user_id TEXT PRIMARY KEY,
+                    username TEXT NOT NULL UNIQUE,
+                    display_name TEXT NOT NULL,
+                    password_salt TEXT NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    is_admin INTEGER NOT NULL DEFAULT 0,
+                    created_at INTEGER NOT NULL
+                ) STRICT;
+
+                CREATE TABLE refresh_sessions (
+                    refresh_token TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    FOREIGN KEY(user_id)
+                        REFERENCES users(user_id)
+                        ON DELETE CASCADE
+                ) STRICT;
+
+                CREATE TABLE access_sessions (
+                    access_token TEXT PRIMARY KEY,
+                    refresh_token TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    FOREIGN KEY(refresh_token)
+                        REFERENCES refresh_sessions(refresh_token)
+                        ON DELETE CASCADE,
+                    FOREIGN KEY(user_id)
+                        REFERENCES users(user_id)
+                        ON DELETE CASCADE
+                ) STRICT;
+
+                CREATE TABLE incidents (
+                    incident_id TEXT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    severity TEXT NOT NULL,
+                    sequence INTEGER NOT NULL,
+                    server_owned INTEGER NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    updated_at INTEGER NOT NULL
+                ) STRICT;
+
+                CREATE TABLE incident_events (
+                    event_id TEXT PRIMARY KEY,
+                    incident_id TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    sequence INTEGER NOT NULL,
+                    occurred_at INTEGER NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    FOREIGN KEY(incident_id)
+                        REFERENCES incidents(incident_id)
+                        ON DELETE CASCADE
+                ) STRICT;
+
+                CREATE TABLE processed_commands (
+                    command_id TEXT PRIMARY KEY,
+                    incident_id TEXT NOT NULL,
+                    command_type TEXT NOT NULL,
+                    severity TEXT,
+                    processed_at INTEGER NOT NULL,
+                    FOREIGN KEY(incident_id)
+                        REFERENCES incidents(incident_id)
+                        ON DELETE CASCADE
+                ) STRICT;
+
+                CREATE TABLE timeline_entries (
+                    entry_id TEXT PRIMARY KEY,
+                    incident_id TEXT NOT NULL,
+                    event_id TEXT NOT NULL UNIQUE,
+                    message TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    occurred_at INTEGER NOT NULL,
+                    FOREIGN KEY(incident_id)
+                        REFERENCES incidents(incident_id)
+                        ON DELETE CASCADE
+                ) STRICT;
+
+                CREATE TABLE incident_access (
+                    user_id TEXT NOT NULL,
+                    incident_id TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    PRIMARY KEY(user_id, incident_id),
+                    FOREIGN KEY(user_id)
+                        REFERENCES users(user_id)
+                        ON DELETE CASCADE,
+                    FOREIGN KEY(incident_id)
+                        REFERENCES incidents(incident_id)
+                        ON DELETE CASCADE
+                ) STRICT;
+
+                CREATE TABLE push_registrations (
+                    token TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    platform TEXT NOT NULL,
+                    updated_at INTEGER NOT NULL,
+                    FOREIGN KEY(user_id)
+                        REFERENCES users(user_id)
+                        ON DELETE CASCADE
+                ) STRICT;
+
+                CREATE INDEX idx_access_sessions_user
+                    ON access_sessions(user_id);
+
+                CREATE INDEX idx_access_sessions_refresh
+                    ON access_sessions(refresh_token);
+
+                CREATE INDEX idx_refresh_sessions_user
+                    ON refresh_sessions(user_id);
+
+                CREATE INDEX idx_incident_events_replay
+                    ON incident_events(
+                        incident_id,
+                        sequence
+                    );
+
+                CREATE INDEX idx_timeline_incident
+                    ON timeline_entries(
+                        incident_id,
+                        occurred_at
+                    );
+
+                CREATE INDEX idx_push_registrations_user
+                    ON push_registrations(user_id);
+                `
+            );
+        }
+    ]
+]);
+
 class RelayStorage {
 
     constructor(
@@ -53,138 +208,183 @@ class RelayStorage {
             `
             PRAGMA journal_mode = WAL;
             PRAGMA foreign_keys = ON;
-
-            CREATE TABLE IF NOT EXISTS users (
-                user_id TEXT PRIMARY KEY,
-                username TEXT NOT NULL UNIQUE,
-                display_name TEXT NOT NULL,
-                password_salt TEXT NOT NULL,
-                password_hash TEXT NOT NULL,
-                is_admin INTEGER NOT NULL DEFAULT 0,
-                created_at INTEGER NOT NULL
-            ) STRICT;
-
-            CREATE TABLE IF NOT EXISTS refresh_sessions (
-                refresh_token TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                expires_at INTEGER NOT NULL,
-                created_at INTEGER NOT NULL,
-                FOREIGN KEY(user_id)
-                    REFERENCES users(user_id)
-                    ON DELETE CASCADE
-            ) STRICT;
-
-            CREATE TABLE IF NOT EXISTS access_sessions (
-                access_token TEXT PRIMARY KEY,
-                refresh_token TEXT NOT NULL,
-                user_id TEXT NOT NULL,
-                expires_at INTEGER NOT NULL,
-                created_at INTEGER NOT NULL,
-                FOREIGN KEY(refresh_token)
-                    REFERENCES refresh_sessions(refresh_token)
-                    ON DELETE CASCADE,
-                FOREIGN KEY(user_id)
-                    REFERENCES users(user_id)
-                    ON DELETE CASCADE
-            ) STRICT;
-
-            CREATE TABLE IF NOT EXISTS incidents (
-                incident_id TEXT PRIMARY KEY,
-                title TEXT NOT NULL,
-                status TEXT NOT NULL,
-                severity TEXT NOT NULL,
-                sequence INTEGER NOT NULL,
-                server_owned INTEGER NOT NULL,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL
-            ) STRICT;
-
-            CREATE TABLE IF NOT EXISTS incident_events (
-                event_id TEXT PRIMARY KEY,
-                incident_id TEXT NOT NULL,
-                event_type TEXT NOT NULL,
-                sequence INTEGER NOT NULL,
-                occurred_at INTEGER NOT NULL,
-                payload_json TEXT NOT NULL,
-                FOREIGN KEY(incident_id)
-                    REFERENCES incidents(incident_id)
-                    ON DELETE CASCADE
-            ) STRICT;
-
-            CREATE TABLE IF NOT EXISTS processed_commands (
-                command_id TEXT PRIMARY KEY,
-                incident_id TEXT NOT NULL,
-                command_type TEXT NOT NULL,
-                severity TEXT,
-                processed_at INTEGER NOT NULL,
-                FOREIGN KEY(incident_id)
-                    REFERENCES incidents(incident_id)
-                    ON DELETE CASCADE
-            ) STRICT;
-
-            CREATE TABLE IF NOT EXISTS timeline_entries (
-                entry_id TEXT PRIMARY KEY,
-                incident_id TEXT NOT NULL,
-                event_id TEXT NOT NULL UNIQUE,
-                message TEXT NOT NULL,
-                author TEXT NOT NULL,
-                occurred_at INTEGER NOT NULL,
-                FOREIGN KEY(incident_id)
-                    REFERENCES incidents(incident_id)
-                    ON DELETE CASCADE
-            ) STRICT;
-
-            CREATE TABLE IF NOT EXISTS incident_access (
-                user_id TEXT NOT NULL,
-                incident_id TEXT NOT NULL,
-                role TEXT NOT NULL,
-                created_at INTEGER NOT NULL,
-                PRIMARY KEY(user_id, incident_id),
-                FOREIGN KEY(user_id)
-                    REFERENCES users(user_id)
-                    ON DELETE CASCADE,
-                FOREIGN KEY(incident_id)
-                    REFERENCES incidents(incident_id)
-                    ON DELETE CASCADE
-            ) STRICT;
-
-            CREATE TABLE IF NOT EXISTS push_registrations (
-                token TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                platform TEXT NOT NULL,
-                updated_at INTEGER NOT NULL,
-                FOREIGN KEY(user_id)
-                    REFERENCES users(user_id)
-                    ON DELETE CASCADE
-            ) STRICT;
-
-            CREATE INDEX IF NOT EXISTS idx_access_sessions_user
-                ON access_sessions(user_id);
-
-            CREATE INDEX IF NOT EXISTS idx_access_sessions_refresh
-                ON access_sessions(refresh_token);
-
-            CREATE INDEX IF NOT EXISTS idx_refresh_sessions_user
-                ON refresh_sessions(user_id);
-
-            CREATE INDEX IF NOT EXISTS idx_incident_events_replay
-                ON incident_events(
-                    incident_id,
-                    sequence
-                );
-
-            CREATE INDEX IF NOT EXISTS idx_timeline_incident
-                ON timeline_entries(
-                    incident_id,
-                    occurred_at
-                );
-
-            CREATE INDEX IF NOT EXISTS idx_push_registrations_user
-                ON push_registrations(user_id);
             `
         );
 
+        this.migrateSchema();
         this.migrateSessionTokenDigests();
+    }
+
+    migrateSchema() {
+
+        const currentVersion =
+            Number(
+                this.database
+                    .prepare(
+                        "PRAGMA user_version"
+                    )
+                    .get()
+                    .user_version
+            );
+
+        if (
+            currentVersion >
+            CURRENT_SCHEMA_VERSION
+        ) {
+            throw new Error(
+                "Relay database schema version " +
+                    currentVersion +
+                    " is newer than supported version " +
+                    CURRENT_SCHEMA_VERSION +
+                    "."
+            );
+        }
+
+        if (
+            currentVersion ===
+                0 &&
+            this.hasExistingApplicationTables()
+        ) {
+
+            this.validateLegacySchema();
+
+            this.database.exec(
+                "PRAGMA user_version = 1"
+            );
+
+            return;
+        }
+
+        for (
+            let nextVersion =
+                currentVersion + 1;
+            nextVersion <=
+                CURRENT_SCHEMA_VERSION;
+            nextVersion +=
+                1
+        ) {
+
+            const migration =
+                SCHEMA_MIGRATIONS.get(
+                    nextVersion
+                );
+
+            if (
+                !migration
+            ) {
+                throw new Error(
+                    "Missing Relay database migration for version " +
+                        nextVersion +
+                        "."
+                );
+            }
+
+            this.database.exec(
+                "BEGIN IMMEDIATE"
+            );
+
+            try {
+
+                migration(
+                    this.database
+                );
+
+                this.database.exec(
+                    "PRAGMA user_version = " +
+                        nextVersion
+                );
+
+                const foreignKeyViolation =
+                    this.database
+                        .prepare(
+                            "PRAGMA foreign_key_check"
+                        )
+                        .get();
+
+                if (
+                    foreignKeyViolation
+                ) {
+                    throw new Error(
+                        "Schema migration " +
+                            nextVersion +
+                            " violated foreign keys."
+                    );
+                }
+
+                this.database.exec(
+                    "COMMIT"
+                );
+
+            } catch (error) {
+
+                this.database.exec(
+                    "ROLLBACK"
+                );
+
+                throw error;
+            }
+        }
+    }
+
+    hasExistingApplicationTables() {
+
+        const row =
+            this.database
+                .prepare(
+                    `
+                    SELECT COUNT(*) AS count
+                    FROM sqlite_master
+                    WHERE type = 'table'
+                      AND name NOT LIKE 'sqlite_%'
+                    `
+                )
+                .get();
+
+        return Number(
+            row.count
+        ) >
+            0;
+    }
+
+    validateLegacySchema() {
+
+        const tables =
+            new Set(
+                this.database
+                    .prepare(
+                        `
+                        SELECT name
+                        FROM sqlite_master
+                        WHERE type = 'table'
+                        `
+                    )
+                    .all()
+                    .map(
+                        row =>
+                            row.name
+                    )
+            );
+
+        const missing =
+            REQUIRED_LEGACY_TABLES
+                .filter(
+                    table =>
+                        !tables.has(
+                            table
+                        )
+                );
+
+        if (
+            missing.length >
+            0
+        ) {
+            throw new Error(
+                "Unversioned Relay database has incomplete schema. Missing: " +
+                    missing.join(
+                        ", "
+                    )
+            );
+        }
     }
 
     close() {
