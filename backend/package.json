@@ -13,7 +13,8 @@
     "backup": "node backup.js",
     "test:push": "node push-test.js",
     "push:smoke": "node push-smoke.js",
-    "push:e2e-trigger": "node push-e2e-trigger.js"
+    "push:e2e-trigger": "node push-e2e-trigger.js",
+    "test:authorization": "node authorization-e2e-test.js"
   },
   "keywords": [],
   "author": "",
