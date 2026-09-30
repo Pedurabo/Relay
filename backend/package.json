@@ -12,7 +12,8 @@
     "provision:admin": "node provision-admin.js",
     "backup": "node backup.js",
     "test:push": "node push-test.js",
-    "push:smoke": "node push-smoke.js"
+    "push:smoke": "node push-smoke.js",
+    "push:e2e-trigger": "node push-e2e-trigger.js"
   },
   "keywords": [],
   "author": "",
