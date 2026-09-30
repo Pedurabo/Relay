@@ -18,10 +18,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -35,9 +41,14 @@ fun IncidentsScreen(
     incidents: List<Incident>,
     connectionState: RealtimeConnectionState,
     sessionState: SessionState,
+    signInInProgress: Boolean,
+    signInError: String?,
     onIncidentClick: (String) -> Unit,
     onCreateIncidentClick: () -> Unit,
-    onSignIn: () -> Unit,
+    onSignIn: (
+        String,
+        String
+    ) -> Unit,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -67,35 +78,116 @@ fun IncidentsScreen(
             SessionState.SignedOut -> {
 
                 item {
-                    Text(
-                        text = "Signed out",
-                        style =
-                            MaterialTheme
-                                .typography
-                                .titleMedium
-                    )
-                }
 
-                item {
-                    Text(
-                        text =
-                            "Realtime is disabled until a session is active.",
-                        style =
-                            MaterialTheme
-                                .typography
-                                .bodyMedium
-                    )
-                }
+                    var username by
+                        remember {
+                            mutableStateOf(
+                                ""
+                            )
+                        }
 
-                item {
+                    var password by
+                        remember {
+                            mutableStateOf(
+                                ""
+                            )
+                        }
 
-                    Button(
-                        onClick =
-                            onSignIn
+                    Column(
+                        verticalArrangement =
+                            Arrangement.spacedBy(
+                                12.dp
+                            )
                     ) {
+
                         Text(
-                            "Sign in as Relay Operator"
+                            text = "Signed out",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .titleMedium
                         )
+
+                        Text(
+                            text =
+                                "Sign in to enable realtime coordination.",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyMedium
+                        )
+
+                        OutlinedTextField(
+                            value =
+                                username,
+                            onValueChange = {
+                                username =
+                                    it
+                            },
+                            modifier =
+                                Modifier.fillMaxWidth(),
+                            label = {
+                                Text(
+                                    "Username"
+                                )
+                            },
+                            singleLine =
+                                true
+                        )
+
+                        OutlinedTextField(
+                            value =
+                                password,
+                            onValueChange = {
+                                password =
+                                    it
+                            },
+                            modifier =
+                                Modifier.fillMaxWidth(),
+                            label = {
+                                Text(
+                                    "Password"
+                                )
+                            },
+                            singleLine =
+                                true,
+                            visualTransformation =
+                                PasswordVisualTransformation()
+                        )
+
+                        signInError
+                            ?.let { error ->
+
+                                Text(
+                                    text =
+                                        error,
+                                    style =
+                                        MaterialTheme
+                                            .typography
+                                            .bodyMedium
+                                )
+                            }
+
+                        Button(
+                            enabled =
+                                !signInInProgress,
+                            onClick = {
+                                onSignIn(
+                                    username,
+                                    password
+                                )
+                            }
+                        ) {
+                            Text(
+                                if (
+                                    signInInProgress
+                                ) {
+                                    "Signing in…"
+                                } else {
+                                    "Sign in"
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -204,7 +296,7 @@ private fun ConnectionStateRow(
                 "Realtime: Connected"
 
             RealtimeConnectionState.Connecting ->
-                "Realtime: Connecting�"
+                "Realtime: Connecting…"
 
             RealtimeConnectionState.Disconnected ->
                 "Realtime: Disconnected"
