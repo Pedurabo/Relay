@@ -4,7 +4,11 @@ const http = require("http");
 const crypto = require("crypto");
 const { WebSocketServer } = require("ws");
 
-const PORT = 9000;
+const PORT =
+    Number(
+        process.env.RELAY_PORT ||
+        9000
+    );
 
 const persistentStateFile =
     path.join(
@@ -715,24 +719,27 @@ server.on(
 
 server.listen(
     PORT,
-    "0.0.0.0"
+    "0.0.0.0",
+    () => {
+
+        console.log(
+            "RELAY_DEV_SERVER_READY|" +
+            PORT
+        );
+
+        console.log(
+            "MODE|MULTI_INCIDENT"
+        );
+
+        console.log(
+            "INCIDENT_COUNT|" +
+            Object.keys(
+                state.incidents
+            ).length
+        );
+    }
 );
 
-console.log(
-    "RELAY_DEV_SERVER_READY|" +
-    PORT
-);
-
-console.log(
-    "MODE|MULTI_INCIDENT"
-);
-
-console.log(
-    "INCIDENT_COUNT|" +
-    Object.keys(
-        state.incidents
-    ).length
-);
 
 wss.on(
     "connection",
