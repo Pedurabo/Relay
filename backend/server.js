@@ -24,14 +24,28 @@ const previousRoomTestStateFile =
 
 
 const SESSION_TTL_MS =
-    60 * 60 * 1000;
+    Number(
+        process.env.RELAY_ACCESS_TTL_MS ||
+        60 * 60 * 1000
+    );
+
+const REFRESH_TTL_MS =
+    Number(
+        process.env.RELAY_REFRESH_TTL_MS ||
+        7 * 24 * 60 * 60 * 1000
+    );
 
 const sessions =
     new Map();
 
+const refreshSessions =
+    new Map();
+
 function issueSession(
     userId,
-    userName
+    userName,
+    refreshToken =
+        null
 ) {
 
     const accessToken =
@@ -39,16 +53,37 @@ function issueSession(
             .randomBytes(32)
             .toString("hex");
 
-    const expiresAt =
+    const resolvedRefreshToken =
+        refreshToken ||
+        crypto
+            .randomBytes(48)
+            .toString("hex");
+
+    const accessTokenExpiresAt =
         Date.now() +
         SESSION_TTL_MS;
+
+    const refreshTokenExpiresAt =
+        Date.now() +
+        REFRESH_TTL_MS;
 
     sessions.set(
         accessToken,
         {
             userId,
             userName,
-            expiresAt
+            expiresAt:
+                accessTokenExpiresAt
+        }
+    );
+
+    refreshSessions.set(
+        resolvedRefreshToken,
+        {
+            userId,
+            userName,
+            expiresAt:
+                refreshTokenExpiresAt
         }
     );
 
@@ -56,7 +91,10 @@ function issueSession(
         userId,
         userName,
         accessToken,
-        expiresAt
+        refreshToken:
+            resolvedRefreshToken,
+        accessTokenExpiresAt,
+        refreshTokenExpiresAt
     };
 }
 
@@ -622,7 +660,7 @@ const server =
                             "AUTH_SESSION_ISSUED|" +
                             session.userId +
                             "|expiresAt=" +
-                            session.expiresAt
+                            session.accessTokenExpiresAt
                         );
 
                         response.writeHead(
@@ -638,6 +676,189 @@ const server =
                                 session
                             )
                         );
+                    }
+                );
+
+                return;
+            }
+
+            if (
+                request.method ===
+                    "POST" &&
+                request.url ===
+                    "/auth/refresh"
+            ) {
+
+                let rawBody =
+                    "";
+
+                request.on(
+                    "data",
+                    chunk => {
+                        rawBody +=
+                            chunk.toString();
+                    }
+                );
+
+                request.on(
+                    "end",
+                    () => {
+
+                        let body;
+
+                        try {
+                            body =
+                                JSON.parse(
+                                    rawBody || "{}"
+                                );
+                        } catch (error) {
+
+                            response.writeHead(
+                                400,
+                                {
+                                    "Content-Type":
+                                        "application/json"
+                                }
+                            );
+
+                            response.end(
+                                JSON.stringify({
+                                    error:
+                                        "invalid_json"
+                                })
+                            );
+
+                            return;
+                        }
+
+                        const refreshToken =
+                            String(
+                                body.refreshToken ||
+                                ""
+                            )
+                                .trim();
+
+                        const refreshSession =
+                            refreshSessions.get(
+                                refreshToken
+                            );
+
+                        if (
+                            !refreshSession ||
+                            refreshSession.expiresAt <=
+                                Date.now()
+                        ) {
+
+                            refreshSessions.delete(
+                                refreshToken
+                            );
+
+                            response.writeHead(
+                                401,
+                                {
+                                    "Content-Type":
+                                        "application/json"
+                                }
+                            );
+
+                            response.end(
+                                JSON.stringify({
+                                    error:
+                                        "invalid_refresh_token"
+                                })
+                            );
+
+                            return;
+                        }
+
+                        const session =
+                            issueSession(
+                                refreshSession.userId,
+                                refreshSession.userName,
+                                refreshToken
+                            );
+
+                        console.log(
+                            "AUTH_SESSION_REFRESHED|" +
+                            session.userId +
+                            "|expiresAt=" +
+                            session.accessTokenExpiresAt
+                        );
+
+                        response.writeHead(
+                            200,
+                            {
+                                "Content-Type":
+                                    "application/json"
+                            }
+                        );
+
+                        response.end(
+                            JSON.stringify(
+                                session
+                            )
+                        );
+                    }
+                );
+
+                return;
+            }
+
+            if (
+                request.method ===
+                    "POST" &&
+                request.url ===
+                    "/auth/revoke"
+            ) {
+
+                let rawBody =
+                    "";
+
+                request.on(
+                    "data",
+                    chunk => {
+                        rawBody +=
+                            chunk.toString();
+                    }
+                );
+
+                request.on(
+                    "end",
+                    () => {
+
+                        let body;
+
+                        try {
+                            body =
+                                JSON.parse(
+                                    rawBody || "{}"
+                                );
+                        } catch (error) {
+                            response.writeHead(400);
+                            response.end();
+                            return;
+                        }
+
+                        const refreshToken =
+                            String(
+                                body.refreshToken ||
+                                ""
+                            )
+                                .trim();
+
+                        if (
+                            refreshToken
+                        ) {
+                            refreshSessions.delete(
+                                refreshToken
+                            );
+                        }
+
+                        response.writeHead(
+                            204
+                        );
+
+                        response.end();
                     }
                 );
 
