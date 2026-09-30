@@ -58,6 +58,58 @@ const pushSender =
         process.env
     );
 
+const SESSION_MAINTENANCE_INTERVAL_MS =
+    60 * 60 * 1000;
+
+const PUSH_REGISTRATION_STALE_MS =
+    30 * 24 * 60 * 60 * 1000;
+
+function runStorageMaintenance() {
+
+    const nowMillis =
+        Date.now();
+
+    const sessions =
+        storage
+            .pruneExpiredSessions(
+                nowMillis
+            );
+
+    const pushRegistrations =
+        storage
+            .pruneStalePushRegistrations(
+                nowMillis -
+                    PUSH_REGISTRATION_STALE_MS
+            );
+
+    if (
+        sessions.refreshSessions > 0 ||
+        sessions.accessSessions > 0 ||
+        pushRegistrations > 0
+    ) {
+
+        console.log(
+            "STORAGE_PRUNED|" +
+            "refresh=" +
+            sessions.refreshSessions +
+            "|access=" +
+            sessions.accessSessions +
+            "|push=" +
+            pushRegistrations
+        );
+    }
+}
+
+runStorageMaintenance();
+
+const storageMaintenanceTimer =
+    setInterval(
+        runStorageMaintenance,
+        SESSION_MAINTENANCE_INTERVAL_MS
+    );
+
+storageMaintenanceTimer.unref();
+
 function createSessionPayload(
     userId,
     userName
@@ -1941,6 +1993,10 @@ function gracefulShutdown(
 
     shuttingDown =
         true;
+
+    clearInterval(
+        storageMaintenanceTimer
+    );
 
     console.log(
         "SERVER_SHUTDOWN_BEGIN|" +
