@@ -991,9 +991,16 @@ class RelayStorage {
             "operator"
     ) {
 
-        this.ensureIncident(
-            incidentId
-        );
+        if (
+            !this.getIncident(
+                incidentId
+            )
+        ) {
+            throw new Error(
+                "Cannot grant access to unknown incident: " +
+                    incidentId
+            );
+        }
 
         this.database
             .prepare(
