@@ -1081,13 +1081,50 @@ class RelayStorage {
             row.count
         );
     }
+
+    backupTo(
+        destinationPath
+    ) {
+
+        const escaped =
+            String(
+                destinationPath
+            )
+                .replaceAll(
+                    "'",
+                    "''"
+                );
+
+        this.database.exec(
+            "VACUUM INTO '" +
+                escaped +
+                "'"
+        );
+    }
+
+    integrityCheck() {
+
+        const row =
+            this.database
+                .prepare(
+                    "PRAGMA integrity_check"
+                )
+                .get();
+
+        return row
+            ?.integrity_check ===
+            "ok";
+    }
 }
 
 function createStorage(
-    backendDir
+    backendDir,
+    explicitDatabasePath =
+        null
 ) {
 
     const databasePath =
+        explicitDatabasePath ||
         process.env.RELAY_DATABASE_PATH ||
         path.join(
             backendDir,
