@@ -6,6 +6,7 @@ sealed interface SessionState {
         SessionState
 
     data class SignedIn(
+        val userId: String,
         val userName: String,
         val accessToken: String
     ) : SessionState
