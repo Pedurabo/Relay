@@ -16,6 +16,7 @@ import com.signaldesk.relay.data.repository.IncidentRepository
 import com.signaldesk.relay.data.realtime.WebSocketTimelineSender
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
+import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.model.TimelineEntry
@@ -81,6 +82,18 @@ class IncidentDetailViewModel(
 
                     is SessionState.SignedIn ->
                         state.accessToken
+                }
+            },
+
+            onSessionInvalidated = {
+                rejectedAccessToken ->
+
+                viewModelScope.launch {
+
+                    SessionRefreshCoordinator
+                        .refreshOrSignOut(
+                            rejectedAccessToken
+                        )
                 }
             }
         )
