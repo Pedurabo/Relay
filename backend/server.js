@@ -7,6 +7,7 @@ const { createStorage } = require("./storage");
 const { loadConfig } = require("./config");
 const { createUserRecord, verifyPassword } = require("./credentials");
 const { buildIncidentPushPayload, createPushSender } = require("./push");
+const { LoginRateLimiter } = require("./login-rate-limiter");
 
 const config =
     loadConfig(
@@ -46,6 +47,16 @@ const SESSION_TTL_MS =
 
 const REFRESH_TTL_MS =
     config.refreshTtlMs;
+
+const loginRateLimiter =
+    new LoginRateLimiter({
+        usernameLimit:
+            config.loginRateLimitUsernameFailures,
+        clientLimit:
+            config.loginRateLimitClientFailures,
+        windowMs:
+            config.loginRateLimitWindowMs
+    });
 
 const storage =
     createStorage(
@@ -754,6 +765,50 @@ const server =
                                 ""
                             );
 
+                        const clientKey =
+                            request.socket
+                                ?.remoteAddress ||
+                            "unknown";
+
+                        const rateLimit =
+                            loginRateLimiter
+                                .check(
+                                    username,
+                                    clientKey
+                                );
+
+                        if (
+                            !rateLimit.allowed
+                        ) {
+
+                            console.log(
+                                "AUTH_LOGIN_RATE_LIMITED|" +
+                                username
+                            );
+
+                            response.writeHead(
+                                429,
+                                {
+                                    "Content-Type":
+                                        "application/json",
+                                    "Retry-After":
+                                        String(
+                                            rateLimit
+                                                .retryAfterSeconds
+                                        )
+                                }
+                            );
+
+                            response.end(
+                                JSON.stringify({
+                                    error:
+                                        "invalid_credentials"
+                                })
+                            );
+
+                            return;
+                        }
+
                         const user =
                             storage.getUserByUsername(
                                 username
@@ -767,6 +822,12 @@ const server =
                                 user
                             )
                         ) {
+
+                            loginRateLimiter
+                                .recordFailure(
+                                    username,
+                                    clientKey
+                                );
 
                             console.log(
                                 "AUTH_LOGIN_REJECTED|" +
@@ -790,6 +851,11 @@ const server =
 
                             return;
                         }
+
+                        loginRateLimiter
+                            .recordSuccess(
+                                username
+                            );
 
                         const session =
                             issueSession(
