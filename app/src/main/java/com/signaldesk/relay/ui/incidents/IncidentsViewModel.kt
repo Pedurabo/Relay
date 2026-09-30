@@ -16,6 +16,7 @@ import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.notifications.IncidentNotificationManager
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -111,6 +112,13 @@ class IncidentsViewModel(
     val sessionState =
         SessionManager.sessionState
 
+    val signInInProgress =
+        MutableStateFlow(false)
+
+    val signInError =
+        MutableStateFlow<String?>(null)
+
+
     private val realtimeSource =
         WebSocketRealtimeIncidentSource(
             url =
@@ -194,14 +202,45 @@ class IncidentsViewModel(
         }
     }
 
-    fun signIn() {
+    fun signIn(
+        username: String,
+        password: String
+    ) {
+
+        if (
+            signInInProgress.value
+        ) {
+            return
+        }
+
+        if (
+            username.isBlank() ||
+            password.isBlank()
+        ) {
+
+            signInError.value =
+                "Username and password are required."
+
+            return
+        }
+
+        signInInProgress.value =
+            true
+
+        signInError.value =
+            null
 
         viewModelScope.launch {
 
             runCatching {
 
                 authSessionClient
-                    .createDevelopmentSession()
+                    .login(
+                        username =
+                            username.trim(),
+                        password =
+                            password
+                    )
 
             }
                 .onSuccess { session ->
@@ -210,12 +249,21 @@ class IncidentsViewModel(
                         .establishSession(
                             session
                         )
+
+                    signInError.value =
+                        null
                 }
                 .onFailure {
 
                     SessionManager
                         .signOut()
+
+                    signInError.value =
+                        "Sign-in failed. Check your credentials."
                 }
+
+            signInInProgress.value =
+                false
         }
     }
 
