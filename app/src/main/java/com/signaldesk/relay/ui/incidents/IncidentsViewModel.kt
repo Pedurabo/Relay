@@ -3,7 +3,6 @@ package com.signaldesk.relay.ui.incidents
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.signaldesk.relay.appstate.AppVisibilityTracker
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
 import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
@@ -27,26 +26,6 @@ import kotlinx.coroutines.launch
 class IncidentsViewModel(
     application: Application
 ) : AndroidViewModel(application) {
-
-    init {
-        AppVisibilityTracker.initialize(
-            application
-        )
-
-        SessionManager.initialize(
-            application
-        )
-
-        SeverityOutboxCoordinator
-            .initialize(
-                application
-            )
-
-        PushRegistrationCoordinator
-            .initialize(
-                application
-            )
-    }
 
     private val database =
         RelayDatabase.getInstance(
