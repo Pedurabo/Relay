@@ -70,3 +70,6 @@ jobs:
 
       - name: Verify backend authentication
         run: npm run test:auth
+
+      - name: Verify SQLite persistence and authorization
+        run: npm run test:storage
