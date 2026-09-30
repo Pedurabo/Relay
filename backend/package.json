@@ -11,7 +11,8 @@
     "test:backup": "node backup-test.js",
     "provision:admin": "node provision-admin.js",
     "backup": "node backup.js",
-    "test:push": "node push-test.js"
+    "test:push": "node push-test.js",
+    "push:smoke": "node push-smoke.js"
   },
   "keywords": [],
   "author": "",
