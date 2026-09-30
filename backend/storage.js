@@ -328,6 +328,36 @@ class RelayStorage {
             );
     }
 
+    grantIncidentAccess(
+        userId,
+        incidentId,
+        role =
+            "operator"
+    ) {
+
+        this.database
+            .prepare(
+                `
+                INSERT INTO incident_access (
+                    user_id,
+                    incident_id,
+                    role,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(user_id, incident_id)
+                DO UPDATE SET
+                    role = excluded.role
+                `
+            )
+            .run(
+                userId,
+                incidentId,
+                role,
+                Date.now()
+            );
+    }
+
     canAccessIncident(
         userId,
         incidentId
