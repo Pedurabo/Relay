@@ -72,6 +72,8 @@ function issueSession(
         {
             userId,
             userName,
+            refreshToken:
+                resolvedRefreshToken,
             expiresAt:
                 accessTokenExpiresAt
         }
@@ -849,8 +851,32 @@ const server =
                         if (
                             refreshToken
                         ) {
+
                             refreshSessions.delete(
                                 refreshToken
+                            );
+
+                            for (
+                                const [
+                                    accessToken,
+                                    accessSession
+                                ] of
+                                sessions.entries()
+                            ) {
+
+                                if (
+                                    accessSession.refreshToken ===
+                                    refreshToken
+                                ) {
+
+                                    sessions.delete(
+                                        accessToken
+                                    );
+                                }
+                            }
+
+                            console.log(
+                                "AUTH_SESSION_REVOKED"
                             );
                         }
 
