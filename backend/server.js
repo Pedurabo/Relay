@@ -560,6 +560,41 @@ const server =
             }
 
             if (
+                process.env.RELAY_ENABLE_TEST_SHUTDOWN ===
+                    "1" &&
+                request.method ===
+                    "POST" &&
+                request.url ===
+                    "/__test/shutdown"
+            ) {
+
+                response.writeHead(
+                    202,
+                    {
+                        "Content-Type":
+                            "application/json"
+                    }
+                );
+
+                response.end(
+                    JSON.stringify({
+                        status:
+                            "shutting_down"
+                    })
+                );
+
+                setImmediate(
+                    () => {
+                        gracefulShutdown(
+                            "TEST"
+                        );
+                    }
+                );
+
+                return;
+            }
+
+            if (
                 request.method ===
                     "POST" &&
                 request.url ===
