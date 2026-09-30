@@ -279,12 +279,12 @@ async function main() {
 
         const response =
             await postJson(
-                "/auth/dev-session",
+                "/auth/login",
                 {
-                    userId:
-                        "dev-relay-operator",
-                    userName:
-                        "Relay Operator"
+                    username:
+                        TEST_USERNAME,
+                    password:
+                        TEST_PASSWORD
                 }
             );
 
@@ -293,7 +293,7 @@ async function main() {
             200
         ) {
             throw new Error(
-                "Expected auth 200, got " +
+                "Expected login 200, got " +
                     response.status
             );
         }
@@ -472,7 +472,7 @@ async function main() {
         }
 
         console.log(
-            "AUTH_LOGOUT_REVOCATION_GREEN"
+            "AUTH_CREDENTIAL_LOGIN_GREEN"
         );
 
     } finally {
