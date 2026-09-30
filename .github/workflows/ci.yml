@@ -82,3 +82,6 @@ jobs:
 
       - name: Verify SQLite backup and restore
         run: npm run test:backup
+
+      - name: Verify push authorization and payload policy
+        run: npm run test:push
