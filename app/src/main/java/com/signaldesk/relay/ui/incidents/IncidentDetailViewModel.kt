@@ -65,7 +65,24 @@ class IncidentDetailViewModel(
 
     private val timelineSender =
         WebSocketTimelineSender(
-            url = "ws://127.0.0.1:9000"
+            url =
+                "ws://127.0.0.1:9000",
+            tokenProvider = {
+
+                when (
+                    val state =
+                        SessionManager
+                            .sessionState
+                            .value
+                ) {
+
+                    SessionState.SignedOut ->
+                        null
+
+                    is SessionState.SignedIn ->
+                        state.accessToken
+                }
+            }
         )
 
     val incident: StateFlow<Incident?> =
