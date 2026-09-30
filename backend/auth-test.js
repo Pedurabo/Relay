@@ -3,6 +3,7 @@ const path = require("path");
 const WebSocket = require("ws");
 
 const backendDir = __dirname;
+const TEST_PORT = 9100;
 const serverPath = path.join(
     backendDir,
     "server.js"
@@ -43,7 +44,7 @@ function waitForServer(
 
                     if (
                         text.includes(
-                            "RELAY_DEV_SERVER_READY|9000"
+                            "RELAY_DEV_SERVER_READY|" + TEST_PORT
                         )
                     ) {
 
@@ -97,7 +98,7 @@ function openSocket(
 
             const socket =
                 new WebSocket(
-                    "ws://127.0.0.1:9000",
+                    "ws://127.0.0.1:" + TEST_PORT,
                     {
                         headers: {
                             Authorization:
@@ -203,6 +204,13 @@ async function main() {
             {
                 cwd:
                     backendDir,
+                env: {
+                    ...process.env,
+                    RELAY_PORT:
+                        String(
+                            TEST_PORT
+                        )
+                },
                 stdio: [
                     "ignore",
                     "pipe",
@@ -219,7 +227,7 @@ async function main() {
 
         const response =
             await fetch(
-                "http://127.0.0.1:9000/auth/dev-session",
+                "http://127.0.0.1:" + TEST_PORT + "/auth/dev-session",
                 {
                     method:
                         "POST",
