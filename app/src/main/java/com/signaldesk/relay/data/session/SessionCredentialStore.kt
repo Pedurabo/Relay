@@ -12,13 +12,17 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 internal class SessionCredentialStore(
-    context: Context
+    context: Context,
+    private val prefsName: String =
+        PREFS_NAME,
+    private val keyAlias: String =
+        KEY_ALIAS
 ) {
 
     private val preferences =
         context.applicationContext
             .getSharedPreferences(
-                PREFS_NAME,
+                prefsName,
                 Context.MODE_PRIVATE
             )
 
@@ -265,7 +269,7 @@ internal class SessionCredentialStore(
 
         val existing =
             keyStore.getKey(
-                KEY_ALIAS,
+                keyAlias,
                 null
             )
 
@@ -286,7 +290,7 @@ internal class SessionCredentialStore(
         generator.init(
             KeyGenParameterSpec
                 .Builder(
-                    KEY_ALIAS,
+                    keyAlias,
                     KeyProperties
                         .PURPOSE_ENCRYPT or
                         KeyProperties
