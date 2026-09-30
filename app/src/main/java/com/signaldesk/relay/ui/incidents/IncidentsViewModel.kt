@@ -132,7 +132,10 @@ class IncidentsViewModel(
                 }
             },
             onSessionInvalidated = {
-                SessionManager.signOut()
+
+                viewModelScope.launch {
+                    refreshSessionOrSignOut()
+                }
             }
         )
 
@@ -216,8 +219,74 @@ class IncidentsViewModel(
         }
     }
 
+    private suspend fun refreshSessionOrSignOut() {
+
+        val current =
+            SessionManager
+                .sessionState
+                .value
+
+        if (
+            current !is
+            SessionState.SignedIn
+        ) {
+            return
+        }
+
+        val refreshed =
+            runCatching {
+
+                authSessionClient
+                    .refreshSession(
+                        current.refreshToken
+                    )
+            }
+                .getOrNull()
+
+        if (
+            refreshed == null ||
+            refreshed.userId !=
+                current.userId
+        ) {
+
+            SessionManager
+                .signOut()
+
+            return
+        }
+
+        SessionManager
+            .establishSession(
+                refreshed
+            )
+    }
+
     fun signOut() {
-        SessionManager.signOut()
+
+        val current =
+            SessionManager
+                .sessionState
+                .value
+
+        SessionManager
+            .signOut()
+
+        if (
+            current is
+            SessionState.SignedIn
+        ) {
+
+            viewModelScope.launch {
+
+                runCatching {
+
+                    authSessionClient
+                        .revokeSession(
+                            current.refreshToken
+                        )
+                }
+            }
+        }
     }
 
     override fun onCleared() {
