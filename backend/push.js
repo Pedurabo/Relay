@@ -170,7 +170,9 @@ class FcmPushSender {
                                             data,
                                             android: {
                                                 priority:
-                                                    "high"
+                                                    "high",
+                                                ttl:
+                                                    "300s"
                                             }
                                         }
                                     })
