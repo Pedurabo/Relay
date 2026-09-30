@@ -111,6 +111,16 @@ class RelayStorage {
                     ON DELETE CASCADE
             ) STRICT;
 
+            CREATE TABLE IF NOT EXISTS push_registrations (
+                token TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                platform TEXT NOT NULL,
+                updated_at INTEGER NOT NULL,
+                FOREIGN KEY(user_id)
+                    REFERENCES users(user_id)
+                    ON DELETE CASCADE
+            ) STRICT;
+
             CREATE INDEX IF NOT EXISTS idx_access_sessions_user
                 ON access_sessions(user_id);
 
@@ -131,6 +141,9 @@ class RelayStorage {
                     incident_id,
                     occurred_at
                 );
+
+            CREATE INDEX IF NOT EXISTS idx_push_registrations_user
+                ON push_registrations(user_id);
             `
         );
     }
@@ -1022,6 +1035,80 @@ class RelayStorage {
                 incidentId,
                 role,
                 Date.now()
+            );
+    }
+
+    upsertPushRegistration(
+        userId,
+        token
+    ) {
+
+        this.database
+            .prepare(
+                `
+                INSERT INTO push_registrations (
+                    token,
+                    user_id,
+                    platform,
+                    updated_at
+                )
+                VALUES (?, ?, 'android', ?)
+                ON CONFLICT(token)
+                DO UPDATE SET
+                    user_id = excluded.user_id,
+                    platform = excluded.platform,
+                    updated_at = excluded.updated_at
+                `
+            )
+            .run(
+                token,
+                userId,
+                Date.now()
+            );
+    }
+
+    removePushRegistration(
+        userId,
+        token
+    ) {
+
+        this.database
+            .prepare(
+                `
+                DELETE FROM push_registrations
+                WHERE user_id = ?
+                  AND token = ?
+                `
+            )
+            .run(
+                userId,
+                token
+            );
+    }
+
+    getPushTargetsForIncident(
+        incidentId
+    ) {
+
+        return this.database
+            .prepare(
+                `
+                SELECT DISTINCT
+                    p.token,
+                    p.user_id AS userId
+                FROM push_registrations p
+                JOIN users u
+                    ON u.user_id = p.user_id
+                LEFT JOIN incident_access ia
+                    ON ia.user_id = p.user_id
+                   AND ia.incident_id = ?
+                WHERE u.is_admin = 1
+                   OR ia.user_id IS NOT NULL
+                ORDER BY p.user_id, p.token
+                `
+            )
+            .all(
+                incidentId
             );
     }
 
