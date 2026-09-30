@@ -6,7 +6,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:auth": "node auth-test.js",
     "test:storage": "node storage-test.js",
-    "test:restart": "node restart-e2e-test.js"
+    "test:restart": "node restart-e2e-test.js",
+    "test:config": "node config-test.js",
+    "test:backup": "node backup-test.js",
+    "provision:admin": "node provision-admin.js",
+    "backup": "node backup.js"
   },
   "keywords": [],
   "author": "",
