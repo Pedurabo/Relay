@@ -235,6 +235,24 @@ function main() {
         "Future database schema version was not rejected."
     );
 
+    const reopenedFuture =
+        new DatabaseSync(
+            futurePath
+        );
+
+    reopenedFuture.close();
+
+    fs.unlinkSync(
+        futurePath
+    );
+
+    assert(
+        !fs.existsSync(
+            futurePath
+        ),
+        "Rejected future-schema database handle remained open."
+    );
+
     cleanup(
         freshPath
     );
