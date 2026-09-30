@@ -190,7 +190,9 @@ function startServer() {
                 RELAY_BOOTSTRAP_USERNAME:
                     USERNAME,
                 RELAY_BOOTSTRAP_PASSWORD:
-                    PASSWORD
+                    PASSWORD,
+                RELAY_ENABLE_TEST_SHUTDOWN:
+                    "1"
             },
             stdio: [
                 "ignore",
@@ -401,11 +403,20 @@ async function stopServer(
     const complete =
         waitForOutput(
             child,
-            "SERVER_SHUTDOWN_COMPLETE|SIGTERM"
+            "SERVER_SHUTDOWN_COMPLETE|TEST"
         );
 
-    child.kill(
-        "SIGTERM"
+    const response =
+        await postJson(
+            "/__test/shutdown",
+            {}
+        );
+
+    assert(
+        response.status ===
+            202,
+        "Graceful shutdown request failed: " +
+            response.status
     );
 
     await complete;
