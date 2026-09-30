@@ -19,6 +19,12 @@ object SessionManager {
     private const val KEY_ACCESS_TOKEN =
         "access_token"
 
+    private const val KEY_REFRESH_TOKEN =
+        "refresh_token"
+
+    private const val KEY_ACCESS_TOKEN_EXPIRES_AT =
+        "access_token_expires_at"
+
     private val _sessionState =
         MutableStateFlow<SessionState>(
             SessionState.SignedOut
@@ -69,16 +75,34 @@ object SessionManager {
                 null
             )
 
+        val refreshToken =
+            preferences.getString(
+                KEY_REFRESH_TOKEN,
+                null
+            )
+
+        val accessTokenExpiresAt =
+            preferences.getLong(
+                KEY_ACCESS_TOKEN_EXPIRES_AT,
+                0L
+            )
+
         _sessionState.value =
             if (
                 !userId.isNullOrBlank() &&
                 !userName.isNullOrBlank() &&
-                !accessToken.isNullOrBlank()
+                !accessToken.isNullOrBlank() &&
+                !refreshToken.isNullOrBlank() &&
+                accessTokenExpiresAt >
+                    0L
             ) {
                 SessionState.SignedIn(
                     userId = userId,
                     userName = userName,
-                    accessToken = accessToken
+                    accessToken = accessToken,
+                    refreshToken = refreshToken,
+                    accessTokenExpiresAt =
+                        accessTokenExpiresAt
                 )
             } else {
                 SessionState.SignedOut
@@ -104,6 +128,15 @@ object SessionManager {
             session.accessToken.isNotBlank()
         )
 
+        require(
+            session.refreshToken.isNotBlank()
+        )
+
+        require(
+            session.accessTokenExpiresAt >
+                0L
+        )
+
         val signedIn =
             SessionState.SignedIn(
                 userId =
@@ -111,7 +144,11 @@ object SessionManager {
                 userName =
                     session.userName,
                 accessToken =
-                    session.accessToken
+                    session.accessToken,
+                refreshToken =
+                    session.refreshToken,
+                accessTokenExpiresAt =
+                    session.accessTokenExpiresAt
             )
 
         appContext
@@ -131,6 +168,14 @@ object SessionManager {
             ?.putString(
                 KEY_ACCESS_TOKEN,
                 signedIn.accessToken
+            )
+            ?.putString(
+                KEY_REFRESH_TOKEN,
+                signedIn.refreshToken
+            )
+            ?.putLong(
+                KEY_ACCESS_TOKEN_EXPIRES_AT,
+                signedIn.accessTokenExpiresAt
             )
             ?.commit()
 
