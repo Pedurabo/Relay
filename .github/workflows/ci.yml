@@ -71,6 +71,9 @@ jobs:
       - name: Verify backend authentication
         run: npm run test:auth
 
+      - name: Verify session tokens are protected at rest
+        run: npm run test:token-storage
+
       - name: Verify SQLite persistence and authorization
         run: npm run test:storage
 
