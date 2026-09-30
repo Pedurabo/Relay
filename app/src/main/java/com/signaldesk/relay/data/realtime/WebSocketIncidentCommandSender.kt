@@ -20,6 +20,8 @@ enum class IncidentCommandResult {
 class WebSocketIncidentCommandSender(
     private val url: String,
     private val tokenProvider: () -> String?,
+    private val onSessionInvalidated:
+        (String) -> Unit = {},
     private val client: OkHttpClient =
         OkHttpClient()
 ) {
@@ -69,10 +71,13 @@ class WebSocketIncidentCommandSender(
                         .Builder()
                         .url(url)
 
-                tokenProvider()
-                    ?.takeIf {
-                        it.isNotBlank()
-                    }
+                val accessToken =
+                    tokenProvider()
+                        ?.takeIf {
+                            it.isNotBlank()
+                        }
+
+                accessToken
                     ?.let {
                         token ->
 
@@ -204,6 +209,17 @@ class WebSocketIncidentCommandSender(
                             response:
                                 Response?
                         ) {
+
+                            if (
+                                response?.code ==
+                                401
+                            ) {
+                                accessToken
+                                    ?.let(
+                                        onSessionInvalidated
+                                    )
+                            }
+
                             finish(
                                 IncidentCommandResult
                                     .TRANSPORT_FAILURE
