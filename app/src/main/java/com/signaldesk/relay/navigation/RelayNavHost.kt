@@ -58,10 +58,20 @@ fun RelayNavHost(
             val sessionState by
                 viewModel.sessionState.collectAsState()
 
+            val signInInProgress by
+                viewModel.signInInProgress.collectAsState()
+
+            val signInError by
+                viewModel.signInError.collectAsState()
+
             IncidentsScreen(
                 incidents = incidents,
                 connectionState = connectionState,
                 sessionState = sessionState,
+                signInInProgress =
+                    signInInProgress,
+                signInError =
+                    signInError,
                 onIncidentClick = { incidentId ->
                     navController.navigate(
                         Routes.incidentDetail(
