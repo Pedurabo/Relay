@@ -110,3 +110,10 @@ final-room-proof-post/
 
 # Development backups
 backup-before-*/
+
+backend/relay.sqlite
+backend/relay.sqlite-wal
+backend/relay.sqlite-shm
+backend/relay-storage-test.sqlite
+backend/relay-storage-test.sqlite-wal
+backend/relay-storage-test.sqlite-shm
