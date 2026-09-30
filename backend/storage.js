@@ -1,5 +1,42 @@
 const path = require("path");
+const crypto = require("crypto");
 const { DatabaseSync } = require("node:sqlite");
+
+const TOKEN_DIGEST_PREFIX =
+    "sha256:";
+
+function tokenDigest(
+    token
+) {
+
+    return (
+        TOKEN_DIGEST_PREFIX +
+        crypto
+            .createHash(
+                "sha256"
+            )
+            .update(
+                String(
+                    token
+                )
+            )
+            .digest(
+                "hex"
+            )
+    );
+}
+
+function isTokenDigest(
+    value
+) {
+
+    return String(
+        value
+    )
+        .startsWith(
+            TOKEN_DIGEST_PREFIX
+        );
+}
 
 class RelayStorage {
 
@@ -146,10 +183,185 @@ class RelayStorage {
                 ON push_registrations(user_id);
             `
         );
+
+        this.migrateSessionTokenDigests();
     }
 
     close() {
         this.database.close();
+    }
+
+    migrateSessionTokenDigests() {
+
+        const refreshRows =
+            this.database
+                .prepare(
+                    `
+                    SELECT
+                        refresh_token AS refreshToken,
+                        user_id AS userId,
+                        expires_at AS expiresAt,
+                        created_at AS createdAt
+                    FROM refresh_sessions
+                    `
+                )
+                .all();
+
+        const accessRows =
+            this.database
+                .prepare(
+                    `
+                    SELECT
+                        access_token AS accessToken
+                    FROM access_sessions
+                    `
+                )
+                .all();
+
+        const needsMigration =
+            refreshRows.some(
+                row =>
+                    !isTokenDigest(
+                        row.refreshToken
+                    )
+            ) ||
+            accessRows.some(
+                row =>
+                    !isTokenDigest(
+                        row.accessToken
+                    )
+            );
+
+        if (
+            !needsMigration
+        ) {
+            return;
+        }
+
+        this.database.exec(
+            "BEGIN IMMEDIATE"
+        );
+
+        try {
+
+            for (
+                const row of
+                refreshRows
+            ) {
+
+                if (
+                    isTokenDigest(
+                        row.refreshToken
+                    )
+                ) {
+                    continue;
+                }
+
+                const digest =
+                    tokenDigest(
+                        row.refreshToken
+                    );
+
+                this.database
+                    .prepare(
+                        `
+                        INSERT OR IGNORE INTO refresh_sessions (
+                            refresh_token,
+                            user_id,
+                            expires_at,
+                            created_at
+                        )
+                        VALUES (?, ?, ?, ?)
+                        `
+                    )
+                    .run(
+                        digest,
+                        row.userId,
+                        row.expiresAt,
+                        row.createdAt
+                    );
+
+                this.database
+                    .prepare(
+                        `
+                        UPDATE access_sessions
+                        SET refresh_token = ?
+                        WHERE refresh_token = ?
+                        `
+                    )
+                    .run(
+                        digest,
+                        row.refreshToken
+                    );
+
+                this.database
+                    .prepare(
+                        `
+                        DELETE FROM refresh_sessions
+                        WHERE refresh_token = ?
+                        `
+                    )
+                    .run(
+                        row.refreshToken
+                    );
+            }
+
+            for (
+                const row of
+                accessRows
+            ) {
+
+                if (
+                    isTokenDigest(
+                        row.accessToken
+                    )
+                ) {
+                    continue;
+                }
+
+                this.database
+                    .prepare(
+                        `
+                        UPDATE access_sessions
+                        SET access_token = ?
+                        WHERE access_token = ?
+                        `
+                    )
+                    .run(
+                        tokenDigest(
+                            row.accessToken
+                        ),
+                        row.accessToken
+                    );
+            }
+
+            const foreignKeyViolation =
+                this.database
+                    .prepare(
+                        "PRAGMA foreign_key_check"
+                    )
+                    .get();
+
+            if (
+                foreignKeyViolation
+            ) {
+                throw new Error(
+                    "Session token digest migration violated foreign keys."
+                );
+            }
+
+            this.database.exec(
+                "COMMIT"
+            );
+
+        } catch (error) {
+
+            this.database.exec(
+                "ROLLBACK"
+            );
+
+            throw error;
+        }
     }
 
     getUserByUsername(
@@ -255,7 +467,9 @@ class RelayStorage {
                     `
                 )
                 .run(
-                    session.refreshToken,
+                    tokenDigest(
+                        session.refreshToken
+                    ),
                     session.userId,
                     session.refreshTokenExpiresAt,
                     Date.now()
@@ -275,8 +489,12 @@ class RelayStorage {
                     `
                 )
                 .run(
-                    session.accessToken,
-                    session.refreshToken,
+                    tokenDigest(
+                        session.accessToken
+                    ),
+                    tokenDigest(
+                        session.refreshToken
+                    ),
                     session.userId,
                     session.accessTokenExpiresAt,
                     Date.now()
@@ -318,7 +536,9 @@ class RelayStorage {
                         `
                     )
                     .run(
-                        oldRefreshToken,
+                        tokenDigest(
+                            oldRefreshToken
+                        ),
                         session.userId,
                         Date.now()
                     );
@@ -350,7 +570,9 @@ class RelayStorage {
                     `
                 )
                 .run(
-                    session.refreshToken,
+                    tokenDigest(
+                        session.refreshToken
+                    ),
                     session.userId,
                     session.refreshTokenExpiresAt,
                     Date.now()
@@ -370,8 +592,12 @@ class RelayStorage {
                     `
                 )
                 .run(
-                    session.accessToken,
-                    session.refreshToken,
+                    tokenDigest(
+                        session.accessToken
+                    ),
+                    tokenDigest(
+                        session.refreshToken
+                    ),
                     session.userId,
                     session.accessTokenExpiresAt,
                     Date.now()
@@ -402,8 +628,8 @@ class RelayStorage {
                 .prepare(
                     `
                     SELECT
-                        a.access_token AS accessToken,
-                        a.refresh_token AS refreshToken,
+                        a.access_token AS storedAccessToken,
+                        a.refresh_token AS storedRefreshToken,
                         a.user_id AS userId,
                         a.expires_at AS expiresAt,
                         u.display_name AS userName
@@ -414,7 +640,9 @@ class RelayStorage {
                     `
                 )
                 .get(
-                    accessToken
+                    tokenDigest(
+                        accessToken
+                    )
                 );
 
         if (!session) {
@@ -433,7 +661,7 @@ class RelayStorage {
                     "DELETE FROM access_sessions WHERE access_token = ?"
                 )
                 .run(
-                    accessToken
+                    session.storedAccessToken
                 );
 
             return null;
@@ -451,7 +679,7 @@ class RelayStorage {
                 .prepare(
                     `
                     SELECT
-                        r.refresh_token AS refreshToken,
+                        r.refresh_token AS storedRefreshToken,
                         r.user_id AS userId,
                         r.expires_at AS expiresAt,
                         u.display_name AS userName
@@ -462,7 +690,9 @@ class RelayStorage {
                     `
                 )
                 .get(
-                    refreshToken
+                    tokenDigest(
+                        refreshToken
+                    )
                 );
 
         if (!session) {
@@ -495,7 +725,9 @@ class RelayStorage {
                 "DELETE FROM refresh_sessions WHERE refresh_token = ?"
             )
             .run(
-                refreshToken
+                tokenDigest(
+                    refreshToken
+                )
             );
     }
 
