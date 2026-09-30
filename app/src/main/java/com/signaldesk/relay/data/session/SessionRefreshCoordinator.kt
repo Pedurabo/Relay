@@ -11,19 +11,13 @@ object SessionRefreshCoordinator {
     private val gate =
         SingleFlightRefreshGate()
 
-    suspend fun refreshOrSignOut():
-        Boolean {
-
-        val observed =
-            SessionManager
-                .sessionState
-                .value as?
-                SessionState.SignedIn
-                ?: return false
+    suspend fun refreshOrSignOut(
+        rejectedAccessToken: String
+    ): Boolean {
 
         return gate.run(
             observedAccessToken =
-                observed.accessToken,
+                rejectedAccessToken,
             currentAccessToken = {
 
                 (
