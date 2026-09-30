@@ -7,7 +7,9 @@ const {
 const databasePath =
     path.join(
         __dirname,
-        "relay-storage-test.sqlite"
+        "relay-storage-test-" +
+            process.pid +
+            ".sqlite"
     );
 
 function cleanup() {
@@ -75,9 +77,14 @@ function main() {
     cleanup();
 
     let storage =
-        new RelayStorage(
-            databasePath
-        );
+        null;
+
+    try {
+
+        storage =
+            new RelayStorage(
+                databasePath
+            );
 
     storage.insertUser(
         userRecord(
@@ -165,20 +172,6 @@ function main() {
         "Non-admin should not have implicit incident access."
     );
 
-    storage.grantIncidentAccess(
-        "user-operator",
-        "INC-DB",
-        "operator"
-    );
-
-    assert(
-        storage.canAccessIncident(
-            "user-operator",
-            "INC-DB"
-        ),
-        "Explicit incident access grant was not honored."
-    );
-
     const incident =
         storage.ensureIncident(
             "INC-DB",
@@ -195,6 +188,20 @@ function main() {
                     true
             }
         );
+
+    storage.grantIncidentAccess(
+        "user-operator",
+        "INC-DB",
+        "operator"
+    );
+
+    assert(
+        storage.canAccessIncident(
+            "user-operator",
+            "INC-DB"
+        ),
+        "Explicit incident access grant was not honored."
+    );
 
     assert(
         incident.sequence ===
@@ -340,13 +347,25 @@ function main() {
         "Access session survived parent refresh revocation."
     );
 
-    storage.close();
+        storage.close();
+        storage =
+            null;
 
-    cleanup();
+        console.log(
+            "SQLITE_AUTHORITATIVE_STATE_GREEN"
+        );
 
-    console.log(
-        "SQLITE_AUTHORITATIVE_STATE_GREEN"
-    );
+    } finally {
+
+        if (
+            storage != null
+        ) {
+
+            storage.close();
+        }
+
+        cleanup();
+    }
 }
 
 try {
@@ -354,8 +373,6 @@ try {
     main();
 
 } catch (error) {
-
-    cleanup();
 
     console.error(
         error
