@@ -39,6 +39,11 @@ class IncidentNotificationManager(
             Dispatchers.IO
         )
 
+    private val dedupStore =
+        NotificationEventDedupStore(
+            context
+        )
+
     init {
         createChannel()
     }
@@ -223,6 +228,15 @@ class IncidentNotificationManager(
         severity: IncidentSeverity,
         content: String
     ) {
+
+        if (
+            !dedupStore
+                .markIfNew(
+                    eventId
+                )
+        ) {
+            return
+        }
 
         val intent =
             Intent(
