@@ -1,8 +1,0 @@
-{
-  "incidentId": "INC-ROOM-OUTBOX-1790770470916",
-  "title": ">>> ROOM OUTBOX TEST <<< 1790770470916",
-  "status": "Active",
-  "severity": "MEDIUM",
-  "sequence": 1,
-  "processedCommandIds": []
-}
