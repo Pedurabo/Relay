@@ -991,6 +991,10 @@ class RelayStorage {
             "operator"
     ) {
 
+        this.ensureIncident(
+            incidentId
+        );
+
         this.database
             .prepare(
                 `
