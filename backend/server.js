@@ -1,5 +1,7 @@
 const fs = require("fs");
 const path = require("path");
+const http = require("http");
+const crypto = require("crypto");
 const { WebSocketServer } = require("ws");
 
 const PORT = 9000;
@@ -15,6 +17,92 @@ const previousRoomTestStateFile =
         __dirname,
         "room-outbox-final-state.json"
     );
+
+
+const SESSION_TTL_MS =
+    60 * 60 * 1000;
+
+const sessions =
+    new Map();
+
+function issueSession(
+    userId,
+    userName
+) {
+
+    const accessToken =
+        crypto
+            .randomBytes(32)
+            .toString("hex");
+
+    const expiresAt =
+        Date.now() +
+        SESSION_TTL_MS;
+
+    sessions.set(
+        accessToken,
+        {
+            userId,
+            userName,
+            expiresAt
+        }
+    );
+
+    return {
+        userId,
+        userName,
+        accessToken,
+        expiresAt
+    };
+}
+
+function resolveBearerSession(
+    authorization
+) {
+
+    const prefix =
+        "Bearer ";
+
+    if (
+        typeof authorization !==
+            "string" ||
+        !authorization.startsWith(
+            prefix
+        )
+    ) {
+        return null;
+    }
+
+    const token =
+        authorization
+            .slice(prefix.length)
+            .trim();
+
+    const session =
+        sessions.get(
+            token
+        );
+
+    if (!session) {
+        return null;
+    }
+
+    if (
+        session.expiresAt <=
+        Date.now()
+    ) {
+        sessions.delete(
+            token
+        );
+
+        return null;
+    }
+
+    return {
+        token,
+        ...session
+    };
+}
 
 function now() {
     return Date.now();
@@ -426,11 +514,209 @@ function acknowledgeSeverity(
 // ------------------------------------------------------------
 //
 
+const server =
+    http.createServer(
+        (request, response) => {
+
+            if (
+                request.method ===
+                    "POST" &&
+                request.url ===
+                    "/auth/dev-session"
+            ) {
+
+                let rawBody =
+                    "";
+
+                request.on(
+                    "data",
+                    chunk => {
+                        rawBody +=
+                            chunk.toString();
+                    }
+                );
+
+                request.on(
+                    "end",
+                    () => {
+
+                        let body;
+
+                        try {
+
+                            body =
+                                JSON.parse(
+                                    rawBody || "{}"
+                                );
+
+                        } catch (error) {
+
+                            response.writeHead(
+                                400,
+                                {
+                                    "Content-Type":
+                                        "application/json"
+                                }
+                            );
+
+                            response.end(
+                                JSON.stringify({
+                                    error:
+                                        "invalid_json"
+                                })
+                            );
+
+                            return;
+                        }
+
+                        const userId =
+                            String(
+                                body.userId ||
+                                ""
+                            )
+                                .trim();
+
+                        const userName =
+                            String(
+                                body.userName ||
+                                ""
+                            )
+                                .trim();
+
+                        if (
+                            userId !==
+                                "dev-relay-operator" ||
+                            userName !==
+                                "Relay Operator"
+                        ) {
+
+                            response.writeHead(
+                                401,
+                                {
+                                    "Content-Type":
+                                        "application/json"
+                                }
+                            );
+
+                            response.end(
+                                JSON.stringify({
+                                    error:
+                                        "invalid_credentials"
+                                })
+                            );
+
+                            return;
+                        }
+
+                        const session =
+                            issueSession(
+                                userId,
+                                userName
+                            );
+
+                        console.log(
+                            "AUTH_SESSION_ISSUED|" +
+                            session.userId +
+                            "|expiresAt=" +
+                            session.expiresAt
+                        );
+
+                        response.writeHead(
+                            200,
+                            {
+                                "Content-Type":
+                                    "application/json"
+                            }
+                        );
+
+                        response.end(
+                            JSON.stringify(
+                                session
+                            )
+                        );
+                    }
+                );
+
+                return;
+            }
+
+            response.writeHead(
+                404,
+                {
+                    "Content-Type":
+                        "application/json"
+                }
+            );
+
+            response.end(
+                JSON.stringify({
+                    error:
+                        "not_found"
+                })
+            );
+        }
+    );
+
 const wss =
     new WebSocketServer({
-        port: PORT,
-        host: "0.0.0.0"
+        noServer: true
     });
+
+server.on(
+    "upgrade",
+    (
+        request,
+        socket,
+        head
+    ) => {
+
+        const session =
+            resolveBearerSession(
+                request.headers[
+                    "authorization"
+                ]
+            );
+
+        if (!session) {
+
+            console.log(
+                "AUTH_WEBSOCKET_REJECTED"
+            );
+
+            socket.write(
+                "HTTP/1.1 401 Unauthorized\r\n" +
+                "Connection: close\r\n" +
+                "\r\n"
+            );
+
+            socket.destroy();
+
+            return;
+        }
+
+        request.relaySession =
+            session;
+
+        wss.handleUpgrade(
+            request,
+            socket,
+            head,
+            webSocket => {
+
+                wss.emit(
+                    "connection",
+                    webSocket,
+                    request
+                );
+            }
+        );
+    }
+);
+
+server.listen(
+    PORT,
+    "0.0.0.0"
+);
 
 console.log(
     "RELAY_DEV_SERVER_READY|" +
@@ -450,10 +736,14 @@ console.log(
 
 wss.on(
     "connection",
-    socket => {
+    (socket, request) => {
+
+        const authenticatedSession =
+            request.relaySession;
 
         console.log(
-            "CLIENT_CONNECTED"
+            "CLIENT_CONNECTED|" +
+            authenticatedSession.userId
         );
 
         socket.on(
