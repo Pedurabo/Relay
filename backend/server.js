@@ -16,6 +16,20 @@ const persistentStateFile =
         "relay-dev-state.json"
     );
 
+const BOOTSTRAP_USERNAME =
+    process.env.RELAY_BOOTSTRAP_USERNAME ||
+    "relay.operator";
+
+const BOOTSTRAP_PASSWORD =
+    process.env.RELAY_BOOTSTRAP_PASSWORD ||
+    "RelayDemo123!";
+
+const BOOTSTRAP_USER_ID =
+    "dev-relay-operator";
+
+const BOOTSTRAP_DISPLAY_NAME =
+    "Relay Operator";
+
 const previousRoomTestStateFile =
     path.join(
         __dirname,
@@ -165,9 +179,80 @@ function randomId(prefix) {
     );
 }
 
+function hashPassword(
+    password,
+    salt
+) {
+
+    return crypto
+        .scryptSync(
+            password,
+            salt,
+            64
+        )
+        .toString("hex");
+}
+
+function createUserRecord(
+    userId,
+    username,
+    displayName,
+    password
+) {
+
+    const passwordSalt =
+        crypto
+            .randomBytes(16)
+            .toString("hex");
+
+    return {
+        userId,
+        username:
+            username.toLowerCase(),
+        displayName,
+        passwordSalt,
+        passwordHash:
+            hashPassword(
+                password,
+                passwordSalt
+            )
+    };
+}
+
+function verifyPassword(
+    password,
+    user
+) {
+
+    const actual =
+        Buffer.from(
+            hashPassword(
+                password,
+                user.passwordSalt
+            ),
+            "hex"
+        );
+
+    const expected =
+        Buffer.from(
+            user.passwordHash,
+            "hex"
+        );
+
+    return (
+        actual.length ===
+            expected.length &&
+        crypto.timingSafeEqual(
+            actual,
+            expected
+        )
+    );
+}
+
 function freshState() {
 
     return {
+        users: {},
         incidents: {},
         processedCommands: {},
         timelineEntries: {}
@@ -216,6 +301,36 @@ function saveState() {
 }
 
 function normalizeState() {
+
+    if (
+        !state.users
+    ) {
+        state.users = {};
+    }
+
+    if (
+        !state.users[
+            BOOTSTRAP_USERNAME
+                .toLowerCase()
+        ]
+    ) {
+
+        state.users[
+            BOOTSTRAP_USERNAME
+                .toLowerCase()
+        ] =
+            createUserRecord(
+                BOOTSTRAP_USER_ID,
+                BOOTSTRAP_USERNAME,
+                BOOTSTRAP_DISPLAY_NAME,
+                BOOTSTRAP_PASSWORD
+            );
+
+        console.log(
+            "AUTH_BOOTSTRAP_USER_CREATED|" +
+            BOOTSTRAP_USER_ID
+        );
+    }
 
     if (
         !state.incidents
@@ -566,7 +681,7 @@ const server =
                 request.method ===
                     "POST" &&
                 request.url ===
-                    "/auth/dev-session"
+                    "/auth/login"
             ) {
 
                 let rawBody =
@@ -613,26 +728,38 @@ const server =
                             return;
                         }
 
-                        const userId =
+                        const username =
                             String(
-                                body.userId ||
+                                body.username ||
                                 ""
                             )
-                                .trim();
+                                .trim()
+                                .toLowerCase();
 
-                        const userName =
+                        const password =
                             String(
-                                body.userName ||
+                                body.password ||
                                 ""
-                            )
-                                .trim();
+                            );
+
+                        const user =
+                            state.users[
+                                username
+                            ];
 
                         if (
-                            userId !==
-                                "dev-relay-operator" ||
-                            userName !==
-                                "Relay Operator"
+                            !user ||
+                            !password ||
+                            !verifyPassword(
+                                password,
+                                user
+                            )
                         ) {
+
+                            console.log(
+                                "AUTH_LOGIN_REJECTED|" +
+                                username
+                            );
 
                             response.writeHead(
                                 401,
@@ -654,12 +781,12 @@ const server =
 
                         const session =
                             issueSession(
-                                userId,
-                                userName
+                                user.userId,
+                                user.displayName
                             );
 
                         console.log(
-                            "AUTH_SESSION_ISSUED|" +
+                            "AUTH_LOGIN_ACCEPTED|" +
                             session.userId +
                             "|expiresAt=" +
                             session.accessTokenExpiresAt
