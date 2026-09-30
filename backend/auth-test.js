@@ -5,6 +5,10 @@ const WebSocket = require("ws");
 const backendDir = __dirname;
 const TEST_PORT = 9100;
 const ACCESS_TTL_MS = 250;
+const TEST_USERNAME =
+    "relay.operator";
+const TEST_PASSWORD =
+    "RelayDemo123!";
 const serverPath = path.join(
     backendDir,
     "server.js"
@@ -253,7 +257,11 @@ async function main() {
                     RELAY_ACCESS_TTL_MS:
                         String(
                             ACCESS_TTL_MS
-                        )
+                        ),
+                    RELAY_BOOTSTRAP_USERNAME:
+                        TEST_USERNAME,
+                    RELAY_BOOTSTRAP_PASSWORD:
+                        TEST_PASSWORD
                 },
                 stdio: [
                     "ignore",
