@@ -16,7 +16,9 @@ import kotlin.coroutines.resumeWithException
 data class AuthenticatedSession(
     val userId: String,
     val userName: String,
-    val accessToken: String
+    val accessToken: String,
+    val refreshToken: String,
+    val accessTokenExpiresAt: Long
 )
 
 class AuthSessionClient(
@@ -26,33 +28,161 @@ class AuthSessionClient(
 ) {
 
     suspend fun createDevelopmentSession():
-        AuthenticatedSession =
-        suspendCancellableCoroutine {
-            continuation ->
+        AuthenticatedSession {
 
-            val body =
-                JSONObject()
-                    .put(
-                        "userId",
-                        "dev-relay-operator"
-                    )
-                    .put(
-                        "userName",
-                        "Relay Operator"
-                    )
-                    .toString()
-                    .toRequestBody(
-                        "application/json"
-                            .toMediaType()
-                    )
+        val body =
+            JSONObject()
+                .put(
+                    "userId",
+                    "dev-relay-operator"
+                )
+                .put(
+                    "userName",
+                    "Relay Operator"
+                )
 
-            val request =
+        return postForSession(
+            path =
+                "/auth/dev-session",
+            body =
+                body
+        )
+    }
+
+    suspend fun refreshSession(
+        refreshToken: String
+    ): AuthenticatedSession {
+
+        val body =
+            JSONObject()
+                .put(
+                    "refreshToken",
+                    refreshToken
+                )
+
+        return postForSession(
+            path =
+                "/auth/refresh",
+            body =
+                body
+        )
+    }
+
+    suspend fun revokeSession(
+        refreshToken: String
+    ) {
+
+        val body =
+            JSONObject()
+                .put(
+                    "refreshToken",
+                    refreshToken
+                )
+                .toString()
+                .toRequestBody(
+                    "application/json"
+                        .toMediaType()
+                )
+
+        execute(
+            Request.Builder()
+                .url(
+                    "$baseUrl/auth/revoke"
+                )
+                .post(body)
+                .build()
+        ).use { response ->
+
+            if (
+                response.code !=
+                    204 &&
+                response.code !=
+                    401
+            ) {
+
+                throw IOException(
+                    "Session revoke failed: HTTP " +
+                        response.code
+                )
+            }
+        }
+    }
+
+    private suspend fun postForSession(
+        path: String,
+        body: JSONObject
+    ): AuthenticatedSession {
+
+        val requestBody =
+            body
+                .toString()
+                .toRequestBody(
+                    "application/json"
+                        .toMediaType()
+                )
+
+        val response =
+            execute(
                 Request.Builder()
                     .url(
-                        "$baseUrl/auth/dev-session"
+                        baseUrl +
+                            path
                     )
-                    .post(body)
+                    .post(
+                        requestBody
+                    )
                     .build()
+            )
+
+        response.use {
+
+            if (
+                !response.isSuccessful
+            ) {
+
+                throw IOException(
+                    "Authentication failed: HTTP " +
+                        response.code
+                )
+            }
+
+            val json =
+                JSONObject(
+                    response.body
+                        ?.string()
+                        .orEmpty()
+                )
+
+            return AuthenticatedSession(
+                userId =
+                    json.getString(
+                        "userId"
+                    ),
+                userName =
+                    json.getString(
+                        "userName"
+                    ),
+                accessToken =
+                    json.getString(
+                        "accessToken"
+                    ),
+                refreshToken =
+                    json.getString(
+                        "refreshToken"
+                    ),
+                accessTokenExpiresAt =
+                    json.getLong(
+                        "accessTokenExpiresAt"
+                    )
+            )
+        }
+    }
+
+    private suspend fun execute(
+        request: Request
+    ): Response =
+        suspendCancellableCoroutine {
+            continuation ->
 
             val call =
                 client.newCall(
@@ -64,14 +194,14 @@ class AuthSessionClient(
 
                     override fun onFailure(
                         call: Call,
-                        error: IOException
+                        e: IOException
                     ) {
                         if (
                             continuation.isActive
                         ) {
                             continuation
                                 .resumeWithException(
-                                    error
+                                    e
                                 )
                         }
                     }
@@ -80,58 +210,14 @@ class AuthSessionClient(
                         call: Call,
                         response: Response
                     ) {
-
-                        response.use {
-
-                            if (
-                                !response.isSuccessful
-                            ) {
-
-                                if (
-                                    continuation.isActive
-                                ) {
-                                    continuation
-                                        .resumeWithException(
-                                            IOException(
-                                                "Authentication failed: HTTP " +
-                                                    response.code
-                                            )
-                                        )
-                                }
-
-                                return
-                            }
-
-                            val json =
-                                JSONObject(
-                                    response.body
-                                        ?.string()
-                                        .orEmpty()
-                                )
-
-                            val session =
-                                AuthenticatedSession(
-                                    userId =
-                                        json.getString(
-                                            "userId"
-                                        ),
-                                    userName =
-                                        json.getString(
-                                            "userName"
-                                        ),
-                                    accessToken =
-                                        json.getString(
-                                            "accessToken"
-                                        )
-                                )
-
-                            if (
-                                continuation.isActive
-                            ) {
-                                continuation.resume(
-                                    session
-                                )
-                            }
+                        if (
+                            continuation.isActive
+                        ) {
+                            continuation.resume(
+                                response
+                            )
+                        } else {
+                            response.close()
                         }
                     }
                 }
