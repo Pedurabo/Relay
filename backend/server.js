@@ -58,11 +58,9 @@ const pushSender =
         process.env
     );
 
-function issueSession(
+function createSessionPayload(
     userId,
-    userName,
-    refreshToken =
-        null
+    userName
 ) {
 
     const accessToken =
@@ -70,29 +68,35 @@ function issueSession(
             .randomBytes(32)
             .toString("hex");
 
-    const resolvedRefreshToken =
-        refreshToken ||
+    const refreshToken =
         crypto
             .randomBytes(48)
             .toString("hex");
 
-    const accessTokenExpiresAt =
-        Date.now() +
-        SESSION_TTL_MS;
-
-    const refreshTokenExpiresAt =
-        Date.now() +
-        REFRESH_TTL_MS;
-
-    const session = {
+    return {
         userId,
         userName,
         accessToken,
-        refreshToken:
-            resolvedRefreshToken,
-        accessTokenExpiresAt,
-        refreshTokenExpiresAt
+        refreshToken,
+        accessTokenExpiresAt:
+            Date.now() +
+            SESSION_TTL_MS,
+        refreshTokenExpiresAt:
+            Date.now() +
+            REFRESH_TTL_MS
     };
+}
+
+function issueSession(
+    userId,
+    userName
+) {
+
+    const session =
+        createSessionPayload(
+            userId,
+            userName
+        );
 
     storage.saveSession(
         session
@@ -851,11 +855,39 @@ const server =
                         }
 
                         const session =
-                            issueSession(
+                            createSessionPayload(
                                 refreshSession.userId,
-                                refreshSession.userName,
-                                refreshToken
+                                refreshSession.userName
                             );
+
+                        const rotated =
+                            storage
+                                .rotateSession(
+                                    refreshToken,
+                                    session
+                                );
+
+                        if (
+                            !rotated
+                        ) {
+
+                            response.writeHead(
+                                401,
+                                {
+                                    "Content-Type":
+                                        "application/json"
+                                }
+                            );
+
+                            response.end(
+                                JSON.stringify({
+                                    error:
+                                        "invalid_refresh_token"
+                                })
+                            );
+
+                            return;
+                        }
 
                         console.log(
                             "AUTH_SESSION_REFRESHED|" +
