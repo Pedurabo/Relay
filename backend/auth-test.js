@@ -4,6 +4,7 @@ const WebSocket = require("ws");
 
 const backendDir = __dirname;
 const TEST_PORT = 9100;
+const ACCESS_TTL_MS = 250;
 const serverPath = path.join(
     backendDir,
     "server.js"
@@ -35,16 +36,17 @@ function waitForServer(
                 "data",
                 data => {
 
-                    const text =
+                    const output =
                         data.toString();
 
                     process.stdout.write(
-                        text
+                        output
                     );
 
                     if (
-                        text.includes(
-                            "RELAY_DEV_SERVER_READY|" + TEST_PORT
+                        output.includes(
+                            "RELAY_DEV_SERVER_READY|" +
+                                TEST_PORT
                         )
                     ) {
 
@@ -86,6 +88,19 @@ function waitForServer(
     );
 }
 
+function delay(
+    millis
+) {
+    return new Promise(
+        resolve => {
+            setTimeout(
+                resolve,
+                millis
+            );
+        }
+    );
+}
+
 function openSocket(
     token
 ) {
@@ -98,7 +113,8 @@ function openSocket(
 
             const socket =
                 new WebSocket(
-                    "ws://127.0.0.1:" + TEST_PORT,
+                    "ws://127.0.0.1:" +
+                        TEST_PORT,
                     {
                         headers: {
                             Authorization:
@@ -193,6 +209,30 @@ function openSocket(
     );
 }
 
+async function postJson(
+    pathName,
+    body
+) {
+
+    return fetch(
+        "http://127.0.0.1:" +
+            TEST_PORT +
+            pathName,
+        {
+            method:
+                "POST",
+            headers: {
+                "Content-Type":
+                    "application/json"
+            },
+            body:
+                JSON.stringify(
+                    body
+                )
+        }
+    );
+}
+
 async function main() {
 
     const child =
@@ -209,6 +249,10 @@ async function main() {
                     RELAY_PORT:
                         String(
                             TEST_PORT
+                        ),
+                    RELAY_ACCESS_TTL_MS:
+                        String(
+                            ACCESS_TTL_MS
                         )
                 },
                 stdio: [
@@ -226,22 +270,13 @@ async function main() {
         );
 
         const response =
-            await fetch(
-                "http://127.0.0.1:" + TEST_PORT + "/auth/dev-session",
+            await postJson(
+                "/auth/dev-session",
                 {
-                    method:
-                        "POST",
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-                    body:
-                        JSON.stringify({
-                            userId:
-                                "dev-relay-operator",
-                            userName:
-                                "Relay Operator"
-                        })
+                    userId:
+                        "dev-relay-operator",
+                    userName:
+                        "Relay Operator"
                 }
             );
 
@@ -261,7 +296,9 @@ async function main() {
         if (
             session.userId !==
                 "dev-relay-operator" ||
-            !session.accessToken
+            !session.accessToken ||
+            !session.refreshToken ||
+            !session.accessTokenExpiresAt
         ) {
             throw new Error(
                 "Invalid session payload."
@@ -298,8 +335,121 @@ async function main() {
             );
         }
 
+        await delay(
+            ACCESS_TTL_MS +
+                150
+        );
+
+        const expired =
+            await openSocket(
+                session.accessToken
+            );
+
+        if (
+            expired !==
+            "rejected:401"
+        ) {
+            throw new Error(
+                "Expired access token was not rejected: " +
+                    expired
+            );
+        }
+
+        const refreshResponse =
+            await postJson(
+                "/auth/refresh",
+                {
+                    refreshToken:
+                        session.refreshToken
+                }
+            );
+
+        if (
+            refreshResponse.status !==
+            200
+        ) {
+            throw new Error(
+                "Expected refresh 200, got " +
+                    refreshResponse.status
+            );
+        }
+
+        const refreshed =
+            await refreshResponse.json();
+
+        if (
+            refreshed.userId !==
+                session.userId
+        ) {
+            throw new Error(
+                "Refresh changed immutable userId."
+            );
+        }
+
+        if (
+            refreshed.accessToken ===
+                session.accessToken
+        ) {
+            throw new Error(
+                "Refresh did not rotate access token."
+            );
+        }
+
+        const refreshedSocket =
+            await openSocket(
+                refreshed.accessToken
+            );
+
+        if (
+            refreshedSocket !==
+            "opened"
+        ) {
+            throw new Error(
+                "Refreshed access token was rejected: " +
+                    refreshedSocket
+            );
+        }
+
+        const revokeResponse =
+            await postJson(
+                "/auth/revoke",
+                {
+                    refreshToken:
+                        refreshed.refreshToken
+                }
+            );
+
+        if (
+            revokeResponse.status !==
+            204
+        ) {
+            throw new Error(
+                "Expected revoke 204, got " +
+                    revokeResponse.status
+            );
+        }
+
+        const revokedRefreshResponse =
+            await postJson(
+                "/auth/refresh",
+                {
+                    refreshToken:
+                        refreshed.refreshToken
+                }
+            );
+
+        if (
+            revokedRefreshResponse.status !==
+            401
+        ) {
+            throw new Error(
+                "Revoked refresh token remained usable: " +
+                    revokedRefreshResponse.status
+            );
+        }
+
         console.log(
-            "AUTH_BACKEND_GREEN"
+            "AUTH_REFRESH_GREEN"
         );
 
     } finally {
