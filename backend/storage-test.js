@@ -179,6 +179,147 @@ function main() {
         "Explicit incident access grant was not honored."
     );
 
+    const incident =
+        storage.ensureIncident(
+            "INC-DB",
+            {
+                title:
+                    "Database incident",
+                status:
+                    "Active",
+                severity:
+                    "MEDIUM",
+                sequence:
+                    10,
+                serverOwned:
+                    true
+            }
+        );
+
+    assert(
+        incident.sequence ===
+            10,
+        "Incident seed sequence was not stored."
+    );
+
+    const applied =
+        storage.applySeverityCommand(
+            "CMD-DB-1",
+            "INC-DB",
+            "HIGH",
+            1000
+        );
+
+    assert(
+        applied.duplicate ===
+            false,
+        "First severity command was incorrectly deduped."
+    );
+
+    assert(
+        applied.incident.severity ===
+            "HIGH",
+        "Severity update was not persisted."
+    );
+
+    assert(
+        Number(
+            applied.incident.sequence
+        ) ===
+            11,
+        "Server-owned sequence did not advance."
+    );
+
+    const duplicate =
+        storage.applySeverityCommand(
+            "CMD-DB-1",
+            "INC-DB",
+            "CRITICAL",
+            2000
+        );
+
+    assert(
+        duplicate.duplicate ===
+            true,
+        "Duplicate severity command was re-applied."
+    );
+
+    assert(
+        duplicate.incident.severity ===
+            "HIGH",
+        "Duplicate command changed authoritative severity."
+    );
+
+    const timeline =
+        storage.saveTimelineEntry({
+            type:
+                "timeline.entry.added",
+            eventId:
+                "EVT-TIMELINE-DB-1",
+            incidentId:
+                "INC-DB",
+            occurredAt:
+                1500,
+            entryId:
+                "ENTRY-DB-1",
+            message:
+                "Persist me",
+            author:
+                "Operator"
+        });
+
+    assert(
+        timeline.entryId ===
+            "ENTRY-DB-1",
+        "Timeline entry was not stored."
+    );
+
+    storage.close();
+
+    storage =
+        new RelayStorage(
+            databasePath
+        );
+
+    assert(
+        storage
+            .getProcessedCommand(
+                "CMD-DB-1"
+            )
+            ?.incidentId ===
+            "INC-DB",
+        "Processed command dedupe did not survive reopen."
+    );
+
+    assert(
+        storage
+            .getTimelineEntry(
+                "ENTRY-DB-1"
+            )
+            ?.message ===
+            "Persist me",
+        "Timeline entry did not survive reopen."
+    );
+
+    const replay =
+        storage.getReplay(
+            "INC-DB",
+            11,
+            11
+        );
+
+    assert(
+        replay.length ===
+            1,
+        "Ordered incident history did not survive reopen."
+    );
+
+    assert(
+        replay[0].severity ===
+            "HIGH",
+        "Replay event payload was incorrect."
+    );
+
     storage.revokeRefreshSession(
         "refresh-1"
     );
@@ -204,7 +345,7 @@ function main() {
     cleanup();
 
     console.log(
-        "SQLITE_STORAGE_GREEN"
+        "SQLITE_AUTHORITATIVE_STATE_GREEN"
     );
 }
 
