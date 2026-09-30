@@ -71,6 +71,9 @@ jobs:
       - name: Verify backend authentication
         run: npm run test:auth
 
+      - name: Verify login abuse rate limiting
+        run: npm run test:login-rate-limit
+
       - name: Verify session and push pruning
         run: npm run test:pruning
 
