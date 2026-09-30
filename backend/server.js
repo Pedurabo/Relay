@@ -634,6 +634,19 @@ function acknowledgeSeverity(
     );
 }
 
+
+function canAccessIncident(
+    authenticatedSession,
+    incidentId
+) {
+
+    return storage
+        .canAccessIncident(
+            authenticatedSession.userId,
+            incidentId
+        );
+}
+
 //
 // ------------------------------------------------------------
 // Server
@@ -1186,6 +1199,37 @@ wss.on(
                         return;
                     }
 
+                    if (
+                        !canAccessIncident(
+                            authenticatedSession,
+                            incidentId
+                        )
+                    ) {
+
+                        send(
+                            socket,
+                            {
+                                type:
+                                    "command.rejected",
+                                command:
+                                    "incident.severity.update",
+                                commandId,
+                                incidentId,
+                                reason:
+                                    "forbidden"
+                            }
+                        );
+
+                        console.log(
+                            "AUTH_INCIDENT_FORBIDDEN|" +
+                            authenticatedSession.userId +
+                            "|" +
+                            incidentId
+                        );
+
+                        return;
+                    }
+
                     const existingCommand =
                         state.processedCommands[
                             commandId
@@ -1447,6 +1491,28 @@ wss.on(
                         return;
                     }
 
+                    if (
+                        !canAccessIncident(
+                            authenticatedSession,
+                            incidentId
+                        )
+                    ) {
+
+                        console.log(
+                            "AUTH_INCIDENT_FORBIDDEN|" +
+                            authenticatedSession.userId +
+                            "|" +
+                            incidentId
+                        );
+
+                        socket.close(
+                            4003,
+                            "Forbidden"
+                        );
+
+                        return;
+                    }
+
                     ensureIncident(
                         incidentId
                     );
@@ -1544,6 +1610,23 @@ wss.on(
                         Number(
                             message.throughSequence
                         );
+
+                    if (
+                        !canAccessIncident(
+                            authenticatedSession,
+                            incidentId
+                        )
+                    ) {
+
+                        console.log(
+                            "AUTH_INCIDENT_FORBIDDEN|" +
+                            authenticatedSession.userId +
+                            "|" +
+                            incidentId
+                        );
+
+                        return;
+                    }
 
                     const incident =
                         state.incidents[
@@ -1644,6 +1727,7 @@ process.on(
     () => {
 
         saveState();
+        storage.close();
         process.exit(0);
     }
 );
@@ -1653,6 +1737,7 @@ process.on(
     () => {
 
         saveState();
+        storage.close();
         process.exit(0);
     }
 );
