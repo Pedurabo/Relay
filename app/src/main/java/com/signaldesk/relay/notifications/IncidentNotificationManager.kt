@@ -166,7 +166,7 @@ class IncidentNotificationManager(
                         }
                         ?: "incident updated"
 
-                "${severity.name}: ${event.incidentId} · $detail"
+                "${severity.name}: ${event.incidentId} Â· $detail"
             }
 
             is TimelineEntryAddedEvent ->
@@ -243,14 +243,27 @@ class IncidentNotificationManager(
                 )
                 .build()
 
-        NotificationManagerCompat
-            .from(context)
-            .notify(
-                event.eventId
-                    .hashCode()
-                    .absoluteValue,
-                notification
-            )
+        if (!hasPermission()) {
+            return
+        }
+
+        try {
+
+            NotificationManagerCompat
+                .from(context)
+                .notify(
+                    event.eventId
+                        .hashCode()
+                        .absoluteValue,
+                    notification
+                )
+
+        } catch (
+            error: SecurityException
+        ) {
+
+            return
+        }
     }
 
     private fun hasPermission():
