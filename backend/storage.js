@@ -296,6 +296,103 @@ class RelayStorage {
         }
     }
 
+    rotateSession(
+        oldRefreshToken,
+        session
+    ) {
+
+        this.database.exec(
+            "BEGIN IMMEDIATE"
+        );
+
+        try {
+
+            const consumed =
+                this.database
+                    .prepare(
+                        `
+                        DELETE FROM refresh_sessions
+                        WHERE refresh_token = ?
+                          AND user_id = ?
+                          AND expires_at > ?
+                        `
+                    )
+                    .run(
+                        oldRefreshToken,
+                        session.userId,
+                        Date.now()
+                    );
+
+            if (
+                Number(
+                    consumed.changes
+                ) !==
+                1
+            ) {
+
+                this.database.exec(
+                    "ROLLBACK"
+                );
+
+                return false;
+            }
+
+            this.database
+                .prepare(
+                    `
+                    INSERT INTO refresh_sessions (
+                        refresh_token,
+                        user_id,
+                        expires_at,
+                        created_at
+                    )
+                    VALUES (?, ?, ?, ?)
+                    `
+                )
+                .run(
+                    session.refreshToken,
+                    session.userId,
+                    session.refreshTokenExpiresAt,
+                    Date.now()
+                );
+
+            this.database
+                .prepare(
+                    `
+                    INSERT INTO access_sessions (
+                        access_token,
+                        refresh_token,
+                        user_id,
+                        expires_at,
+                        created_at
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    `
+                )
+                .run(
+                    session.accessToken,
+                    session.refreshToken,
+                    session.userId,
+                    session.accessTokenExpiresAt,
+                    Date.now()
+                );
+
+            this.database.exec(
+                "COMMIT"
+            );
+
+            return true;
+
+        } catch (error) {
+
+            this.database.exec(
+                "ROLLBACK"
+            );
+
+            throw error;
+        }
+    }
+
     getAccessSession(
         accessToken
     ) {
