@@ -482,7 +482,12 @@ function sendPushForIncidentEvent(
             ),
             buildIncidentPushPayload(
                 event,
-                content
+                content,
+                storage
+                    .getIncident(
+                        event.incidentId
+                    ) ||
+                    {}
             )
         )
         .then(
