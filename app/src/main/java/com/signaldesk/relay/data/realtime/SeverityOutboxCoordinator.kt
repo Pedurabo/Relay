@@ -157,7 +157,7 @@ object SeverityOutboxCoordinator {
                     current is
                     SessionState.SignedIn &&
                     store.load(
-                        current.userName
+                        current.userId
                     ) != null
                 ) {
 
@@ -190,7 +190,7 @@ object SeverityOutboxCoordinator {
             }
 
             val ownerPrincipal =
-                session.userName
+                session.userId
 
             val pending =
                 store.loadAll(
@@ -443,7 +443,7 @@ object SeverityOutboxCoordinator {
             if (
                 currentSession !is
                 SessionState.SignedIn ||
-                currentSession.userName !=
+                currentSession.userId !=
                 ownerPrincipal
             ) {
 
@@ -632,7 +632,7 @@ object SeverityOutboxCoordinator {
         if (
             session !is
             SessionState.SignedIn ||
-            session.userName !=
+            session.userId !=
             pending.ownerPrincipal
         ) {
 
@@ -869,7 +869,7 @@ object SeverityOutboxCoordinator {
         return (
             session is
                 SessionState.SignedIn &&
-            session.userName ==
+            session.userId ==
                 ownerPrincipal
         )
     }
