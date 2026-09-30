@@ -10,6 +10,28 @@ android {
 
     defaultConfig {
         applicationId = "com.signaldesk.relay"
+
+        val firebaseApplicationId =
+            providers.gradleProperty("relayFirebaseApplicationId")
+                .orElse(System.getenv("RELAY_FIREBASE_APPLICATION_ID") ?: "")
+                .get()
+        val firebaseProjectId =
+            providers.gradleProperty("relayFirebaseProjectId")
+                .orElse(System.getenv("RELAY_FIREBASE_PROJECT_ID") ?: "")
+                .get()
+        val firebaseApiKey =
+            providers.gradleProperty("relayFirebaseApiKey")
+                .orElse(System.getenv("RELAY_FIREBASE_API_KEY") ?: "")
+                .get()
+        val firebaseSenderId =
+            providers.gradleProperty("relayFirebaseSenderId")
+                .orElse(System.getenv("RELAY_FIREBASE_SENDER_ID") ?: "")
+                .get()
+
+        buildConfigField("String", "FIREBASE_APPLICATION_ID", "\"$firebaseApplicationId\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"$firebaseProjectId\"")
+        buildConfigField("String", "FIREBASE_API_KEY", "\"$firebaseApiKey\"")
+        buildConfigField("String", "FIREBASE_SENDER_ID", "\"$firebaseSenderId\"")
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -33,13 +55,14 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
-    
-    
-    
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+
     implementation(libs.okhttp.core)
 implementation(libs.androidx.lifecycle.viewmodel.compose)
 implementation(libs.androidx.room.runtime)
