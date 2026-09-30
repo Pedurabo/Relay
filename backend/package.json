@@ -17,7 +17,8 @@
     "test:authorization": "node authorization-e2e-test.js",
     "test:token-storage": "node session-token-storage-test.js",
     "test:migrations": "node schema-migration-test.js",
-    "test:pruning": "node session-pruning-test.js"
+    "test:pruning": "node session-pruning-test.js",
+    "test:login-rate-limit": "node login-rate-limit-test.js"
   },
   "keywords": [],
   "author": "",
