@@ -17,6 +17,7 @@ import kotlin.coroutines.resumeWithException
 
 class WebSocketTimelineSender(
     private val url: String,
+    private val tokenProvider: () -> String?,
     private val client: OkHttpClient =
         OkHttpClient()
 ) {
