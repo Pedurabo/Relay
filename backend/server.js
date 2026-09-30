@@ -929,6 +929,54 @@ const server =
 
             if (
                 request.method ===
+                    "GET" &&
+                request.url ===
+                    "/push/status"
+            ) {
+
+                const session =
+                    resolveBearerSession(
+                        request.headers[
+                            "authorization"
+                        ]
+                    );
+
+                if (
+                    !session
+                ) {
+
+                    response.writeHead(
+                        401
+                    );
+
+                    response.end();
+
+                    return;
+                }
+
+                response.writeHead(
+                    200,
+                    {
+                        "Content-Type":
+                            "application/json"
+                    }
+                );
+
+                response.end(
+                    JSON.stringify({
+                        registeredDevices:
+                            storage
+                                .countPushRegistrationsForUser(
+                                    session.userId
+                                )
+                    })
+                );
+
+                return;
+            }
+
+            if (
+                request.method ===
                     "POST" &&
                 (
                     request.url ===
