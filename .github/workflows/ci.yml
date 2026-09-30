@@ -77,6 +77,9 @@ jobs:
       - name: Verify SQLite persistence and authorization
         run: npm run test:storage
 
+      - name: Verify versioned SQLite migrations
+        run: npm run test:migrations
+
       - name: Verify restart-level backend behavior
         run: npm run test:restart
 
