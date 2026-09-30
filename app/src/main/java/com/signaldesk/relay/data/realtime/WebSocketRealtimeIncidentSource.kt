@@ -156,6 +156,13 @@ class WebSocketRealtimeIncidentSource(
                         _connectionState.value =
                             RealtimeConnectionState.Disconnected
 
+                        if (
+                            response?.code ==
+                            401
+                        ) {
+                            onSessionInvalidated()
+                        }
+
                         close(t)
                     }
                 }
