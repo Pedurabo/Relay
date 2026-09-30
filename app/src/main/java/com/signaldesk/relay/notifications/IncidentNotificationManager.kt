@@ -81,14 +81,57 @@ class IncidentNotificationManager(
                     ?: return@launch
 
             postNotification(
-                event =
-                    event,
+                eventId =
+                    event.eventId,
+                incidentId =
+                    event.incidentId,
                 severity =
                     severity,
                 content =
                     content
             )
         }
+    }
+
+    fun notifyRemoteEvent(
+        eventId: String,
+        incidentId: String,
+        severityValue: String,
+        content: String
+    ) {
+
+        if (
+            AppVisibilityTracker.isForeground ||
+            !hasPermission()
+        ) {
+            return
+        }
+
+        val severity =
+            IncidentSeverity
+                .fromStoredValue(
+                    severityValue
+                )
+
+        if (
+            severity !=
+            IncidentSeverity.HIGH &&
+            severity !=
+            IncidentSeverity.CRITICAL
+        ) {
+            return
+        }
+
+        postNotification(
+            eventId =
+                eventId,
+            incidentId =
+                incidentId,
+            severity =
+                severity,
+            content =
+                content
+        )
     }
 
     private suspend fun resolveSeverity(
@@ -175,7 +218,8 @@ class IncidentNotificationManager(
     }
 
     private fun postNotification(
-        event: IncidentEvent,
+        eventId: String,
+        incidentId: String,
         severity: IncidentSeverity,
         content: String
     ) {
@@ -188,12 +232,17 @@ class IncidentNotificationManager(
                 flags =
                     Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_CLEAR_TOP
+
+                putExtra(
+                    MainActivity.EXTRA_INCIDENT_ID,
+                    incidentId
+                )
             }
 
         val pendingIntent =
             PendingIntent.getActivity(
                 context,
-                event.incidentId.hashCode(),
+                incidentId.hashCode(),
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or
                     PendingIntent.FLAG_IMMUTABLE
@@ -252,7 +301,7 @@ class IncidentNotificationManager(
             NotificationManagerCompat
                 .from(context)
                 .notify(
-                    event.eventId
+                    eventId
                         .hashCode()
                         .absoluteValue,
                     notification
