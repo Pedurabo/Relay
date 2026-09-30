@@ -389,6 +389,207 @@ class RelayStorage {
             );
     }
 
+    importLegacyState(
+        legacyState
+    ) {
+
+        if (
+            !legacyState ||
+            this.countIncidents() >
+                0
+        ) {
+            return;
+        }
+
+        this.database.exec(
+            "BEGIN IMMEDIATE"
+        );
+
+        try {
+
+            for (
+                const incident of
+                Object.values(
+                    legacyState.incidents ||
+                    {}
+                )
+            ) {
+
+                const timestamp =
+                    Date.now();
+
+                this.database
+                    .prepare(
+                        `
+                        INSERT OR IGNORE INTO incidents (
+                            incident_id,
+                            title,
+                            status,
+                            severity,
+                            sequence,
+                            server_owned,
+                            created_at,
+                            updated_at
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        `
+                    )
+                    .run(
+                        incident.id,
+                        incident.title ||
+                            "Existing Relay incident",
+                        incident.status ||
+                            "Active",
+                        incident.severity ||
+                            "MEDIUM",
+                        Number(
+                            incident.sequence ||
+                            0
+                        ),
+                        incident.serverOwned
+                            ? 1
+                            : 0,
+                        timestamp,
+                        timestamp
+                    );
+
+                for (
+                    const event of
+                    incident.history ||
+                    []
+                ) {
+
+                    this.database
+                        .prepare(
+                            `
+                            INSERT OR IGNORE INTO incident_events (
+                                event_id,
+                                incident_id,
+                                event_type,
+                                sequence,
+                                occurred_at,
+                                payload_json
+                            )
+                            VALUES (?, ?, ?, ?, ?, ?)
+                            `
+                        )
+                        .run(
+                            event.eventId,
+                            event.incidentId,
+                            event.type,
+                            Number(
+                                event.sequence ||
+                                0
+                            ),
+                            Number(
+                                event.occurredAt ||
+                                timestamp
+                            ),
+                            JSON.stringify(
+                                event
+                            )
+                        );
+                }
+            }
+
+            for (
+                const command of
+                Object.values(
+                    legacyState.processedCommands ||
+                    {}
+                )
+            ) {
+
+                if (
+                    this.getIncident(
+                        command.incidentId
+                    )
+                ) {
+
+                    this.database
+                        .prepare(
+                            `
+                            INSERT OR IGNORE INTO processed_commands (
+                                command_id,
+                                incident_id,
+                                command_type,
+                                severity,
+                                processed_at
+                            )
+                            VALUES (?, ?, ?, ?, ?)
+                            `
+                        )
+                        .run(
+                            command.commandId,
+                            command.incidentId,
+                            command.type ||
+                                "incident.severity.update",
+                            command.severity ||
+                                null,
+                            Number(
+                                command.processedAt ||
+                                Date.now()
+                            )
+                        );
+                }
+            }
+
+            for (
+                const entry of
+                Object.values(
+                    legacyState.timelineEntries ||
+                    {}
+                )
+            ) {
+
+                if (
+                    this.getIncident(
+                        entry.incidentId
+                    )
+                ) {
+
+                    this.database
+                        .prepare(
+                            `
+                            INSERT OR IGNORE INTO timeline_entries (
+                                entry_id,
+                                incident_id,
+                                event_id,
+                                message,
+                                author,
+                                occurred_at
+                            )
+                            VALUES (?, ?, ?, ?, ?, ?)
+                            `
+                        )
+                        .run(
+                            entry.entryId,
+                            entry.incidentId,
+                            entry.eventId,
+                            entry.message,
+                            entry.author,
+                            Number(
+                                entry.occurredAt ||
+                                Date.now()
+                            )
+                        );
+                }
+            }
+
+            this.database.exec(
+                "COMMIT"
+            );
+
+        } catch (error) {
+
+            this.database.exec(
+                "ROLLBACK"
+            );
+
+            throw error;
+        }
+    }
+
     getIncident(
         incidentId
     ) {
