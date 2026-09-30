@@ -204,15 +204,31 @@ class RelayStorage {
                 databasePath
             );
 
-        this.database.exec(
-            `
-            PRAGMA journal_mode = WAL;
-            PRAGMA foreign_keys = ON;
-            `
-        );
+        try {
 
-        this.migrateSchema();
-        this.migrateSessionTokenDigests();
+            this.database.exec(
+                `
+                PRAGMA journal_mode = WAL;
+                PRAGMA foreign_keys = ON;
+                `
+            );
+
+            this.migrateSchema();
+            this.migrateSessionTokenDigests();
+
+        } catch (error) {
+
+            try {
+                this.database.close();
+            } catch (
+                closeError
+            ) {
+
+                void closeError;
+            }
+
+            throw error;
+        }
     }
 
     migrateSchema() {
