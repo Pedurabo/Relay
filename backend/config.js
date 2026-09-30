@@ -91,6 +91,27 @@ function loadConfig(
             "RELAY_REFRESH_TTL_MS"
         );
 
+    const loginRateLimitWindowMs =
+        parsePositiveInteger(
+            env.RELAY_LOGIN_RATE_LIMIT_WINDOW_MS,
+            5 * 60 * 1000,
+            "RELAY_LOGIN_RATE_LIMIT_WINDOW_MS"
+        );
+
+    const loginRateLimitUsernameFailures =
+        parsePositiveInteger(
+            env.RELAY_LOGIN_RATE_LIMIT_USERNAME_FAILURES,
+            5,
+            "RELAY_LOGIN_RATE_LIMIT_USERNAME_FAILURES"
+        );
+
+    const loginRateLimitClientFailures =
+        parsePositiveInteger(
+            env.RELAY_LOGIN_RATE_LIMIT_CLIENT_FAILURES,
+            20,
+            "RELAY_LOGIN_RATE_LIMIT_CLIENT_FAILURES"
+        );
+
     if (
         refreshTtlMs <=
         accessTtlMs
@@ -181,6 +202,9 @@ function loadConfig(
         databasePath,
         accessTtlMs,
         refreshTtlMs,
+        loginRateLimitWindowMs,
+        loginRateLimitUsernameFailures,
+        loginRateLimitClientFailures,
         testShutdownEnabled,
         allowDevelopmentBootstrap:
             environment !==
