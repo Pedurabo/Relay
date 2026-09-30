@@ -336,9 +336,19 @@ function send(
     }
 }
 
-function broadcast(
+function broadcastIncident(
     message
 ) {
+
+    const incidentId =
+        message &&
+        message.incidentId;
+
+    if (
+        !incidentId
+    ) {
+        return;
+    }
 
     const payload =
         JSON.stringify(
@@ -350,8 +360,16 @@ function broadcast(
         wss.clients
     ) {
 
+        const session =
+            client.relaySession;
+
         if (
-            client.readyState === 1
+            client.readyState === 1 &&
+            session &&
+            canAccessIncident(
+                session,
+                incidentId
+            )
         ) {
 
             client.send(
@@ -1210,6 +1228,9 @@ wss.on(
         const authenticatedSession =
             request.relaySession;
 
+        socket.relaySession =
+            authenticatedSession;
+
         console.log(
             "CLIENT_CONNECTED|" +
             authenticatedSession.userId
@@ -1372,6 +1393,41 @@ wss.on(
                         existingCommand
                     ) {
 
+                        if (
+                            existingCommand.incidentId !==
+                            incidentId ||
+                            !canAccessIncident(
+                                authenticatedSession,
+                                existingCommand.incidentId
+                            )
+                        ) {
+
+                            send(
+                                socket,
+                                {
+                                    type:
+                                        "command.rejected",
+                                    command:
+                                        "incident.severity.update",
+                                    commandId,
+                                    incidentId,
+                                    reason:
+                                        "command_id_conflict"
+                                }
+                            );
+
+                            console.log(
+                                "SEVERITY_COMMAND_ID_CONFLICT|" +
+                                authenticatedSession.userId +
+                                "|" +
+                                commandId +
+                                "|" +
+                                incidentId
+                            );
+
+                            return;
+                        }
+
                         const duplicateIncident =
                             ensureIncident(
                                 existingCommand
@@ -1396,7 +1452,7 @@ wss.on(
                             true
                         );
 
-                        broadcast(
+                        broadcastIncident(
                             buildSeverityEvent(
                                 duplicateIncident,
                                 commandId
@@ -1529,7 +1585,7 @@ wss.on(
                         false
                     );
 
-                    broadcast(
+                    broadcastIncident(
                         event
                     );
 
@@ -1624,6 +1680,24 @@ wss.on(
                                 entryId
                             );
 
+                    if (
+                        event &&
+                        event.incidentId !==
+                            incidentId
+                    ) {
+
+                        console.log(
+                            "TIMELINE_ENTRY_ID_CONFLICT|" +
+                            authenticatedSession.userId +
+                            "|" +
+                            entryId +
+                            "|" +
+                            incidentId
+                        );
+
+                        return;
+                    }
+
                     var created =
                         false;
 
@@ -1667,7 +1741,7 @@ wss.on(
                         incidentId
                     );
 
-                    broadcast(
+                    broadcastIncident(
                         event
                     );
 
