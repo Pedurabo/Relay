@@ -212,10 +212,67 @@ object SeverityOutboxCoordinator {
             var attemptedAny =
                 false
 
+            val now =
+                System.currentTimeMillis()
+
+            val retryNotBeforeMillis =
+                pending
+                    .mapNotNull { command ->
+
+                        retryStates[
+                            command.commandId
+                        ]
+                            ?.notBeforeMillis
+                            ?.let { notBefore ->
+                                command.commandId to
+                                    notBefore
+                            }
+                    }
+                    .toMap()
+
+            val eligibleCommandIds =
+                OutboxDrainPlanner
+                    .eligibleCommandIds(
+                        commandIds =
+                            pending.map {
+                                it.commandId
+                            },
+
+                        retryNotBeforeMillis =
+                            retryNotBeforeMillis,
+
+                        nowMillis =
+                            now
+                    )
+                    .toSet()
+
             for (
                 command in
                 pending
             ) {
+
+                if (
+                    command.commandId !in
+                    eligibleCommandIds
+                ) {
+
+                    val retryState =
+                        retryStates[
+                            command.commandId
+                        ]
+
+                    if (
+                        retryState != null
+                    ) {
+
+                        Log.i(
+                            TAG,
+                            "OUTBOX_COOLDOWN|${command.commandId}|remainingMs=${retryState.notBeforeMillis - now}|attempt=${retryState.attempt}"
+                        )
+                    }
+
+                    continue
+                }
 
                 if (
                     !isCurrentOwner(
@@ -231,27 +288,6 @@ object SeverityOutboxCoordinator {
                     return
                 }
 
-                val retryState =
-                    retryStates[
-                        command.commandId
-                    ]
-
-                val now =
-                    System.currentTimeMillis()
-
-                if (
-                    retryState != null &&
-                    retryState.notBeforeMillis >
-                    now
-                ) {
-
-                    Log.i(
-                        TAG,
-                        "OUTBOX_COOLDOWN|${command.commandId}|remainingMs=${retryState.notBeforeMillis - now}|attempt=${retryState.attempt}"
-                    )
-
-                    continue
-                }
 
                 val claimed =
                     store.claim(
@@ -443,15 +479,35 @@ object SeverityOutboxCoordinator {
             val currentTime =
                 System.currentTimeMillis()
 
-            val nearestRetry =
+            val remainingRetryNotBefore =
                 remaining
                     .mapNotNull { command ->
+
                         retryStates[
                             command.commandId
                         ]
                             ?.notBeforeMillis
+                            ?.let { notBefore ->
+                                command.commandId to
+                                    notBefore
+                            }
                     }
-                    .minOrNull()
+                    .toMap()
+
+            val nearestRetry =
+                OutboxDrainPlanner
+                    .nearestRetryAtMillis(
+                        commandIds =
+                            remaining.map {
+                                it.commandId
+                            },
+
+                        retryNotBeforeMillis =
+                            remainingRetryNotBefore,
+
+                        nowMillis =
+                            currentTime
+                    )
 
             if (
                 nearestRetry != null
