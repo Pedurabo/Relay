@@ -27,23 +27,25 @@ class AuthSessionClient(
         OkHttpClient()
 ) {
 
-    suspend fun createDevelopmentSession():
-        AuthenticatedSession {
+    suspend fun login(
+        username: String,
+        password: String
+    ): AuthenticatedSession {
 
         val body =
             JSONObject()
                 .put(
-                    "userId",
-                    "dev-relay-operator"
+                    "username",
+                    username
                 )
                 .put(
-                    "userName",
-                    "Relay Operator"
+                    "password",
+                    password
                 )
 
         return postForSession(
             path =
-                "/auth/dev-session",
+                "/auth/login",
             body =
                 body
         )
