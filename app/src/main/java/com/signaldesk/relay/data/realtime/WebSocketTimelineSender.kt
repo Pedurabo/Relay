@@ -18,6 +18,8 @@ import kotlin.coroutines.resumeWithException
 class WebSocketTimelineSender(
     private val url: String,
     private val tokenProvider: () -> String?,
+    private val onSessionInvalidated:
+        (String) -> Unit = {},
     private val client: OkHttpClient =
         OkHttpClient()
 ) {
@@ -227,6 +229,17 @@ class WebSocketTimelineSender(
                         t: Throwable,
                         response: Response?
                     ) {
+
+                        if (
+                            response?.code ==
+                            401
+                        ) {
+                            token
+                                ?.let(
+                                    onSessionInvalidated
+                                )
+                        }
+
                         fail(t)
                     }
 
