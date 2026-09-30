@@ -85,3 +85,6 @@ jobs:
 
       - name: Verify push authorization and payload policy
         run: npm run test:push
+
+      - name: Verify realtime incident authorization
+        run: npm run test:authorization
