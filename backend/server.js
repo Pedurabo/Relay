@@ -3,6 +3,7 @@ const path = require("path");
 const http = require("http");
 const crypto = require("crypto");
 const { WebSocketServer } = require("ws");
+const { createStorage } = require("./storage");
 
 const PORT =
     Number(
@@ -49,11 +50,10 @@ const REFRESH_TTL_MS =
         7 * 24 * 60 * 60 * 1000
     );
 
-const sessions =
-    new Map();
-
-const refreshSessions =
-    new Map();
+const storage =
+    createStorage(
+        __dirname
+    );
 
 function issueSession(
     userId,
@@ -81,29 +81,7 @@ function issueSession(
         Date.now() +
         REFRESH_TTL_MS;
 
-    sessions.set(
-        accessToken,
-        {
-            userId,
-            userName,
-            refreshToken:
-                resolvedRefreshToken,
-            expiresAt:
-                accessTokenExpiresAt
-        }
-    );
-
-    refreshSessions.set(
-        resolvedRefreshToken,
-        {
-            userId,
-            userName,
-            expiresAt:
-                refreshTokenExpiresAt
-        }
-    );
-
-    return {
+    const session = {
         userId,
         userName,
         accessToken,
@@ -112,6 +90,12 @@ function issueSession(
         accessTokenExpiresAt,
         refreshTokenExpiresAt
     };
+
+    storage.saveSession(
+        session
+    );
+
+    return session;
 }
 
 function resolveBearerSession(
@@ -137,22 +121,11 @@ function resolveBearerSession(
             .trim();
 
     const session =
-        sessions.get(
+        storage.getAccessSession(
             token
         );
 
     if (!session) {
-        return null;
-    }
-
-    if (
-        session.expiresAt <=
-        Date.now()
-    ) {
-        sessions.delete(
-            token
-        );
-
         return null;
     }
 
@@ -252,7 +225,6 @@ function verifyPassword(
 function freshState() {
 
     return {
-        users: {},
         incidents: {},
         processedCommands: {},
         timelineEntries: {}
@@ -301,36 +273,6 @@ function saveState() {
 }
 
 function normalizeState() {
-
-    if (
-        !state.users
-    ) {
-        state.users = {};
-    }
-
-    if (
-        !state.users[
-            BOOTSTRAP_USERNAME
-                .toLowerCase()
-        ]
-    ) {
-
-        state.users[
-            BOOTSTRAP_USERNAME
-                .toLowerCase()
-        ] =
-            createUserRecord(
-                BOOTSTRAP_USER_ID,
-                BOOTSTRAP_USERNAME,
-                BOOTSTRAP_DISPLAY_NAME,
-                BOOTSTRAP_PASSWORD
-            );
-
-        console.log(
-            "AUTH_BOOTSTRAP_USER_CREATED|" +
-            BOOTSTRAP_USER_ID
-        );
-    }
 
     if (
         !state.incidents
@@ -392,6 +334,31 @@ let state =
     loadState();
 
 normalizeState();
+
+if (
+    !storage.getUserByUsername(
+        BOOTSTRAP_USERNAME
+    )
+) {
+
+    const user =
+        createUserRecord(
+            BOOTSTRAP_USER_ID,
+            BOOTSTRAP_USERNAME,
+            BOOTSTRAP_DISPLAY_NAME,
+            BOOTSTRAP_PASSWORD
+        );
+
+    storage.insertUser({
+        ...user,
+        isAdmin: true
+    });
+
+    console.log(
+        "AUTH_BOOTSTRAP_USER_CREATED|" +
+        BOOTSTRAP_USER_ID
+    );
+}
 
 
 
@@ -743,9 +710,9 @@ const server =
                             );
 
                         const user =
-                            state.users[
+                            storage.getUserByUsername(
                                 username
-                            ];
+                            );
 
                         if (
                             !user ||
@@ -868,19 +835,13 @@ const server =
                                 .trim();
 
                         const refreshSession =
-                            refreshSessions.get(
+                            storage.getRefreshSession(
                                 refreshToken
                             );
 
                         if (
-                            !refreshSession ||
-                            refreshSession.expiresAt <=
-                                Date.now()
+                            !refreshSession
                         ) {
-
-                            refreshSessions.delete(
-                                refreshToken
-                            );
 
                             response.writeHead(
                                 401,
@@ -979,28 +940,10 @@ const server =
                             refreshToken
                         ) {
 
-                            refreshSessions.delete(
-                                refreshToken
-                            );
-
-                            for (
-                                const [
-                                    accessToken,
-                                    accessSession
-                                ] of
-                                sessions.entries()
-                            ) {
-
-                                if (
-                                    accessSession.refreshToken ===
+                            storage
+                                .revokeRefreshSession(
                                     refreshToken
-                                ) {
-
-                                    sessions.delete(
-                                        accessToken
-                                    );
-                                }
-                            }
+                                );
 
                             console.log(
                                 "AUTH_SESSION_REVOKED"
