@@ -15,6 +15,7 @@ import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.notifications.IncidentNotificationManager
+import com.signaldesk.relay.notifications.PushRegistrationCoordinator
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +38,11 @@ class IncidentsViewModel(
         )
 
         SeverityOutboxCoordinator
+            .initialize(
+                application
+            )
+
+        PushRegistrationCoordinator
             .initialize(
                 application
             )
@@ -196,6 +202,11 @@ class IncidentsViewModel(
 
                             SeverityOutboxCoordinator
                                 .kick()
+
+                            PushRegistrationCoordinator
+                                .kick(
+                                    application
+                                )
                         }
                     }
                 }
@@ -323,6 +334,14 @@ class IncidentsViewModel(
             current is
             SessionState.SignedIn
         ) {
+
+            PushRegistrationCoordinator
+                .unregister(
+                    context =
+                        getApplication(),
+                    accessToken =
+                        current.accessToken
+                )
 
             viewModelScope.launch {
 
