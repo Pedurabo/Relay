@@ -10,6 +10,7 @@ import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
 import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
 import com.signaldesk.relay.data.repository.IncidentRepository
+import com.signaldesk.relay.data.session.AuthSessionClient
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.Incident
@@ -101,6 +102,12 @@ class IncidentsViewModel(
                     emptyList()
             )
 
+    private val authSessionClient =
+        AuthSessionClient(
+            baseUrl =
+                "http://127.0.0.1:9000"
+        )
+
     val sessionState =
         SessionManager.sessionState
 
@@ -185,12 +192,28 @@ class IncidentsViewModel(
     }
 
     fun signIn() {
-        SessionManager.signIn(
-            userId =
-                "dev-relay-operator",
-            userName =
-                "Relay Operator"
-        )
+
+        viewModelScope.launch {
+
+            runCatching {
+
+                authSessionClient
+                    .createDevelopmentSession()
+
+            }
+                .onSuccess { session ->
+
+                    SessionManager
+                        .establishSession(
+                            session
+                        )
+                }
+                .onFailure {
+
+                    SessionManager
+                        .signOut()
+                }
+        }
     }
 
     fun signOut() {
