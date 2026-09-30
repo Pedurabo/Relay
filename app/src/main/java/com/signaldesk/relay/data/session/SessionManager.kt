@@ -11,6 +11,9 @@ object SessionManager {
     private const val PREFS_NAME =
         "relay_session"
 
+    private const val KEY_USER_ID =
+        "user_id"
+
     private const val KEY_USER_NAME =
         "user_name"
 
@@ -49,6 +52,12 @@ object SessionManager {
                     Context.MODE_PRIVATE
                 )
 
+        val userId =
+            preferences.getString(
+                KEY_USER_ID,
+                null
+            )
+
         val userName =
             preferences.getString(
                 KEY_USER_NAME,
@@ -63,10 +72,12 @@ object SessionManager {
 
         _sessionState.value =
             if (
+                !userId.isNullOrBlank() &&
                 !userName.isNullOrBlank() &&
                 !accessToken.isNullOrBlank()
             ) {
                 SessionState.SignedIn(
+                    userId = userId,
                     userName = userName,
                     accessToken = accessToken
                 )
@@ -78,15 +89,27 @@ object SessionManager {
     }
 
     fun signIn(
+        userId: String,
         userName: String
     ) {
+        require(
+            userId.isNotBlank()
+        )
+
+        require(
+            userName.isNotBlank()
+        )
+
         val token =
-            "demo-" +
+            "demo:" +
+                userId +
+                ":" +
                 UUID.randomUUID()
                     .toString()
 
         val signedIn =
             SessionState.SignedIn(
+                userId = userId,
                 userName = userName,
                 accessToken = token
             )
@@ -97,6 +120,10 @@ object SessionManager {
                 Context.MODE_PRIVATE
             )
             ?.edit()
+            ?.putString(
+                KEY_USER_ID,
+                signedIn.userId
+            )
             ?.putString(
                 KEY_USER_NAME,
                 signedIn.userName
@@ -113,11 +140,6 @@ object SessionManager {
 
     fun signOut() {
 
-        /*
-         * Persist the auth boundary synchronously before publishing
-         * SignedOut. An immediate process death must not resurrect
-         * the previous authenticated session.
-         */
         appContext
             ?.getSharedPreferences(
                 PREFS_NAME,
@@ -131,4 +153,3 @@ object SessionManager {
             SessionState.SignedOut
     }
 }
-
