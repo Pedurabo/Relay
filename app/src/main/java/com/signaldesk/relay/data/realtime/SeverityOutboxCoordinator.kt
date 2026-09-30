@@ -6,6 +6,7 @@ import com.signaldesk.relay.data.local.PendingSeverityCommand
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.local.RoomPendingSeverityCommandStore
 import com.signaldesk.relay.data.session.SessionManager
+import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.IncidentSeverity
 import java.util.concurrent.ConcurrentHashMap
@@ -655,6 +656,25 @@ object SeverityOutboxCoordinator {
 
                 tokenProvider = {
                     deliveryToken
+                },
+
+                onSessionInvalidated = {
+                    rejectedAccessToken ->
+
+                    scope.launch {
+
+                        val refreshed =
+                            SessionRefreshCoordinator
+                                .refreshOrSignOut(
+                                    rejectedAccessToken
+                                )
+
+                        if (
+                            refreshed
+                        ) {
+                            kick()
+                        }
+                    }
                 }
             )
 
