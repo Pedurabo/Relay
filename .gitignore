@@ -117,3 +117,6 @@ backend/relay.sqlite-shm
 backend/relay-storage-test.sqlite
 backend/relay-storage-test.sqlite-wal
 backend/relay-storage-test.sqlite-shm
+
+backend/relay-firebase-service-account.json
+backend/firebase-service-account*.json
