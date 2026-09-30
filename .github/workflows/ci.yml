@@ -76,3 +76,9 @@ jobs:
 
       - name: Verify restart-level backend behavior
         run: npm run test:restart
+
+      - name: Verify production configuration safety
+        run: npm run test:config
+
+      - name: Verify SQLite backup and restore
+        run: npm run test:backup
