@@ -169,7 +169,7 @@ class IncidentDetailViewModel(
                         null
 
                     is SessionState.SignedIn ->
-                        session.userName
+                        session.userId
                 }
 
             ownerPrincipal
@@ -242,7 +242,7 @@ class IncidentDetailViewModel(
                     return
 
                 is SessionState.SignedIn ->
-                    session.userName
+                    session.userId
             }
 
         val pending =
