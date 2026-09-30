@@ -67,3 +67,6 @@ jobs:
 
       - name: Validate backend syntax
         run: node --check server.js
+
+      - name: Verify backend authentication
+        run: npm run test:auth
