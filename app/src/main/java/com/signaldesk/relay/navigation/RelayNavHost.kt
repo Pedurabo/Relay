@@ -2,6 +2,7 @@ package com.signaldesk.relay.navigation
 import com.signaldesk.relay.model.IncidentSeverity
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -32,10 +33,29 @@ private object Routes {
 
 @Composable
 fun RelayNavHost(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initialIncidentId: String? = null
 ) {
     val navController =
         rememberNavController()
+
+    LaunchedEffect(
+        initialIncidentId
+    ) {
+
+        initialIncidentId
+            ?.takeIf {
+                it.isNotBlank()
+            }
+            ?.let { incidentId ->
+
+                navController.navigate(
+                    Routes.incidentDetail(
+                        incidentId
+                    )
+                )
+            }
+    }
 
     NavHost(
         navController = navController,
