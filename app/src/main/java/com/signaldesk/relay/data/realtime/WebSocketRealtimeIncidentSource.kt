@@ -20,7 +20,7 @@ import org.json.JSONObject
 class WebSocketRealtimeIncidentSource(
     private val url: String,
     private val tokenProvider: () -> String? = { null },
-    private val onSessionInvalidated: () -> Unit = {},
+    private val onSessionInvalidated: (String) -> Unit = {},
     private val client: OkHttpClient =
         OkHttpClient()
 ) : RealtimeIncidentSource {
@@ -48,10 +48,13 @@ class WebSocketRealtimeIncidentSource(
                 Request.Builder()
                     .url(url)
 
-            tokenProvider()
-                ?.takeIf {
-                    it.isNotBlank()
-                }
+            val accessToken =
+                tokenProvider()
+                    ?.takeIf {
+                        it.isNotBlank()
+                    }
+
+            accessToken
                 ?.let { token ->
                     requestBuilder.header(
                         "Authorization",
@@ -93,7 +96,10 @@ class WebSocketRealtimeIncidentSource(
                             _connectionState.value =
                                 RealtimeConnectionState.Disconnected
 
-                            onSessionInvalidated()
+                            accessToken
+                                ?.let(
+                                    onSessionInvalidated
+                                )
 
                             webSocket.close(
                                 4001,
@@ -160,7 +166,10 @@ class WebSocketRealtimeIncidentSource(
                             response?.code ==
                             401
                         ) {
-                            onSessionInvalidated()
+                            accessToken
+                                ?.let(
+                                    onSessionInvalidated
+                                )
                         }
 
                         close(t)
