@@ -1086,6 +1086,28 @@ class RelayStorage {
             );
     }
 
+    countPushRegistrationsForUser(
+        userId
+    ) {
+
+        const row =
+            this.database
+                .prepare(
+                    `
+                    SELECT COUNT(*) AS count
+                    FROM push_registrations
+                    WHERE user_id = ?
+                    `
+                )
+                .get(
+                    userId
+                );
+
+        return Number(
+            row.count
+        );
+    }
+
     getPushTargetsForIncident(
         incidentId
     ) {
