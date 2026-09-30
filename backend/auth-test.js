@@ -429,6 +429,21 @@ async function main() {
             );
         }
 
+        const revokedAccess =
+            await openSocket(
+                refreshed.accessToken
+            );
+
+        if (
+            revokedAccess !==
+            "rejected:401"
+        ) {
+            throw new Error(
+                "Revoked access token remained usable: " +
+                    revokedAccess
+            );
+        }
+
         const revokedRefreshResponse =
             await postJson(
                 "/auth/refresh",
@@ -449,7 +464,7 @@ async function main() {
         }
 
         console.log(
-            "AUTH_REFRESH_GREEN"
+            "AUTH_LOGOUT_REVOCATION_GREEN"
         );
 
     } finally {
