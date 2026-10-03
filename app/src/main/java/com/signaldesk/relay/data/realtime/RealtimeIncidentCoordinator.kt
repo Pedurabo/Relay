@@ -38,6 +38,18 @@ internal fun removeReplayJobIfCurrent(
         replayJob
     )
 
+
+internal suspend fun stopRealtimeReplayJobs(
+    jobs: Collection<Job>
+) {
+    jobs.forEach {
+        it.cancel()
+    }
+
+    jobs.forEach {
+        it.join()
+    }
+}
 internal class RealtimeAttemptConnectionTracker {
 
     private var sawConnecting =
@@ -253,7 +265,15 @@ class RealtimeIncidentCoordinator(
                             .remove(
                                 incidentId
                             )
-                            ?.cancel()
+                            ?.let {
+                                replayJob ->
+
+                                stopRealtimeReplayJobs(
+                                    listOf(
+                                        replayJob
+                                    )
+                                )
+                            }
                     }
 
                 if (
@@ -261,13 +281,16 @@ class RealtimeIncidentCoordinator(
                     RealtimeConnectionState.Connected
                 ) {
 
-                    replayJobs
-                        .values
-                        .forEach {
-                            it.cancel()
-                        }
+                    val replayJobsToStop =
+                        replayJobs
+                            .values
+                            .toList()
 
                     replayJobs.clear()
+
+                    stopRealtimeReplayJobs(
+                        replayJobsToStop
+                    )
 
                     return@collect
                 }
