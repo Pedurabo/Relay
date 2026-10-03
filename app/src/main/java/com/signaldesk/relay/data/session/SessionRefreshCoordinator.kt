@@ -1,5 +1,12 @@
 package com.signaldesk.relay.data.session
 
+internal fun shouldSignOutAfterRefreshFailure(
+    error: Throwable
+): Boolean =
+    error is AuthHttpException &&
+        error.statusCode ==
+            401
+
 object SessionRefreshCoordinator {
 
     private val client =
@@ -38,19 +45,38 @@ object SessionRefreshCoordinator {
                         ?: return@run false
 
                 val refreshed =
-                    runCatching {
+                    try {
 
                         client
                             .refreshSession(
                                 current.refreshToken
                             )
+
+                    } catch (
+                        error: kotlinx.coroutines.CancellationException
+                    ) {
+                        throw error
+
+                    } catch (
+                        error: Throwable
+                    ) {
+
+                        if (
+                            shouldSignOutAfterRefreshFailure(
+                                error
+                            )
+                        ) {
+
+                            SessionManager
+                                .signOut()
+                        }
+
+                        return@run false
                     }
-                        .getOrNull()
 
                 if (
-                    refreshed == null ||
                     refreshed.userId !=
-                        current.userId
+                    current.userId
                 ) {
 
                     SessionManager

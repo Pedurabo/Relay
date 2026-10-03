@@ -13,6 +13,12 @@ import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+internal class AuthHttpException(
+    val statusCode: Int
+) : IOException(
+    "Authentication failed: HTTP $statusCode"
+)
+
 data class AuthenticatedSession(
     val userId: String,
     val userName: String,
@@ -142,9 +148,8 @@ class AuthSessionClient(
                 !response.isSuccessful
             ) {
 
-                throw IOException(
-                    "Authentication failed: HTTP " +
-                        response.code
+                throw AuthHttpException(
+                    response.code
                 )
             }
 
