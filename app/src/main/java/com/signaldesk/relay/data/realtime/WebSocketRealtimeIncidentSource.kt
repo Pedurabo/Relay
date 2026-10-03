@@ -30,13 +30,24 @@ internal fun <T : Any> shouldProcessRealtimeSocketMessage(
 ): Boolean =
     activeSocket === callbackSocket
 
-internal fun shouldAcceptRealtimeSocketOpen(
+internal fun isCurrentRealtimeAttempt(
     activeAttemptId: Long,
     callbackAttemptId: Long
 ): Boolean =
     activeAttemptId != 0L &&
         activeAttemptId ==
         callbackAttemptId
+
+internal fun shouldAcceptRealtimeSocketOpen(
+    activeAttemptId: Long,
+    callbackAttemptId: Long
+): Boolean =
+    isCurrentRealtimeAttempt(
+        activeAttemptId =
+            activeAttemptId,
+        callbackAttemptId =
+            callbackAttemptId
+    )
 
 class WebSocketRealtimeIncidentSource(
     private val url: String,
@@ -204,6 +215,12 @@ class WebSocketRealtimeIncidentSource(
                         reason: String
                     ) {
                         if (
+                            isCurrentRealtimeAttempt(
+                                activeAttemptId =
+                                    activeAttemptId,
+                                callbackAttemptId =
+                                    attemptId
+                            ) &&
                             shouldApplyRealtimeSocketTerminalState(
                                 activeSocket =
                                     activeSocket,
@@ -232,6 +249,12 @@ class WebSocketRealtimeIncidentSource(
                         response: Response?
                     ) {
                         val shouldApplyTerminalState =
+                            isCurrentRealtimeAttempt(
+                                activeAttemptId =
+                                    activeAttemptId,
+                                callbackAttemptId =
+                                    attemptId
+                            ) &&
                             shouldApplyRealtimeSocketTerminalState(
                                 activeSocket =
                                     activeSocket,
