@@ -333,7 +333,6 @@ class RealtimeIncidentCoordinator(
 
     fun stop() {
         job?.cancel()
-        job = null
 
         _connectionState.value =
             RealtimeConnectionState.Disconnected
