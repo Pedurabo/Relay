@@ -100,6 +100,17 @@ class WebSocketRealtimeIncidentSource(
                             json.optString("type") ==
                             "session.invalidated"
                         ) {
+
+                            if (
+                                !shouldApplyRealtimeSocketTerminalState(
+                                    activeSocket =
+                                        activeSocket,
+                                    callbackSocket =
+                                        webSocket
+                                )
+                            ) {
+                                return
+                            }
                             _connectionState.value =
                                 RealtimeConnectionState.Disconnected
 
@@ -169,13 +180,16 @@ class WebSocketRealtimeIncidentSource(
                         t: Throwable,
                         response: Response?
                     ) {
-                        if (
+                        val shouldApplyTerminalState =
                             shouldApplyRealtimeSocketTerminalState(
                                 activeSocket =
                                     activeSocket,
                                 callbackSocket =
                                     webSocket
                             )
+
+                        if (
+                            shouldApplyTerminalState
                         ) {
 
                             if (
@@ -190,6 +204,7 @@ class WebSocketRealtimeIncidentSource(
                         }
 
                         if (
+                            shouldApplyTerminalState &&
                             response?.code ==
                             401
                         ) {
