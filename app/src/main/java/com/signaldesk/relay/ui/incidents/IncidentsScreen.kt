@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -196,60 +197,16 @@ fun IncidentsScreen(
 
                 item {
 
-                    Row(
-                        modifier =
-                            Modifier.fillMaxWidth(),
-                        horizontalArrangement =
-                            Arrangement.SpaceBetween
-                    ) {
-
-                        Column {
-
-                            Text(
-                                text = "Signed in",
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .labelMedium
-                            )
-
-                            Text(
-                                text =
-                                    sessionState.userName,
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .titleMedium
-                            )
-                        }
-
-                        Button(
-                            onClick =
-                                onSignOut
-                        ) {
-                            Text(
-                                "Sign out"
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    ConnectionStateRow(
-                        state =
-                            connectionState
+                    SignedInOperationsPanel(
+                        userName =
+                            sessionState.userName,
+                        connectionState =
+                            connectionState,
+                        onCreateIncidentClick =
+                            onCreateIncidentClick,
+                        onSignOut =
+                            onSignOut
                     )
-                }
-
-                item {
-                    Button(
-                        onClick =
-                            onCreateIncidentClick
-                    ) {
-                        Text(
-                            "Create incident"
-                        )
-                    }
                 }
 
                 if (incidents.isEmpty()) {
@@ -284,6 +241,96 @@ fun IncidentsScreen(
         }
     }
 }
+
+@Composable
+private fun SignedInOperationsPanel(
+    userName: String,
+    connectionState: RealtimeConnectionState,
+    onCreateIncidentClick: () -> Unit,
+    onSignOut: () -> Unit
+) {
+    OutlinedCard(
+        modifier =
+            Modifier.fillMaxWidth()
+    ) {
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        16.dp
+                    ),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    12.dp
+                )
+        ) {
+
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.SpaceBetween
+            ) {
+
+                Column(
+                    verticalArrangement =
+                        Arrangement.spacedBy(
+                            2.dp
+                        )
+                ) {
+
+                    Text(
+                        text =
+                            "Signed in",
+                        style =
+                            MaterialTheme
+                                .typography
+                                .labelMedium
+                    )
+
+                    Text(
+                        text =
+                            userName,
+                        style =
+                            MaterialTheme
+                                .typography
+                                .titleMedium,
+                        fontWeight =
+                            FontWeight.SemiBold
+                    )
+                }
+
+                Button(
+                    onClick =
+                        onSignOut
+                ) {
+                    Text(
+                        "Sign out"
+                    )
+                }
+            }
+
+            ConnectionStateRow(
+                state =
+                    connectionState
+            )
+
+            Button(
+                onClick =
+                    onCreateIncidentClick,
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    "Create incident"
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun ConnectionStateRow(
