@@ -50,6 +50,25 @@ internal suspend fun stopRealtimeReplayJobs(
         it.join()
     }
 }
+internal suspend fun runRealtimeReplayJobSafely(
+    block: suspend () -> Unit
+) {
+    try {
+
+        block()
+
+    } catch (
+        error: CancellationException
+    ) {
+        throw error
+
+    } catch (
+        error: Throwable
+    ) {
+        // Replay recovery must not terminate primary realtime collection.
+    }
+}
+
 internal class RealtimeAttemptConnectionTracker {
 
     private var sawConnecting =
@@ -324,8 +343,10 @@ class RealtimeIncidentCoordinator(
 
                             try {
 
-                                SequenceGapReplayWorker
-                                    .run(
+                                runRealtimeReplayJobSafely {
+
+                                    SequenceGapReplayWorker
+                                        .run(
                                         incidentId =
                                             gap.incidentId,
 
@@ -373,7 +394,9 @@ class RealtimeIncidentCoordinator(
                                                 )
                                             )
                                         }
-                                    )
+                                        )
+
+                                }
 
                             } finally {
 
