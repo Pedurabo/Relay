@@ -289,4 +289,68 @@ class TimelineOutboxCoordinatorTest {
                 0,
                 delays
             )
+        }
+    @Test
+    fun sessionSnapshotChangeStopsDrainRetryLoop() =
+        runBlocking {
+
+            var currentOwner =
+                "operator-a"
+
+            var currentToken =
+                "token-a"
+
+            val expectedOwner =
+                "operator-a"
+
+            val expectedToken =
+                "token-a"
+
+            var drains =
+                0
+
+            var delays =
+                0
+
+            runTimelineOutboxDrainSafely(
+                isActive = {
+
+                    currentOwner ==
+                        expectedOwner &&
+                    currentToken ==
+                        expectedToken
+                },
+
+                delayAfterFailure = {
+                    delays +=
+                        1
+                },
+
+                drain = {
+
+                    drains +=
+                        1
+
+                    /*
+                     * Simulate either account switch or token refresh
+                     * during a failed delivery attempt.
+                     */
+                    currentToken =
+                        "token-b"
+
+                    error(
+                        "transport failed"
+                    )
+                }
+            )
+
+            assertEquals(
+                1,
+                drains
+            )
+
+            assertEquals(
+                0,
+                delays
+            )
         }}

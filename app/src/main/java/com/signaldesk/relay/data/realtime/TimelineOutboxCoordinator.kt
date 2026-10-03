@@ -166,14 +166,19 @@ object TimelineOutboxCoordinator {
             return
         }
 
-        if (
+        val session =
             SessionManager
                 .sessionState
-                .value !is
+                .value as?
                 SessionState.SignedIn
-        ) {
-            return
-        }
+                ?: return
+
+        val credential =
+            timelineDeliveryCredential(
+                session,
+                session.userId
+            )
+                ?: return
 
         if (
             !draining.compareAndSet(
@@ -188,10 +193,14 @@ object TimelineOutboxCoordinator {
             try {
                 runTimelineOutboxDrainSafely(
                     isActive = {
-                        SessionManager
-                            .sessionState
-                            .value is
-                            SessionState.SignedIn
+
+                        isTimelineDeliverySessionCurrent(
+                            SessionManager
+                                .sessionState
+                                .value,
+                            credential.ownerPrincipal,
+                            credential.accessToken
+                        )
                     },
                     delayAfterFailure = {
                         attempt ->
@@ -207,7 +216,9 @@ object TimelineOutboxCoordinator {
                         )
                     },
                     drain = {
-                        drainPending()
+                        drainPending(
+                            credential
+                        )
                     }
                 )
             } finally {
@@ -272,37 +283,53 @@ object TimelineOutboxCoordinator {
     }
 
 
-    private suspend fun drainPending() {
-        while (true) {
-            val session =
-                SessionManager
-                    .sessionState
-                    .value as?
-                    SessionState.SignedIn
-                    ?: return
+    private suspend fun drainPending(
+        credential:
+            TimelineDeliveryCredential
+    ) {
 
-            val ownerPrincipal =
-                session.userId
+        while (true) {
+
+            if (
+                !isTimelineDeliverySessionCurrent(
+                    SessionManager
+                        .sessionState
+                        .value,
+                    credential.ownerPrincipal,
+                    credential.accessToken
+                )
+            ) {
+                return
+            }
 
             val pending =
                 timelineDao
                     .loadPendingForOwner(
-                        ownerPrincipal
+                        credential.ownerPrincipal
                     )
 
-            if (pending.isEmpty()) {
+            if (
+                pending.isEmpty()
+            ) {
                 return
             }
 
-            for (entity in pending) {
-                val credential =
-                    timelineDeliveryCredential(
-                        SessionManager
-                            .sessionState
-                            .value,
-                        entity.ownerPrincipal
-                    )
-                        ?: return
+            for (
+                entity in
+                pending
+            ) {
+
+                /*
+                 * DAO ownership filtering should already guarantee
+                 * this. Keep the check here as a second boundary
+                 * before authenticated delivery.
+                 */
+                if (
+                    entity.ownerPrincipal !=
+                    credential.ownerPrincipal
+                ) {
+                    return
+                }
 
                 if (
                     !isTimelineDeliverySessionCurrent(
@@ -318,21 +345,28 @@ object TimelineOutboxCoordinator {
 
                 val acknowledgement =
                     try {
+
                         withTimeout(
                             10_000L
                         ) {
+
                             sender.send(
                                 entity.toDomain(),
                                 credential.accessToken
                             )
                         }
+
                     } catch (
-                        error: CancellationException
+                        error:
+                            CancellationException
                     ) {
                         throw error
+
                     } catch (
-                        error: Throwable
+                        error:
+                            Throwable
                     ) {
+
                         if (
                             !isTimelineDeliverySessionCurrent(
                                 SessionManager
@@ -368,20 +402,7 @@ object TimelineOutboxCoordinator {
                         )
                     )
             }
-
-            val afterPass =
-                SessionManager
-                    .sessionState
-                    .value
-
-            if (
-                afterPass !is
-                    SessionState.SignedIn ||
-                afterPass.userId !=
-                    ownerPrincipal
-            ) {
-                return
-            }
         }
     }
+
 }
