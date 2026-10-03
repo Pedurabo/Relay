@@ -82,6 +82,15 @@ class IncidentRepository(
         return entity.toDomain()
     }
 
+    suspend fun getTimelineEntryOwnerPrincipal(
+        entryId: String
+    ): String? {
+        return requireTimelineDao()
+            .getById(
+                entryId
+            )
+            ?.ownerPrincipal
+    }
     suspend fun markTimelineEntryPending(
         entryId: String
     ) {
@@ -103,7 +112,8 @@ class IncidentRepository(
     }
 
     suspend fun confirmTimelineEntry(
-        event: TimelineEntryAddedEvent
+        event: TimelineEntryAddedEvent,
+        ownerPrincipal: String
     ) {
         requireTimelineDao()
             .upsert(
@@ -119,7 +129,9 @@ class IncidentRepository(
                     occurredAt =
                         event.occurredAt,
                     deliveryState =
-                        DeliveryState.SENT.name
+                        DeliveryState.SENT.name,
+                    ownerPrincipal =
+                        ownerPrincipal
                 )
             )
     }

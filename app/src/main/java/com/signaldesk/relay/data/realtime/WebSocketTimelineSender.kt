@@ -17,7 +17,6 @@ import kotlin.coroutines.resumeWithException
 
 class WebSocketTimelineSender(
     private val url: String,
-    private val tokenProvider: () -> String?,
     private val onSessionInvalidated:
         (String) -> Unit = {},
     private val client: OkHttpClient =
@@ -25,7 +24,8 @@ class WebSocketTimelineSender(
 ) {
 
     suspend fun send(
-        entry: TimelineEntry
+        entry: TimelineEntry,
+        accessToken: String
     ): TimelineEntryAddedEvent =
         suspendCancellableCoroutine { continuation ->
 
@@ -81,22 +81,17 @@ class WebSocketTimelineSender(
                 }
             }
 
+            require(
+                accessToken.isNotBlank()
+            )
+
             val requestBuilder =
                 Request.Builder()
                     .url(url)
-
-            val token =
-                tokenProvider()
-
-            if (
-                !token.isNullOrBlank()
-            ) {
-
-                requestBuilder.header(
-                    "Authorization",
-                    "Bearer " + token
-                )
-            }
+                    .header(
+                        "Authorization",
+                        "Bearer " + accessToken
+                    )
 
             val request =
                 requestBuilder.build()
@@ -234,10 +229,9 @@ class WebSocketTimelineSender(
                             response?.code ==
                             401
                         ) {
-                            token
-                                ?.let(
-                                    onSessionInvalidated
-                                )
+                            onSessionInvalidated(
+                                accessToken
+                            )
                         }
 
                         fail(t)

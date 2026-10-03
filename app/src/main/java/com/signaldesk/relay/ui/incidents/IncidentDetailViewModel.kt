@@ -14,6 +14,9 @@ import androidx.lifecycle.viewModelScope
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.repository.IncidentRepository
 import com.signaldesk.relay.data.realtime.WebSocketTimelineSender
+import com.signaldesk.relay.data.realtime.TimelineDeliveryCredential
+import com.signaldesk.relay.data.realtime.isTimelineDeliverySessionCurrent
+import com.signaldesk.relay.data.realtime.timelineDeliveryCredential
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionRefreshCoordinator
@@ -68,23 +71,6 @@ class IncidentDetailViewModel(
         WebSocketTimelineSender(
             url =
                 "ws://127.0.0.1:9000",
-            tokenProvider = {
-
-                when (
-                    val state =
-                        SessionManager
-                            .sessionState
-                            .value
-                ) {
-
-                    SessionState.SignedOut ->
-                        null
-
-                    is SessionState.SignedIn ->
-                        state.accessToken
-                }
-            },
-
             onSessionInvalidated = {
                 rejectedAccessToken ->
 
@@ -148,8 +134,16 @@ class IncidentDetailViewModel(
                             currentSession.userId
                     )
 
+            val credential =
+                timelineDeliveryCredential(
+                    currentSession,
+                    currentSession.userId
+                )
+                    ?: return@launch
+
             sendPendingEntry(
-                pending
+                pending,
+                credential
             )
         }
     }
@@ -158,33 +152,76 @@ class IncidentDetailViewModel(
         entry: TimelineEntry
     ) {
         viewModelScope.launch {
+
+            val ownerPrincipal =
+                repository
+                    .getTimelineEntryOwnerPrincipal(
+                        entry.id
+                    )
+                    ?: return@launch
+
+            val credential =
+                timelineDeliveryCredential(
+                    SessionManager
+                        .sessionState
+                        .value,
+                    ownerPrincipal
+                )
+                    ?: return@launch
+
             repository
                 .markTimelineEntryPending(
                     entry.id
                 )
 
             sendPendingEntry(
-                entry
+                entry,
+                credential
             )
         }
     }
 
     private suspend fun sendPendingEntry(
-        entry: TimelineEntry
+        entry: TimelineEntry,
+        credential:
+            TimelineDeliveryCredential
     ) {
+
+        if (
+            !isTimelineDeliverySessionCurrent(
+                SessionManager
+                    .sessionState
+                    .value,
+                credential.ownerPrincipal,
+                credential.accessToken
+            )
+        ) {
+            return
+        }
+
         try {
             val acknowledgement =
                 withTimeout(10_000) {
                     timelineSender.send(
-                        entry
+                        entry,
+                        credential.accessToken
                     )
                 }
 
             repository
                 .confirmTimelineEntry(
-                    acknowledgement
+                    acknowledgement,
+                    credential.ownerPrincipal
                 )
-        } catch (error: Throwable) {
+        } catch (
+            cancellation:
+                kotlinx.coroutines.CancellationException
+        ) {
+            throw cancellation
+        } catch (
+            error:
+                Throwable
+        ) {
             repository
                 .markTimelineEntryFailed(
                     entry.id

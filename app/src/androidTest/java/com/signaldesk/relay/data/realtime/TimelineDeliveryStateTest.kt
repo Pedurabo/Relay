@@ -106,6 +106,8 @@ class TimelineDeliveryStateTest {
                         author =
                             pending.author
                     )
+                ,
+                    "operator-a"
                 )
 
             val confirmed =
@@ -119,6 +121,12 @@ class TimelineDeliveryStateTest {
                 DeliveryState.SENT.name,
                 confirmed
                     ?.deliveryState
+            )
+
+            assertEquals(
+                "operator-a",
+                confirmed
+                    ?.ownerPrincipal
             )
         }
 }
