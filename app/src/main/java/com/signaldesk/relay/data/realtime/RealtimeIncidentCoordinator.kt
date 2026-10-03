@@ -20,6 +20,31 @@ internal fun shouldStartRealtimeCoordinator(
     job == null ||
         job.isCompleted
 
+internal class RealtimeAttemptConnectionTracker {
+
+    private var sawConnecting =
+        false
+
+    fun observesSuccessfulConnection(
+        state: RealtimeConnectionState
+    ): Boolean {
+
+        if (
+            state ==
+            RealtimeConnectionState.Connecting
+        ) {
+            sawConnecting =
+                true
+
+            return false
+        }
+
+        return sawConnecting &&
+            state ==
+            RealtimeConnectionState.Connected
+    }
+}
+
 class RealtimeIncidentCoordinator(
     private val source: RealtimeIncidentSource,
     private val processor: IncidentEventProcessor,
@@ -65,6 +90,9 @@ class RealtimeIncidentCoordinator(
                     var connectedThisAttempt =
                         false
 
+                    val connectionTracker =
+                        RealtimeAttemptConnectionTracker()
+
                     _connectionState.value =
                         RealtimeConnectionState.Connecting
 
@@ -75,8 +103,10 @@ class RealtimeIncidentCoordinator(
                                 .collect { state ->
 
                                     if (
-                                        state ==
-                                        RealtimeConnectionState.Connected
+                                        connectionTracker
+                                            .observesSuccessfulConnection(
+                                                state
+                                            )
                                     ) {
                                         connectedThisAttempt =
                                             true

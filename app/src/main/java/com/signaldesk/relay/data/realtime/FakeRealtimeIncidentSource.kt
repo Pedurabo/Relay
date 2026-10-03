@@ -14,7 +14,7 @@ class FakeRealtimeIncidentSource :
 
     private val _connectionState =
         MutableStateFlow<RealtimeConnectionState>(
-            RealtimeConnectionState.Connected
+            RealtimeConnectionState.Disconnected
         )
 
     override val connectionState:
@@ -23,6 +23,13 @@ class FakeRealtimeIncidentSource :
 
     override val events: Flow<IncidentEvent> =
         flow {
+
+            _connectionState.value =
+                RealtimeConnectionState.Connecting
+
+            _connectionState.value =
+                RealtimeConnectionState.Connected
+
             delay(2_000)
 
             emit(
