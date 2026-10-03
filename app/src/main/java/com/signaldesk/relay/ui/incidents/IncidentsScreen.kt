@@ -140,10 +140,8 @@ fun IncidentsScreen(
                 if (incidents.isEmpty()) {
 
                     item {
-                        Text(
-                            text =
-                                "No incidents yet."
-                        )
+
+                        EmptyIncidentsState()
                     }
                 }
 
@@ -416,6 +414,50 @@ private fun ConnectionStateRow(
                 .labelLarge
     )
 }
+
+@Composable
+private fun EmptyIncidentsState() {
+    OutlinedCard(
+        modifier =
+            Modifier.fillMaxWidth()
+    ) {
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        16.dp
+                    ),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    8.dp
+                )
+        ) {
+
+            Text(
+                text =
+                    "No incidents yet",
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium,
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Text(
+                text =
+                    "Create an incident to start coordinating updates and severity changes.",
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodyMedium
+            )
+        }
+    }
+}
+
 
 @Composable
 private fun IncidentCard(
