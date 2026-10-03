@@ -51,21 +51,45 @@ internal suspend fun stopRealtimeReplayJobs(
     }
 }
 internal suspend fun runRealtimeReplayJobSafely(
+    isConnected: () -> Boolean,
+    delayAfterFailure:
+        suspend (Int) -> Unit,
     block: suspend () -> Unit
 ) {
-    try {
+    var failedAttempts =
+        0
 
-        block()
-
-    } catch (
-        error: CancellationException
+    while (
+        isConnected()
     ) {
-        throw error
+        try {
 
-    } catch (
-        error: Throwable
-    ) {
-        // Replay recovery must not terminate primary realtime collection.
+            block()
+
+            return
+
+        } catch (
+            error: CancellationException
+        ) {
+            throw error
+
+        } catch (
+            error: Throwable
+        ) {
+
+            failedAttempts +=
+                1
+
+            if (
+                !isConnected()
+            ) {
+                return
+            }
+
+            delayAfterFailure(
+                failedAttempts
+            )
+        }
     }
 }
 
@@ -343,7 +367,24 @@ class RealtimeIncidentCoordinator(
 
                             try {
 
-                                runRealtimeReplayJobSafely {
+                                runRealtimeReplayJobSafely(
+                                    isConnected = {
+                                        source
+                                            .connectionState
+                                            .value ==
+                                        RealtimeConnectionState
+                                            .Connected
+                                    },
+                                    delayAfterFailure = {
+                                        attempt ->
+
+                                        delay(
+                                            calculateReplayBackoffMillis(
+                                                attempt
+                                            )
+                                        )
+                                    }
+                                ) {
 
                                     SequenceGapReplayWorker
                                         .run(

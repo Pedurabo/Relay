@@ -2,6 +2,7 @@ package com.signaldesk.relay.data.realtime
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -9,24 +10,98 @@ import org.junit.Test
 class RealtimeReplayFailureIsolationTest {
 
     @Test
-    fun nonCancellationReplayFailureDoesNotEscapeBoundary() =
+    fun retriesNonCancellationFailureWhileConnected() =
         runBlocking {
 
-            var continuedAfterFailure =
+            var connected =
+                true
+
+            var executions =
+                0
+
+            val delayedAttempts =
+                mutableListOf<Int>()
+
+            runRealtimeReplayJobSafely(
+                isConnected = {
+                    connected
+                },
+                delayAfterFailure = {
+                    attempt ->
+
+                    delayedAttempts +=
+                        attempt
+                }
+            ) {
+
+                executions +=
+                    1
+
+                if (
+                    executions ==
+                    1
+                ) {
+                    throw IllegalStateException(
+                        "Transient replay failure"
+                    )
+                }
+            }
+
+            assertEquals(
+                2,
+                executions
+            )
+
+            assertEquals(
+                listOf(
+                    1
+                ),
+                delayedAttempts
+            )
+        }
+
+
+    @Test
+    fun stopsRetryingFailureAfterDisconnect() =
+        runBlocking {
+
+            var connected =
+                true
+
+            var executions =
+                0
+
+            var delayed =
                 false
 
-            runRealtimeReplayJobSafely {
+            runRealtimeReplayJobSafely(
+                isConnected = {
+                    connected
+                },
+                delayAfterFailure = {
+                    delayed =
+                        true
+                }
+            ) {
+
+                executions +=
+                    1
+
+                connected =
+                    false
 
                 throw IllegalStateException(
-                    "Replay transport failed"
+                    "Replay failed as connection dropped"
                 )
             }
 
-            continuedAfterFailure =
-                true
+            assertEquals(
+                1,
+                executions
+            )
 
-            assertTrue(
-                continuedAfterFailure
+            assertFalse(
+                delayed
             )
         }
 
@@ -38,20 +113,25 @@ class RealtimeReplayFailureIsolationTest {
             var cancellationEscaped =
                 false
 
-            var continuedAfterCancellation =
+            var delayed =
                 false
 
             try {
 
-                runRealtimeReplayJobSafely {
+                runRealtimeReplayJobSafely(
+                    isConnected = {
+                        true
+                    },
+                    delayAfterFailure = {
+                        delayed =
+                            true
+                    }
+                ) {
 
                     throw CancellationException(
                         "Coordinator stopping"
                     )
                 }
-
-                continuedAfterCancellation =
-                    true
 
             } catch (
                 error: CancellationException
@@ -66,7 +146,7 @@ class RealtimeReplayFailureIsolationTest {
             )
 
             assertFalse(
-                continuedAfterCancellation
+                delayed
             )
         }
 }
