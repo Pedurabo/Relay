@@ -7,6 +7,7 @@ import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
 import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
+import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
 import com.signaldesk.relay.data.repository.IncidentRepository
 import com.signaldesk.relay.data.session.AuthSessionClient
@@ -188,6 +189,9 @@ class IncidentsViewModel(
                             SeverityOutboxCoordinator
                                 .kick()
 
+                            TimelineOutboxCoordinator
+                                .kick()
+
                             PushRegistrationCoordinator
                                 .kick(
                                     application
@@ -304,4 +308,3 @@ class IncidentsViewModel(
         super.onCleared()
     }
 }
-
