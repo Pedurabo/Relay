@@ -20,6 +20,13 @@ internal fun shouldStartRealtimeCoordinator(
     job == null ||
         job.isCompleted
 
+internal suspend fun stopRealtimeStateCollector(
+    job: Job
+) {
+    job.cancel()
+    job.join()
+}
+
 internal class RealtimeAttemptConnectionTracker {
 
     private var sawConnecting =
@@ -155,7 +162,9 @@ class RealtimeIncidentCoordinator(
                         // Reconnect below.
 
                     } finally {
-                        stateJob.cancel()
+                        stopRealtimeStateCollector(
+                            stateJob
+                        )
                     }
 
                     if (!isActive) {
