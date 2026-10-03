@@ -242,12 +242,31 @@ class WebSocketTimelineSender(
                         code: Int,
                         reason: String
                     ) {
+
                         if (!finished.get()) {
-                            fail(
-                                IOException(
-                                    "Socket closed before acknowledgement."
+
+                            if (
+                                code ==
+                                4003
+                            ) {
+
+                                fail(
+                                    TimelineDeliveryRejectedException(
+                                        closeCode =
+                                            code,
+                                        message =
+                                            "Timeline delivery rejected: $reason"
+                                    )
                                 )
-                            )
+
+                            } else {
+
+                                fail(
+                                    IOException(
+                                        "Socket closed before acknowledgement."
+                                    )
+                                )
+                            }
                         }
                     }
                 }

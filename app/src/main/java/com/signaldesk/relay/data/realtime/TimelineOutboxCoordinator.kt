@@ -434,6 +434,30 @@ object TimelineOutboxCoordinator {
                             return
                         }
 
+                        if (
+                            isPermanentTimelineDeliveryFailure(
+                                error
+                            )
+                        ) {
+
+                            timelineDao
+                                .updateDeliveryState(
+                                    entity.entryId,
+                                    DeliveryState.FAILED.name
+                                )
+
+                            retryStates.remove(
+                                entity.entryId
+                            )
+
+                            Log.i(
+                                TAG,
+                                "TIMELINE_OUTBOX_FAILED|entryId=${entity.entryId}|reason=permanent_rejection"
+                            )
+
+                            continue
+                        }
+
                         scheduleTransportRetry(
                             entity.entryId
                         )
