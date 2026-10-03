@@ -46,6 +46,54 @@ internal suspend fun runTimelineOutboxDrainSafely(
     }
 }
 
+internal suspend fun runTimelineOutboxPostDrainCheckSafely(
+    isActive: () -> Boolean,
+    delayAfterFailure:
+        suspend (Int) -> Unit,
+    hasPendingWork:
+        suspend () -> Boolean
+): Boolean {
+
+    var failedAttempts =
+        0
+
+    while (
+        isActive()
+    ) {
+
+        try {
+
+            return hasPendingWork()
+
+        } catch (
+            error:
+                CancellationException
+        ) {
+            throw error
+
+        } catch (
+            error:
+                Throwable
+        ) {
+
+            failedAttempts +=
+                1
+
+            if (
+                !isActive()
+            ) {
+                return false
+            }
+
+            delayAfterFailure(
+                failedAttempts
+            )
+        }
+    }
+
+    return false
+}
+
 object TimelineOutboxCoordinator {
 
     private const val TAG =
@@ -174,37 +222,51 @@ object TimelineOutboxCoordinator {
 
 
     private suspend fun closeKickRace() {
-        val current =
-            SessionManager
-                .sessionState
-                .value as?
-                SessionState.SignedIn
-                ?: return
 
         val hasPending =
-            try {
-                timelineDao
-                    .loadPendingForOwner(
-                        current.userId
+            runTimelineOutboxPostDrainCheckSafely(
+                isActive = {
+
+                    SessionManager
+                        .sessionState
+                        .value is
+                        SessionState.SignedIn
+                },
+
+                delayAfterFailure = {
+                    attempt ->
+
+                    delay(
+                        when (attempt) {
+                            1 -> 1_000L
+                            2 -> 2_000L
+                            3 -> 4_000L
+                            4 -> 8_000L
+                            else -> 30_000L
+                        }
                     )
-                    .isNotEmpty()
-            } catch (
-                error: CancellationException
-            ) {
-                throw error
-            } catch (
-                error: Throwable
-            ) {
-                Log.e(
-                    TAG,
-                    "POST_DRAIN_CHECK_FAILED",
-                    error
-                )
+                },
 
-                false
-            }
+                hasPendingWork = {
 
-        if (hasPending) {
+                    val current =
+                        SessionManager
+                            .sessionState
+                            .value as?
+                            SessionState.SignedIn
+                            ?: return@runTimelineOutboxPostDrainCheckSafely false
+
+                    timelineDao
+                        .loadPendingForOwner(
+                            current.userId
+                        )
+                        .isNotEmpty()
+                }
+            )
+
+        if (
+            hasPending
+        ) {
             kick()
         }
     }
