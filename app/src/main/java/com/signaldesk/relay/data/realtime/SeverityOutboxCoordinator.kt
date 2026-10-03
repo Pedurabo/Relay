@@ -53,6 +53,52 @@ internal suspend fun runOutboxStartupResetSafely(
     }
 }
 
+internal suspend fun runOutboxDrainSafely(
+    isActive: () -> Boolean,
+    delayAfterFailure:
+        suspend (Int) -> Unit,
+    drain:
+        suspend () -> Unit
+) {
+
+    var failedAttempts =
+        0
+
+    while (
+        isActive()
+    ) {
+
+        try {
+
+            drain()
+
+            return
+
+        } catch (
+            error: CancellationException
+        ) {
+            throw error
+
+        } catch (
+            error: Throwable
+        ) {
+
+            failedAttempts +=
+                1
+
+            if (
+                !isActive()
+            ) {
+                return
+            }
+
+            delayAfterFailure(
+                failedAttempts
+            )
+        }
+    }
+}
+
 object SeverityOutboxCoordinator {
 
     private const val TAG =
@@ -189,7 +235,31 @@ object SeverityOutboxCoordinator {
 
             try {
 
-                drainFairly()
+                runOutboxDrainSafely(
+                    isActive = {
+
+                        SessionManager
+                            .sessionState
+                            .value is
+                            SessionState.SignedIn
+                    },
+                    delayAfterFailure = {
+                        attempt ->
+
+                        delay(
+                            when (attempt) {
+                                1 -> 1_000L
+                                2 -> 2_000L
+                                3 -> 4_000L
+                                4 -> 8_000L
+                                else -> 30_000L
+                            }
+                        )
+                    }
+                ) {
+
+                    drainFairly()
+                }
 
             } finally {
 
