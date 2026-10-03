@@ -10,12 +10,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [
         
-        PendingSeverityCommand::class,IncidentEntity::class,
+        PendingSeverityCommand::class,
+        PendingStatusCommand::class,
+        IncidentEntity::class,
         ProcessedEventEntity::class,
         TimelineEntryEntity::class,
         IncidentSequenceGapEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 abstract class RelayDatabase :
@@ -36,6 +38,10 @@ abstract class RelayDatabase :
     
     abstract fun pendingSeverityCommandDao():
         PendingSeverityCommandDao
+
+    abstract fun pendingStatusCommandDao():
+        PendingStatusCommandDao
+
 companion object {
 
         @Volatile
@@ -213,7 +219,8 @@ companion object {
                                 MIGRATION_6_7,
                                 MIGRATION_7_8,
                                 MIGRATION_8_9,
-                                MIGRATION_9_10
+                                MIGRATION_9_10,
+                                MIGRATION_10_11
                             )
                             .build()
                             .also {
@@ -298,6 +305,34 @@ companion object {
                         ADD COLUMN ownerPrincipal
                         TEXT NOT NULL
                         DEFAULT ''
+                        """.trimIndent()
+                    )
+                }
+            }
+
+        val MIGRATION_10_11 =
+            object : Migration(
+                10,
+                11
+            ) {
+
+                override fun migrate(
+                    db:
+                        SupportSQLiteDatabase
+                ) {
+
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS pending_status_commands (
+                            commandId TEXT NOT NULL,
+                            incidentId TEXT NOT NULL,
+                            status TEXT NOT NULL,
+                            baseStatus TEXT NOT NULL,
+                            ownerPrincipal TEXT NOT NULL,
+                            createdAt INTEGER NOT NULL,
+                            deliveryState TEXT NOT NULL,
+                            PRIMARY KEY(commandId)
+                        )
                         """.trimIndent()
                     )
                 }
