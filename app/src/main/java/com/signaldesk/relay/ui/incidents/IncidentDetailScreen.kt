@@ -355,7 +355,7 @@ private fun TimelineEntryItem(
         ) {
             DeliveryState.PENDING -> {
                 Text(
-                    text = "Sending�",
+                    text = "Sending...",
                     style =
                         MaterialTheme
                             .typography
