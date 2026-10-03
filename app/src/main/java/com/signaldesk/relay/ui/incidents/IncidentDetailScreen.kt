@@ -80,50 +80,26 @@ fun IncidentDetailScreen(
         }
 
         item {
-            Text(
-                text = "Post update",
-                style =
-                    MaterialTheme
-                        .typography
-                        .titleMedium
-            )
-        }
 
-        item {
-            OutlinedTextField(
-                value = message,
-                onValueChange = {
-                    message = it
+            UpdateComposer(
+                message =
+                    message,
+                onMessageChange = {
+                    message =
+                        it
                 },
-                modifier =
-                    Modifier.fillMaxWidth(),
-                label = {
-                    Text(
-                        "What changed?"
-                    )
-                }
-            )
-        }
-
-        item {
-            Button(
-                enabled =
-                    message.isNotBlank(),
-                onClick = {
+                onPostUpdate = {
                     val update =
                         message.trim()
 
-                    message = ""
+                    message =
+                        ""
 
                     onPostUpdate(
                         update
                     )
                 }
-            ) {
-                Text(
-                    "Post update"
-                )
-            }
+            )
         }
 
         item {
@@ -173,6 +149,72 @@ fun IncidentDetailScreen(
         }
     }
 }
+
+@Composable
+private fun UpdateComposer(
+    message: String,
+    onMessageChange: (String) -> Unit,
+    onPostUpdate: () -> Unit
+) {
+    OutlinedCard(
+        modifier =
+            Modifier.fillMaxWidth()
+    ) {
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        16.dp
+                    ),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    12.dp
+                )
+        ) {
+
+            Text(
+                text =
+                    "Post update",
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium,
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            OutlinedTextField(
+                value =
+                    message,
+                onValueChange =
+                    onMessageChange,
+                modifier =
+                    Modifier.fillMaxWidth(),
+                label = {
+                    Text(
+                        "What changed?"
+                    )
+                }
+            )
+
+            Button(
+                enabled =
+                    message.isNotBlank(),
+                onClick =
+                    onPostUpdate,
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    "Post update"
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun IncidentSummary(
