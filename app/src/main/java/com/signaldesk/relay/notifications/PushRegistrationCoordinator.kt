@@ -8,6 +8,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
+internal suspend fun attemptPushUnregistration(
+    unregister: suspend () -> Unit
+) {
+    runCatching {
+        unregister()
+    }
+}
+
 object PushRegistrationCoordinator {
 
     private val scope =
@@ -110,7 +118,7 @@ object PushRegistrationCoordinator {
 
         scope.launch {
 
-            runCatching {
+            attemptPushUnregistration {
 
                 client.unregister(
                     accessToken =
@@ -120,7 +128,6 @@ object PushRegistrationCoordinator {
                 )
             }
 
-            store.clear()
         }
     }
 }
