@@ -4,6 +4,7 @@ import com.signaldesk.relay.data.local.IncidentSequenceGapDao
 import com.signaldesk.relay.data.remote.model.IncidentEvent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +51,47 @@ internal suspend fun stopRealtimeReplayJobs(
         it.join()
     }
 }
+internal fun CoroutineScope.launchRegisteredRealtimeReplayJob(
+    replayJobs: ConcurrentHashMap<String, Job>,
+    incidentId: String,
+    block: suspend () -> Unit
+): Job {
+
+    lateinit var replayJob:
+        Job
+
+    replayJob =
+        launch(
+            start =
+                CoroutineStart.LAZY
+        ) {
+            try {
+
+                block()
+
+            } finally {
+
+                removeReplayJobIfCurrent(
+                    replayJobs =
+                        replayJobs,
+                    incidentId =
+                        incidentId,
+                    replayJob =
+                        replayJob
+                )
+            }
+        }
+
+    replayJobs[
+        incidentId
+    ] =
+        replayJob
+
+    replayJob.start()
+
+    return replayJob
+}
+
 internal suspend fun runRealtimeReplayJobSafely(
     isConnected: () -> Boolean,
     delayAfterFailure:
@@ -353,21 +395,14 @@ class RealtimeIncidentCoordinator(
                         return@forEach
                     }
 
-                    replayJobs[
-                        gap.incidentId
-                    ] =
-                        launch {
+                    launchRegisteredRealtimeReplayJob(
+                        replayJobs =
+                            replayJobs,
+                        incidentId =
+                            gap.incidentId
+                    ) {
 
-                            val replayJob =
-                                checkNotNull(
-                                    coroutineContext[
-                                        Job
-                                    ]
-                                )
-
-                            try {
-
-                                runRealtimeReplayJobSafely(
+                        runRealtimeReplayJobSafely(
                                     isConnected = {
                                         source
                                             .connectionState
@@ -438,19 +473,7 @@ class RealtimeIncidentCoordinator(
                                         )
 
                                 }
-
-                            } finally {
-
-                                removeReplayJobIfCurrent(
-                                    replayJobs =
-                                        replayJobs,
-                                    incidentId =
-                                        gap.incidentId,
-                                    replayJob =
-                                        replayJob
-                                )
-                            }
-                        }
+                    }
                 }
             }
         }
