@@ -10,6 +10,7 @@ import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.DeliveryState
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -99,6 +100,11 @@ object TimelineOutboxCoordinator {
     private const val TAG =
         "RelayTimelineOutbox"
 
+    private data class RetryState(
+        val attempt: Int,
+        val notBeforeMillis: Long
+    )
+
     private val scope =
         CoroutineScope(
             SupervisorJob() +
@@ -110,6 +116,12 @@ object TimelineOutboxCoordinator {
 
     private val draining =
         AtomicBoolean(false)
+
+    private val retryStates =
+        ConcurrentHashMap<
+            String,
+            RetryState
+        >()
 
     private lateinit var timelineDao:
         TimelineEntryDao
@@ -314,16 +326,56 @@ object TimelineOutboxCoordinator {
                 return
             }
 
+            val now =
+                System.currentTimeMillis()
+
+            val retryNotBeforeMillis =
+                pending
+                    .mapNotNull { entity ->
+
+                        retryStates[
+                            entity.entryId
+                        ]
+                            ?.notBeforeMillis
+                            ?.let { notBefore ->
+
+                                entity.entryId to
+                                    notBefore
+                            }
+                    }
+                    .toMap()
+
+            val eligibleEntryIds =
+                OutboxDrainPlanner
+                    .eligibleCommandIds(
+                        commandIds =
+                            pending.map {
+                                it.entryId
+                            },
+
+                        retryNotBeforeMillis =
+                            retryNotBeforeMillis,
+
+                        nowMillis =
+                            now
+                    )
+                    .toSet()
+
+            var attemptedAny =
+                false
+
             for (
                 entity in
                 pending
             ) {
 
-                /*
-                 * DAO ownership filtering should already guarantee
-                 * this. Keep the check here as a second boundary
-                 * before authenticated delivery.
-                 */
+                if (
+                    entity.entryId !in
+                    eligibleEntryIds
+                ) {
+                    continue
+                }
+
                 if (
                     entity.ownerPrincipal !=
                     credential.ownerPrincipal
@@ -342,6 +394,9 @@ object TimelineOutboxCoordinator {
                 ) {
                     return
                 }
+
+                attemptedAny =
+                    true
 
                 val acknowledgement =
                     try {
@@ -379,7 +434,16 @@ object TimelineOutboxCoordinator {
                             return
                         }
 
-                        throw error
+                        scheduleTransportRetry(
+                            entity.entryId
+                        )
+
+                        Log.i(
+                            TAG,
+                            "TIMELINE_OUTBOX_RETRY|entryId=${entity.entryId}"
+                        )
+
+                        continue
                     }
 
                 timelineDao
@@ -401,7 +465,166 @@ object TimelineOutboxCoordinator {
                                 credential.ownerPrincipal
                         )
                     )
+
+                retryStates.remove(
+                    entity.entryId
+                )
             }
+
+            if (
+                !isTimelineDeliverySessionCurrent(
+                    SessionManager
+                        .sessionState
+                        .value,
+                    credential.ownerPrincipal,
+                    credential.accessToken
+                )
+            ) {
+                return
+            }
+
+            val remaining =
+                timelineDao
+                    .loadPendingForOwner(
+                        credential.ownerPrincipal
+                    )
+
+            if (
+                remaining.isEmpty()
+            ) {
+                return
+            }
+
+            if (
+                attemptedAny
+            ) {
+                continue
+            }
+
+            val currentTime =
+                System.currentTimeMillis()
+
+            val remainingRetryNotBefore =
+                remaining
+                    .mapNotNull { entity ->
+
+                        retryStates[
+                            entity.entryId
+                        ]
+                            ?.notBeforeMillis
+                            ?.let { notBefore ->
+
+                                entity.entryId to
+                                    notBefore
+                            }
+                    }
+                    .toMap()
+
+            val nearestRetry =
+                OutboxDrainPlanner
+                    .nearestRetryAtMillis(
+                        commandIds =
+                            remaining.map {
+                                it.entryId
+                            },
+
+                        retryNotBeforeMillis =
+                            remainingRetryNotBefore,
+
+                        nowMillis =
+                            currentTime
+                    )
+
+            if (
+                nearestRetry != null
+            ) {
+
+                val sleepMillis =
+                    (
+                        nearestRetry -
+                            currentTime
+                    )
+                        .coerceIn(
+                            100L,
+                            30_000L
+                        )
+
+                delay(
+                    sleepMillis
+                )
+
+                continue
+            }
+
+            /*
+             * Defensive fallback. Pending work without a retry state
+             * should become eligible immediately on the next pass.
+             */
+            delay(
+                100L
+            )
+        }
+    }
+
+
+    private fun scheduleTransportRetry(
+        entryId: String
+    ) {
+
+        val previousAttempt =
+            retryStates[
+                entryId
+            ]
+                ?.attempt
+                ?: 0
+
+        val nextAttempt =
+            previousAttempt +
+                1
+
+        val delayMillis =
+            timelineTransportBackoffMillis(
+                nextAttempt
+            )
+
+        retryStates[
+            entryId
+        ] =
+            RetryState(
+                attempt =
+                    nextAttempt,
+                notBeforeMillis =
+                    System.currentTimeMillis() +
+                        delayMillis
+            )
+    }
+
+
+    private fun timelineTransportBackoffMillis(
+        attempt: Int
+    ): Long {
+
+        return when (
+            attempt
+        ) {
+
+            1 ->
+                1_000L
+
+            2 ->
+                2_000L
+
+            3 ->
+                4_000L
+
+            4 ->
+                8_000L
+
+            5 ->
+                16_000L
+
+            else ->
+                30_000L
         }
     }
 
