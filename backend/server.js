@@ -512,6 +512,63 @@ function acknowledgeSeverity(
 }
 
 
+function buildStatusEvent(
+    incident,
+    commandId
+) {
+
+    return {
+
+        type:
+            "incident.updated",
+
+        eventId:
+            "EVT-STATUS-" +
+            commandId,
+
+        incidentId:
+            incident.id,
+
+        occurredAt:
+            now(),
+
+        status:
+            incident.status,
+
+        sequence:
+            incident.serverOwned
+                ? incident.sequence
+                : 0
+    };
+}
+
+function acknowledgeStatus(
+    socket,
+    commandId,
+    incidentId,
+    duplicate
+) {
+
+    send(
+        socket,
+        {
+            type:
+                "command.accepted",
+
+            command:
+                "incident.status.update",
+
+            commandId,
+
+            incidentId,
+
+            duplicate:
+                duplicate === true
+        }
+    );
+}
+
+
 function canAccessIncident(
     authenticatedSession,
     incidentId
@@ -1746,6 +1803,237 @@ wss.on(
                             incidentId +
                             " · severity changed to " +
                             severity
+                    );
+
+                    return;
+                }
+
+                //
+                // =================================================
+                // Status command
+                // =================================================
+                //
+
+                if (
+                    message.type ===
+                    "incident.status.update"
+                ) {
+
+                    const commandId =
+                        message.commandId;
+
+                    const incidentId =
+                        message.incidentId;
+
+                    const status =
+                        String(
+                            message.status || ""
+                        )
+                            .trim();
+
+                    console.log(
+                        "STATUS_COMMAND|" +
+                        commandId +
+                        "|" +
+                        incidentId +
+                        "|" +
+                        status
+                    );
+
+                    if (
+                        !commandId ||
+                        !incidentId ||
+                        !status ||
+                        status.length > 64
+                    ) {
+
+                        send(
+                            socket,
+                            {
+                                type:
+                                    "command.rejected",
+
+                                command:
+                                    "incident.status.update",
+
+                                commandId:
+                                    commandId || "",
+
+                                incidentId:
+                                    incidentId || "",
+
+                                reason:
+                                    "invalid_payload"
+                            }
+                        );
+
+                        console.log(
+                            "STATUS_REJECTED_INVALID|" +
+                            incidentId
+                        );
+
+                        return;
+                    }
+
+                    if (
+                        !canAccessIncident(
+                            authenticatedSession,
+                            incidentId
+                        )
+                    ) {
+
+                        send(
+                            socket,
+                            {
+                                type:
+                                    "command.rejected",
+
+                                command:
+                                    "incident.status.update",
+
+                                commandId,
+
+                                incidentId,
+
+                                reason:
+                                    "forbidden"
+                            }
+                        );
+
+                        console.log(
+                            "AUTH_INCIDENT_FORBIDDEN|" +
+                            authenticatedSession.userId +
+                            "|" +
+                            incidentId
+                        );
+
+                        return;
+                    }
+
+                    const existingCommand =
+                        storage
+                            .getProcessedCommand(
+                                commandId
+                            );
+
+                    if (
+                        existingCommand
+                    ) {
+
+                        if (
+                            existingCommand.type !==
+                                "incident.status.update" ||
+                            existingCommand.incidentId !==
+                                incidentId ||
+                            !canAccessIncident(
+                                authenticatedSession,
+                                existingCommand.incidentId
+                            )
+                        ) {
+
+                            send(
+                                socket,
+                                {
+                                    type:
+                                        "command.rejected",
+
+                                    command:
+                                        "incident.status.update",
+
+                                    commandId,
+
+                                    incidentId,
+
+                                    reason:
+                                        "command_id_conflict"
+                                }
+                            );
+
+                            console.log(
+                                "STATUS_COMMAND_ID_CONFLICT|" +
+                                authenticatedSession.userId +
+                                "|" +
+                                commandId +
+                                "|" +
+                                incidentId
+                            );
+
+                            return;
+                        }
+
+                        const duplicateIncident =
+                            ensureIncident(
+                                existingCommand
+                                    .incidentId
+                            );
+
+                        console.log(
+                            "STATUS_DEDUPED|" +
+                            commandId +
+                            "|" +
+                            duplicateIncident.id +
+                            "|" +
+                            duplicateIncident.status +
+                            "|" +
+                            duplicateIncident.sequence
+                        );
+
+                        acknowledgeStatus(
+                            socket,
+                            commandId,
+                            duplicateIncident.id,
+                            true
+                        );
+
+                        broadcastIncident(
+                            buildStatusEvent(
+                                duplicateIncident,
+                                commandId
+                            )
+                        );
+
+                        return;
+                    }
+
+                    const applied =
+                        storage
+                            .applyStatusCommand(
+                                commandId,
+                                incidentId,
+                                status,
+                                now()
+                            );
+
+                    const incident =
+                        applied.incident;
+
+                    const event =
+                        applied.event ||
+                        buildStatusEvent(
+                            incident,
+                            commandId
+                        );
+
+                    console.log(
+                        "STATUS_APPLIED|" +
+                        commandId +
+                        "|" +
+                        incidentId +
+                        "|" +
+                        status +
+                        "|sequence=" +
+                        event.sequence
+                    );
+
+                    acknowledgeStatus(
+                        socket,
+                        commandId,
+                        incidentId,
+                        false
+                    );
+
+                    broadcastIncident(
+                        event
                     );
 
                     return;

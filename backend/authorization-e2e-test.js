@@ -644,6 +644,177 @@ async function main() {
             "Unauthorized incident write was not rejected."
         );
 
+        const operatorStatusEvent =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "incident.updated" &&
+                    message.incidentId ===
+                        INCIDENT_A &&
+                    message.status ===
+                        "Monitoring"
+            );
+
+        const statusAccepted =
+            waitForMessage(
+                adminSocket,
+                message =>
+                    message.type ===
+                        "command.accepted" &&
+                    message.command ===
+                        "incident.status.update" &&
+                    message.commandId ===
+                        "CMD-STATUS-AUTH-A"
+            );
+
+        adminSocket.send(
+            JSON.stringify({
+                type:
+                    "incident.status.update",
+                commandId:
+                    "CMD-STATUS-AUTH-A",
+                incidentId:
+                    INCIDENT_A,
+                status:
+                    "Monitoring"
+            })
+        );
+
+        const receivedStatus =
+            await operatorStatusEvent;
+
+        const acceptedStatus =
+            await statusAccepted;
+
+        assert(
+            receivedStatus.status ===
+                "Monitoring",
+            "Authorized incident status event was incorrect."
+        );
+
+        assert(
+            acceptedStatus.duplicate ===
+                false,
+            "First status command was incorrectly marked duplicate."
+        );
+
+        const duplicateStatusEvent =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "incident.updated" &&
+                    message.incidentId ===
+                        INCIDENT_A &&
+                    message.status ===
+                        "Monitoring"
+            );
+
+        const duplicateStatusAck =
+            waitForMessage(
+                adminSocket,
+                message =>
+                    message.type ===
+                        "command.accepted" &&
+                    message.commandId ===
+                        "CMD-STATUS-AUTH-A" &&
+                    message.duplicate ===
+                        true
+            );
+
+        adminSocket.send(
+            JSON.stringify({
+                type:
+                    "incident.status.update",
+                commandId:
+                    "CMD-STATUS-AUTH-A",
+                incidentId:
+                    INCIDENT_A,
+                status:
+                    "Resolved"
+            })
+        );
+
+        const duplicateStatus =
+            await duplicateStatusEvent;
+
+        await duplicateStatusAck;
+
+        assert(
+            duplicateStatus.status ===
+                "Monitoring",
+            "Duplicate status command changed authoritative status."
+        );
+
+        const forbiddenStatusWrite =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "command.rejected" &&
+                    message.command ===
+                        "incident.status.update" &&
+                    message.commandId ===
+                        "CMD-STATUS-FORBIDDEN-B"
+            );
+
+        operatorSocket.send(
+            JSON.stringify({
+                type:
+                    "incident.status.update",
+                commandId:
+                    "CMD-STATUS-FORBIDDEN-B",
+                incidentId:
+                    INCIDENT_B,
+                status:
+                    "Resolved"
+            })
+        );
+
+        const forbiddenStatus =
+            await forbiddenStatusWrite;
+
+        assert(
+            forbiddenStatus.reason ===
+                "forbidden",
+            "Unauthorized status write was not rejected."
+        );
+
+        const crossTypeCollision =
+            waitForMessage(
+                adminSocket,
+                message =>
+                    message.type ===
+                        "command.rejected" &&
+                    message.command ===
+                        "incident.status.update" &&
+                    message.commandId ===
+                        "CMD-AUTH-A"
+            );
+
+        adminSocket.send(
+            JSON.stringify({
+                type:
+                    "incident.status.update",
+                commandId:
+                    "CMD-AUTH-A",
+                incidentId:
+                    INCIDENT_A,
+                status:
+                    "Resolved"
+            })
+        );
+
+        const crossType =
+            await crossTypeCollision;
+
+        assert(
+            crossType.reason ===
+                "command_id_conflict",
+            "Cross-command-type ID collision was not rejected."
+        );
+
         const noReplayLeak =
             expectNoMessage(
                 operatorSocket,
