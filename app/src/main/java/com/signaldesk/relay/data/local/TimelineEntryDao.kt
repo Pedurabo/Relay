@@ -33,6 +33,18 @@ interface TimelineEntryDao {
         entryId: String
     ): TimelineEntryEntity?
 
+    @Query(
+        """
+        SELECT *
+        FROM timeline_entries
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND deliveryState = 'PENDING'
+        ORDER BY occurredAt ASC, entryId ASC
+        """
+    )
+    suspend fun loadPendingForOwner(
+        ownerPrincipal: String
+    ): List<TimelineEntryEntity>
     @Insert(
         onConflict = OnConflictStrategy.IGNORE
     )
@@ -81,4 +93,3 @@ interface TimelineEntryDao {
     fun observeLatestForAllIncidents():
         Flow<List<TimelineEntryEntity>>
 }
-
