@@ -3,6 +3,7 @@ package com.signaldesk.relay
 import android.app.Application
 import com.signaldesk.relay.appstate.AppVisibilityTracker
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
+import com.signaldesk.relay.data.realtime.StatusOutboxCoordinator
 import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.notifications.FirebasePushInitializer
@@ -25,6 +26,11 @@ class RelayApplication :
             )
 
         SeverityOutboxCoordinator
+            .initialize(
+                this
+            )
+
+        StatusOutboxCoordinator
             .initialize(
                 this
             )
