@@ -24,6 +24,12 @@ internal fun <T : Any> shouldApplyRealtimeSocketTerminalState(
     activeSocket == null ||
         activeSocket === callbackSocket
 
+internal fun <T : Any> shouldProcessRealtimeSocketMessage(
+    activeSocket: T?,
+    callbackSocket: T
+): Boolean =
+    activeSocket === callbackSocket
+
 class WebSocketRealtimeIncidentSource(
     private val url: String,
     private val tokenProvider: () -> String? = { null },
@@ -90,6 +96,16 @@ class WebSocketRealtimeIncidentSource(
                         webSocket: WebSocket,
                         text: String
                     ) {
+                        if (
+                            !shouldProcessRealtimeSocketMessage(
+                                activeSocket =
+                                    activeSocket,
+                                callbackSocket =
+                                    webSocket
+                            )
+                        ) {
+                            return
+                        }
                         val json =
                             runCatching {
                                 JSONObject(text)
