@@ -75,6 +75,27 @@ interface TimelineEntryDao {
 
     @Query(
         """
+        UPDATE timeline_entries
+        SET incidentId = :incidentId,
+            message = :message,
+            author = :author,
+            occurredAt = :occurredAt,
+            deliveryState = 'SENT'
+        WHERE entryId = :entryId
+          AND ownerPrincipal = :ownerPrincipal
+          AND deliveryState = 'PENDING'
+        """
+    )
+    suspend fun acknowledgePending(
+        entryId: String,
+        ownerPrincipal: String,
+        incidentId: String,
+        message: String,
+        author: String,
+        occurredAt: Long
+    ): Int
+    @Query(
+        """
         SELECT t.*
         FROM timeline_entries t
         WHERE NOT EXISTS (

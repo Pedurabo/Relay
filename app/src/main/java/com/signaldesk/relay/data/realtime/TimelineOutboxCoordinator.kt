@@ -474,11 +474,13 @@ object TimelineOutboxCoordinator {
                         continue
                     }
 
-                timelineDao
-                    .upsert(
-                        TimelineEntryEntity(
+                val acknowledged =
+                    timelineDao
+                        .acknowledgePending(
                             entryId =
                                 acknowledgement.entryId,
+                            ownerPrincipal =
+                                credential.ownerPrincipal,
                             incidentId =
                                 acknowledgement.incidentId,
                             message =
@@ -486,13 +488,18 @@ object TimelineOutboxCoordinator {
                             author =
                                 acknowledgement.author,
                             occurredAt =
-                                acknowledgement.occurredAt,
-                            deliveryState =
-                                DeliveryState.SENT.name,
-                            ownerPrincipal =
-                                credential.ownerPrincipal
+                                acknowledgement.occurredAt
                         )
+
+                if (
+                    acknowledged == 0
+                ) {
+
+                    Log.i(
+                        TAG,
+                        "TIMELINE_OUTBOX_ACK_IGNORED|entryId=${entity.entryId}|reason=state_changed"
                     )
+                }
 
                 retryStates.remove(
                     entity.entryId

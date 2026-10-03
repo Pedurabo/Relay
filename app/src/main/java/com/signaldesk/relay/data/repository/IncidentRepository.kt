@@ -126,26 +126,23 @@ class IncidentRepository(
     suspend fun confirmTimelineEntry(
         event: TimelineEntryAddedEvent,
         ownerPrincipal: String
-    ) {
-        requireTimelineDao()
-            .upsert(
-                TimelineEntryEntity(
-                    entryId =
-                        event.entryId,
-                    incidentId =
-                        event.incidentId,
-                    message =
-                        event.message,
-                    author =
-                        event.author,
-                    occurredAt =
-                        event.occurredAt,
-                    deliveryState =
-                        DeliveryState.SENT.name,
-                    ownerPrincipal =
-                        ownerPrincipal
-                )
-            )
+    ): Boolean {
+
+        return requireTimelineDao()
+            .acknowledgePending(
+                entryId =
+                    event.entryId,
+                ownerPrincipal =
+                    ownerPrincipal,
+                incidentId =
+                    event.incidentId,
+                message =
+                    event.message,
+                author =
+                    event.author,
+                occurredAt =
+                    event.occurredAt
+            ) == 1
     }
 
     suspend fun createIncident(
