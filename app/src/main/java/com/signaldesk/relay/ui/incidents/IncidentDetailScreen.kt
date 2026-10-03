@@ -38,6 +38,11 @@ fun IncidentDetailScreen(
     timeline: List<TimelineEntry>,
     onPostUpdate: (String) -> Unit,
     onRetry: (TimelineEntry) -> Unit,
+    optimisticStatus: String? = null,
+    statusUpdateInProgress: Boolean = false,
+    statusUpdateError: String? = null,
+    onStatusChange:
+        (String) -> Unit = {},
     optimisticSeverity: IncidentSeverity? = null,
     severityUpdateInProgress: Boolean = false,
     severityUpdateError: String? = null,
@@ -99,6 +104,24 @@ fun IncidentDetailScreen(
                         update
                     )
                 }
+            )
+        }
+
+        item {
+
+            val displayStatus =
+                optimisticStatus
+                    ?: incident.status
+
+            StatusSelector(
+                status =
+                    displayStatus,
+                syncing =
+                    statusUpdateInProgress,
+                supportingMessage =
+                    statusUpdateError,
+                onStatusChange =
+                    onStatusChange
             )
         }
 
@@ -265,6 +288,170 @@ private fun IncidentSummary(
                     MaterialTheme
                         .typography
                         .labelMedium
+            )
+        }
+    }
+}
+
+
+@Composable
+private fun StatusSelector(
+    status: String,
+    syncing: Boolean,
+    supportingMessage: String?,
+    onStatusChange:
+        (String) -> Unit
+) {
+
+    val lifecycleStatuses =
+        listOf(
+            "Investigating",
+            "Active",
+            "Monitoring",
+            "Resolved"
+        )
+
+    val options =
+        if (
+            status in
+            lifecycleStatuses
+        ) {
+            lifecycleStatuses
+        } else {
+            listOf(
+                status
+            ) +
+                lifecycleStatuses
+        }
+
+    Column(
+        verticalArrangement =
+            Arrangement.spacedBy(
+                8.dp
+            )
+    ) {
+
+        Text(
+            text =
+                "Incident status",
+            style =
+                MaterialTheme
+                    .typography
+                    .titleMedium,
+            fontWeight =
+                FontWeight.SemiBold
+        )
+
+        Text(
+            text =
+                if (
+                    syncing
+                ) {
+                    "Syncing $status…"
+                } else {
+                    "Current status: $status"
+                },
+            style =
+                MaterialTheme
+                    .typography
+                    .bodyMedium
+        )
+
+        options
+            .chunked(
+                2
+            )
+            .forEach {
+                rowOptions ->
+
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(
+                            8.dp
+                        )
+                ) {
+
+                    rowOptions
+                        .forEach {
+                            option ->
+
+                            val selected =
+                                option ==
+                                    status
+
+                            val description =
+                                when {
+
+                                    syncing &&
+                                    selected ->
+                                        "$option status, syncing"
+
+                                    selected ->
+                                        "$option status, current"
+
+                                    else ->
+                                        "Set status to $option"
+                                }
+
+                            FilterChip(
+                                selected =
+                                    selected,
+                                onClick = {
+                                    onStatusChange(
+                                        option
+                                    )
+                                },
+                                enabled =
+                                    !syncing,
+                                modifier =
+                                    Modifier
+                                        .weight(
+                                            1f
+                                        )
+                                        .semantics {
+                                            contentDescription =
+                                                description
+                                        },
+                                label = {
+                                    Text(
+                                        text =
+                                            option,
+                                        maxLines =
+                                            1
+                                    )
+                                }
+                            )
+                        }
+
+                    if (
+                        rowOptions.size ==
+                        1
+                    ) {
+
+                        androidx.compose.foundation.layout.Spacer(
+                            modifier =
+                                Modifier.weight(
+                                    1f
+                                )
+                        )
+                    }
+                }
+            }
+
+        if (
+            supportingMessage !=
+            null
+        ) {
+
+            Text(
+                text =
+                    supportingMessage,
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodySmall
             )
         }
     }

@@ -167,6 +167,24 @@ fun RelayNavHost(
             val timeline by
                 viewModel.timeline.collectAsState()
 
+            val optimisticStatus =
+                viewModel
+                    .optimisticStatus
+                    .collectAsState()
+                    .value
+
+            val statusUpdateInProgress =
+                viewModel
+                    .statusUpdateInProgress
+                    .collectAsState()
+                    .value
+
+            val statusUpdateError =
+                viewModel
+                    .statusUpdateError
+                    .collectAsState()
+                    .value
+
             val optimisticSeverity =
                 viewModel
                     .optimisticSeverity
@@ -187,7 +205,28 @@ fun RelayNavHost(
 
 
             IncidentDetailScreen(
-                
+
+                optimisticStatus =
+                    optimisticStatus,
+                statusUpdateInProgress =
+                    statusUpdateInProgress,
+                statusUpdateError =
+                    statusUpdateError,
+                onStatusChange = { status ->
+
+                    incident
+                        ?.let { displayedIncident ->
+
+                            viewModel
+                                .updateStatus(
+                                    targetIncidentId =
+                                        displayedIncident.id,
+                                    status =
+                                        status
+                                )
+                        }
+                },
+
                 optimisticSeverity =
                     optimisticSeverity,
                 severityUpdateInProgress =
