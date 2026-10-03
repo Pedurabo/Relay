@@ -16,6 +16,17 @@ internal suspend fun attemptPushUnregistration(
     }
 }
 
+internal fun isCurrentPushRegistrationSession(
+    current: SessionState,
+    expectedUserId: String,
+    expectedAccessToken: String
+): Boolean =
+    current is SessionState.SignedIn &&
+        current.userId ==
+            expectedUserId &&
+        current.accessToken ==
+            expectedAccessToken
+
 object PushRegistrationCoordinator {
 
     private val scope =
@@ -86,6 +97,21 @@ object PushRegistrationCoordinator {
                 ?: return
 
         scope.launch {
+
+            if (
+                !isCurrentPushRegistrationSession(
+                    current =
+                        SessionManager
+                            .sessionState
+                            .value,
+                    expectedUserId =
+                        session.userId,
+                    expectedAccessToken =
+                        session.accessToken
+                )
+            ) {
+                return@launch
+            }
 
             runCatching {
 
