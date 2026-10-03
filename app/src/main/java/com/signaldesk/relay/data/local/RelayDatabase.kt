@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TimelineEntryEntity::class,
         IncidentSequenceGapEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class RelayDatabase :
@@ -212,7 +212,8 @@ companion object {
                                 MIGRATION_5_6,
                                 MIGRATION_6_7,
                                 MIGRATION_7_8,
-                                MIGRATION_8_9
+                                MIGRATION_8_9,
+                                MIGRATION_9_10
                             )
                             .build()
                             .also {
@@ -274,8 +275,32 @@ companion object {
                     )
                 }
             }
+
+        val MIGRATION_9_10 =
+            object : Migration(
+                9,
+                10
+            ) {
+
+                override fun migrate(
+                    db:
+                        SupportSQLiteDatabase
+                ) {
+
+                    /*
+                     * Existing timeline rows have unknown ownership.
+                     * They remain readable but are not eligible for
+                     * authenticated automatic delivery.
+                     */
+                    db.execSQL(
+                        """
+                        ALTER TABLE timeline_entries
+                        ADD COLUMN ownerPrincipal
+                        TEXT NOT NULL
+                        DEFAULT ''
+                        """.trimIndent()
+                    )
+                }
+            }
 }
 }
-
-
-

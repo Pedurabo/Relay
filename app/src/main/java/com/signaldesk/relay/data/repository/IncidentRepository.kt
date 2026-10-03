@@ -52,7 +52,8 @@ class IncidentRepository(
     suspend fun createPendingTimelineEntry(
         incidentId: String,
         message: String,
-        author: String
+        author: String,
+        ownerPrincipal: String
     ): TimelineEntry {
         val dao =
             requireTimelineDao()
@@ -71,7 +72,9 @@ class IncidentRepository(
                 occurredAt =
                     System.currentTimeMillis(),
                 deliveryState =
-                    DeliveryState.PENDING.name
+                    DeliveryState.PENDING.name,
+                ownerPrincipal =
+                    ownerPrincipal
             )
 
         dao.upsert(entity)

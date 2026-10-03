@@ -128,6 +128,13 @@ class IncidentDetailViewModel(
         }
 
         viewModelScope.launch {
+            val currentSession =
+                SessionManager
+                    .sessionState
+                    .value as?
+                    SessionState.SignedIn
+                    ?: return@launch
+
             val pending =
                 repository
                     .createPendingTimelineEntry(
@@ -135,7 +142,10 @@ class IncidentDetailViewModel(
                             incidentId,
                         message =
                             message,
-                        author = "You"
+                        author =
+                            "You",
+                        ownerPrincipal =
+                            currentSession.userId
                     )
 
             sendPendingEntry(
@@ -440,4 +450,3 @@ class IncidentDetailViewModel(
         }
     }
 }
-

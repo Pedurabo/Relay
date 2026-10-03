@@ -17,5 +17,8 @@ data class TimelineEntryEntity(
     val message: String,
     val author: String,
     val occurredAt: Long,
-    val deliveryState: String
+    val deliveryState: String,
+
+    val ownerPrincipal: String =
+        ""
 )

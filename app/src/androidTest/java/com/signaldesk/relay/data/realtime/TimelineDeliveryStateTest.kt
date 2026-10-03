@@ -71,7 +71,10 @@ class TimelineDeliveryStateTest {
                             "INC-600",
                         message =
                             "Investigating database latency",
-                        author = "You"
+                        author =
+                            "You",
+                        ownerPrincipal =
+                            "operator-a"
                     )
 
             val pendingStored =
