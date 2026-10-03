@@ -1,6 +1,8 @@
 package com.signaldesk.relay.ui.incidents
 import com.signaldesk.relay.data.local.RoomPendingSeverityCommandStore
 import com.signaldesk.relay.data.local.PendingSeverityCommand
+import com.signaldesk.relay.data.local.RoomPendingStatusCommandStore
+import com.signaldesk.relay.data.local.PendingStatusCommand
 import java.util.UUID
 import kotlinx.coroutines.delay
 
@@ -16,6 +18,7 @@ import com.signaldesk.relay.data.repository.IncidentRepository
 import com.signaldesk.relay.data.realtime.timelineDeliveryCredential
 import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
+import com.signaldesk.relay.data.realtime.StatusOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.Incident
@@ -35,6 +38,22 @@ class IncidentDetailViewModel(
                 .pendingSeverityCommandDao()
         )
     }
+
+    private val pendingStatusStore by lazy {
+        RoomPendingStatusCommandStore(
+            database
+                .pendingStatusCommandDao()
+        )
+    }
+
+    val statusUpdateInProgress =
+        MutableStateFlow(false)
+
+    val statusUpdateError =
+        MutableStateFlow<String?>(null)
+
+    val optimisticStatus =
+        MutableStateFlow<String?>(null)
 
     val severityUpdateInProgress =
         MutableStateFlow(false)
@@ -153,6 +172,54 @@ class IncidentDetailViewModel(
 
             TimelineOutboxCoordinator
                 .kick()
+        }
+    }
+
+    // PERSISTENT_STATUS_OUTBOX
+
+    init {
+
+        viewModelScope.launch {
+
+            val ownerPrincipal =
+                when (
+                    val session =
+                        SessionManager
+                            .sessionState
+                            .value
+                ) {
+
+                    SessionState.SignedOut ->
+                        null
+
+                    is SessionState.SignedIn ->
+                        session.userId
+                }
+
+            ownerPrincipal
+                ?.let { owner ->
+
+                    pendingStatusStore
+                        .loadForIncident(
+                            incidentId,
+                            owner
+                        )
+                }
+                ?.let { pending ->
+
+                    optimisticStatus.value =
+                        pending.status
+
+                    statusUpdateInProgress.value =
+                        true
+
+                    statusUpdateError.value =
+                        "Pending status update restored."
+
+                    monitorPendingStatus(
+                        pending
+                    )
+                }
         }
     }
 
@@ -308,6 +375,204 @@ class IncidentDetailViewModel(
             )
         }
     }
+    fun updateStatus(
+        targetIncidentId: String,
+        status: String
+    ) {
+
+        if (
+            statusUpdateInProgress.value
+        ) {
+            return
+        }
+
+        val requestedStatus =
+            status.trim()
+
+        if (
+            requestedStatus.isBlank()
+        ) {
+            return
+        }
+
+        val displayedIncident =
+            incident.value
+                ?: return
+
+        if (
+            displayedIncident.id !=
+            targetIncidentId
+        ) {
+            return
+        }
+
+        if (
+            displayedIncident.status ==
+            requestedStatus
+        ) {
+            return
+        }
+
+        val ownerPrincipal =
+            when (
+                val session =
+                    SessionManager
+                        .sessionState
+                        .value
+            ) {
+
+                SessionState.SignedOut ->
+                    return
+
+                is SessionState.SignedIn ->
+                    session.userId
+            }
+
+        val pending =
+            PendingStatusCommand(
+                commandId =
+                    UUID
+                        .randomUUID()
+                        .toString(),
+
+                incidentId =
+                    targetIncidentId,
+
+                status =
+                    requestedStatus,
+
+                baseStatus =
+                    displayedIncident.status,
+
+                ownerPrincipal =
+                    ownerPrincipal
+            )
+
+        optimisticStatus.value =
+            requestedStatus
+
+        statusUpdateInProgress.value =
+            true
+
+        statusUpdateError.value =
+            "Status queued for sync."
+
+        viewModelScope.launch {
+
+            pendingStatusStore.save(
+                pending
+            )
+
+            StatusOutboxCoordinator
+                .kick()
+
+            monitorPendingStatus(
+                pending
+            )
+        }
+    }
+
+    private suspend fun monitorPendingStatus(
+        pending:
+            PendingStatusCommand
+    ) {
+
+        val requestedStatus =
+            pending.status
+
+        val baseStatus =
+            pending.baseStatus
+
+        while (true) {
+
+            val current =
+                incident.value
+
+            if (
+                current?.id ==
+                pending.incidentId
+            ) {
+
+                if (
+                    current.status ==
+                    requestedStatus
+                ) {
+
+                    optimisticStatus.value =
+                        null
+
+                    statusUpdateInProgress.value =
+                        false
+
+                    statusUpdateError.value =
+                        null
+
+                    return
+                }
+
+                if (
+                    current.status !=
+                    baseStatus &&
+                    current.status !=
+                    requestedStatus
+                ) {
+
+                    optimisticStatus.value =
+                        null
+
+                    statusUpdateInProgress.value =
+                        false
+
+                    statusUpdateError.value =
+                        "Status was superseded by a newer update: ${current.status}."
+
+                    return
+                }
+            }
+
+            val stored =
+                pendingStatusStore
+                    .loadForIncident(
+                        pending.incidentId,
+                        pending.ownerPrincipal
+                    )
+
+            if (
+                stored?.commandId !=
+                pending.commandId
+            ) {
+
+                optimisticStatus.value =
+                    null
+
+                statusUpdateInProgress.value =
+                    false
+
+                if (
+                    current?.status !=
+                    requestedStatus
+                ) {
+
+                    statusUpdateError.value =
+                        "Status update ended without the requested authoritative state."
+                } else {
+
+                    statusUpdateError.value =
+                        null
+                }
+
+                return
+            }
+
+            statusUpdateError.value =
+                "Status queued; waiting for authoritative sync."
+
+            delay(
+                200L
+            )
+        }
+    }
+
     private suspend fun monitorPendingSeverity(
         pending:
             PendingSeverityCommand
