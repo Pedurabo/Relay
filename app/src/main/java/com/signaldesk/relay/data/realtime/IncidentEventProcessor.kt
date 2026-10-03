@@ -241,6 +241,19 @@ class IncidentEventProcessor(
         )
             ?: return EventProcessingResult.DEFERRED
 
+        /*
+         * A broadcast confirmation can race the dedicated sender ACK.
+         *
+         * If this entry already exists locally, preserve the durable
+         * principal that created it. Truly remote entries have no
+         * local row and therefore remain ownerless.
+         */
+        val existingTimelineEntry =
+            timelineEntryDao
+                .getById(
+                    event.entryId
+                )
+
         timelineEntryDao.upsert(
             TimelineEntryEntity(
                 entryId =
@@ -254,7 +267,11 @@ class IncidentEventProcessor(
                 occurredAt =
                     event.occurredAt,
                 deliveryState =
-                    DeliveryState.SENT.name
+                    DeliveryState.SENT.name,
+                ownerPrincipal =
+                    existingTimelineEntry
+                        ?.ownerPrincipal
+                        ?: ""
             )
         )
 
@@ -370,4 +387,3 @@ class IncidentEventProcessor(
         GAP
     }
 }
-
