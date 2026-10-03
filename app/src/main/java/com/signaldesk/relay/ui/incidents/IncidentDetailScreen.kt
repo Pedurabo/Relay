@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -19,6 +20,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.signaldesk.relay.model.DeliveryState
 import com.signaldesk.relay.model.Incident
@@ -150,85 +153,16 @@ fun IncidentDetailScreen(
                 optimisticSeverity
                     ?: incident.severity
 
-            Text(
-                text = "Incident severity",
-                style =
-                    MaterialTheme
-                        .typography
-                        .titleMedium,
-                fontWeight =
-                    FontWeight.SemiBold
+            SeveritySelector(
+                severity =
+                    displaySeverity,
+                syncing =
+                    severityUpdateInProgress,
+                supportingMessage =
+                    severityUpdateError,
+                onSeverityChange =
+                    onSeverityChange
             )
-
-            Text(
-                text =
-                    "Current: ${displaySeverity.name}",
-                style =
-                    MaterialTheme
-                        .typography
-                        .bodyMedium
-            )
-
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.spacedBy(
-                        8.dp
-                    )
-            ) {
-
-                IncidentSeverity.entries
-                    .forEach { severity ->
-
-                        Button(
-                            onClick = {
-                                onSeverityChange(
-                                    severity
-                                )
-                            },
-                            enabled =
-                                !severityUpdateInProgress &&
-                                    severity !=
-                                    displaySeverity
-                        ) {
-
-                            Text(
-                                text =
-                                    severity.name,
-                                maxLines = 1
-                            )
-                        }
-                    }
-            }
-
-            if (
-                severityUpdateInProgress
-            ) {
-                Text(
-                    text =
-                        "${displaySeverity.name} · waiting for server confirmation…",
-                    style =
-                        MaterialTheme
-                            .typography
-                            .bodySmall
-                )
-            }
-
-            if (
-                severityUpdateError !=
-                null
-            ) {
-                Text(
-                    text =
-                        severityUpdateError,
-                    style =
-                        MaterialTheme
-                            .typography
-                            .bodySmall
-                )
-            }
-
 
             Text(
                 text = "Timeline",
@@ -260,6 +194,125 @@ fun IncidentDetailScreen(
         }
     }
 }
+
+@Composable
+private fun SeveritySelector(
+    severity: IncidentSeverity,
+    syncing: Boolean,
+    supportingMessage: String?,
+    onSeverityChange:
+        (IncidentSeverity) -> Unit
+) {
+    Column(
+        verticalArrangement =
+            Arrangement.spacedBy(
+                8.dp
+            )
+    ) {
+
+        Text(
+            text =
+                "Incident severity",
+            style =
+                MaterialTheme
+                    .typography
+                    .titleMedium,
+            fontWeight =
+                FontWeight.SemiBold
+        )
+
+        Text(
+            text =
+                if (
+                    syncing
+                ) {
+                    "Syncing ${severity.name}â€¦"
+                } else {
+                    "Current severity: ${severity.name}"
+                },
+            style =
+                MaterialTheme
+                    .typography
+                    .bodyMedium
+        )
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(
+                    8.dp
+                )
+        ) {
+
+            IncidentSeverity.entries
+                .forEach { option ->
+
+                    val selected =
+                        option ==
+                            severity
+
+                    val description =
+                        when {
+
+                            syncing &&
+                            selected ->
+                                "${option.name} severity, syncing"
+
+                            selected ->
+                                "${option.name} severity, current"
+
+                            else ->
+                                "Set severity to ${option.name}"
+                        }
+
+                    FilterChip(
+                        selected =
+                            selected,
+                        onClick = {
+                            onSeverityChange(
+                                option
+                            )
+                        },
+                        enabled =
+                            !syncing,
+                        modifier =
+                            Modifier
+                                .weight(
+                                    1f
+                                )
+                                .semantics {
+                                    contentDescription =
+                                        description
+                                },
+                        label = {
+                            Text(
+                                text =
+                                    option.name,
+                                maxLines =
+                                    1
+                            )
+                        }
+                    )
+                }
+        }
+
+        if (
+            supportingMessage !=
+            null
+        ) {
+            Text(
+                text =
+                    supportingMessage,
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodySmall
+            )
+        }
+    }
+}
+
 
 @Composable
 private fun TimelineEntryItem(
@@ -302,7 +355,7 @@ private fun TimelineEntryItem(
         ) {
             DeliveryState.PENDING -> {
                 Text(
-                    text = "Sending…",
+                    text = "Sendingï¿½",
                     style =
                         MaterialTheme
                             .typography
