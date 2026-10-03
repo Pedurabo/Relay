@@ -72,33 +72,10 @@ fun IncidentDetailScreen(
             Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Text(
-                text = incident.id,
-                style =
-                    MaterialTheme
-                        .typography
-                        .labelLarge
-            )
-        }
 
-        item {
-            Text(
-                text = incident.title,
-                style =
-                    MaterialTheme
-                        .typography
-                        .headlineMedium
-            )
-        }
-
-        item {
-            Text(
-                text =
-                    "Status: ${incident.status}",
-                style =
-                    MaterialTheme
-                        .typography
-                        .bodyLarge
+            IncidentSummary(
+                incident =
+                    incident
             )
         }
 
@@ -196,6 +173,61 @@ fun IncidentDetailScreen(
         }
     }
 }
+
+@Composable
+private fun IncidentSummary(
+    incident: Incident
+) {
+    OutlinedCard(
+        modifier =
+            Modifier.fillMaxWidth()
+    ) {
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        16.dp
+                    ),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    8.dp
+                )
+        ) {
+
+            Text(
+                text =
+                    incident.title,
+                style =
+                    MaterialTheme
+                        .typography
+                        .headlineSmall,
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Text(
+                text =
+                    incident.status,
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium
+            )
+
+            Text(
+                text =
+                    "Incident ${incident.id}",
+                style =
+                    MaterialTheme
+                        .typography
+                        .labelMedium
+            )
+        }
+    }
+}
+
 
 @Composable
 private fun SeveritySelector(
