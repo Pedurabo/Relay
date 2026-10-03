@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -319,43 +322,74 @@ private fun TimelineEntryItem(
     entry: TimelineEntry,
     onRetry: (TimelineEntry) -> Unit
 ) {
-    Column(
-        verticalArrangement =
-            Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text =
-                formatTimestamp(
-                    entry.occurredAt
-                ),
-            style =
-                MaterialTheme
-                    .typography
-                    .labelMedium
-        )
 
-        Text(
-            text = entry.message,
-            style =
-                MaterialTheme
-                    .typography
-                    .bodyLarge
-        )
-
-        Text(
-            text = "By ${entry.author}",
-            style =
-                MaterialTheme
-                    .typography
-                    .bodySmall
-        )
-
+    val deliveryDescription =
         when (
             entry.deliveryState
         ) {
-            DeliveryState.PENDING -> {
+
+            DeliveryState.PENDING ->
+                "sending"
+
+            DeliveryState.SENT ->
+                "delivered"
+
+            DeliveryState.FAILED ->
+                "delivery failed"
+        }
+
+    Card(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .semantics {
+                    contentDescription =
+                        "Timeline update by ${entry.author}, $deliveryDescription"
+                },
+        elevation =
+            CardDefaults
+                .cardElevation(
+                    defaultElevation =
+                        1.dp
+                )
+    ) {
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        16.dp
+                    ),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    8.dp
+                )
+        ) {
+
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.SpaceBetween
+            ) {
+
                 Text(
-                    text = "Sending...",
+                    text =
+                        entry.author,
+                    style =
+                        MaterialTheme
+                            .typography
+                            .titleSmall,
+                    fontWeight =
+                        FontWeight.SemiBold
+                )
+
+                Text(
+                    text =
+                        formatTimestamp(
+                            entry.occurredAt
+                        ),
                     style =
                         MaterialTheme
                             .typography
@@ -363,40 +397,72 @@ private fun TimelineEntryItem(
                 )
             }
 
-            DeliveryState.SENT -> {
-                Text(
-                    text = "Sent",
-                    style =
-                        MaterialTheme
-                            .typography
-                            .labelMedium
-                )
-            }
+            Text(
+                text =
+                    entry.message,
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodyLarge
+            )
 
-            DeliveryState.FAILED -> {
-                Row(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            8.dp
-                        )
-                ) {
+            when (
+                entry.deliveryState
+            ) {
+
+                DeliveryState.PENDING -> {
+
                     Text(
                         text =
-                            "Not delivered",
+                            "Sending...",
                         style =
                             MaterialTheme
                                 .typography
                                 .labelMedium
                     )
+                }
 
-                    Button(
-                        onClick = {
-                            onRetry(entry)
-                        }
+                DeliveryState.SENT -> {
+
+                    Text(
+                        text =
+                            "Delivered",
+                        style =
+                            MaterialTheme
+                                .typography
+                                .labelMedium
+                    )
+                }
+
+                DeliveryState.FAILED -> {
+
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween
                     ) {
+
                         Text(
-                            "Retry"
+                            text =
+                                "Delivery failed",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .labelMedium
                         )
+
+                        Button(
+                            onClick = {
+                                onRetry(
+                                    entry
+                                )
+                            }
+                        ) {
+                            Text(
+                                "Retry"
+                            )
+                        }
                     }
                 }
             }
