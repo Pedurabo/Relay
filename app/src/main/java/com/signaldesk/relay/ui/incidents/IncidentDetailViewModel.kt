@@ -13,13 +13,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.repository.IncidentRepository
-import com.signaldesk.relay.data.realtime.WebSocketTimelineSender
-import com.signaldesk.relay.data.realtime.TimelineDeliveryCredential
-import com.signaldesk.relay.data.realtime.isTimelineDeliverySessionCurrent
 import com.signaldesk.relay.data.realtime.timelineDeliveryCredential
+import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
-import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.model.TimelineEntry
@@ -27,8 +24,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
-
 class IncidentDetailViewModel(
     application: Application,
     savedStateHandle: SavedStateHandle
@@ -65,23 +60,6 @@ class IncidentDetailViewModel(
                 database.incidentDao(),
             timelineEntryDao =
                 database.timelineEntryDao()
-        )
-
-    private val timelineSender =
-        WebSocketTimelineSender(
-            url =
-                "ws://127.0.0.1:9000",
-            onSessionInvalidated = {
-                rejectedAccessToken ->
-
-                viewModelScope.launch {
-
-                    SessionRefreshCoordinator
-                        .refreshOrSignOut(
-                            rejectedAccessToken
-                        )
-                }
-            }
         )
 
     val incident: StateFlow<Incident?> =
@@ -133,18 +111,8 @@ class IncidentDetailViewModel(
                         ownerPrincipal =
                             currentSession.userId
                     )
-
-            val credential =
-                timelineDeliveryCredential(
-                    currentSession,
-                    currentSession.userId
-                )
-                    ?: return@launch
-
-            sendPendingEntry(
-                pending,
-                credential
-            )
+            TimelineOutboxCoordinator
+                .kick()
         }
     }
 
@@ -160,74 +128,24 @@ class IncidentDetailViewModel(
                     )
                     ?: return@launch
 
-            val credential =
-                timelineDeliveryCredential(
-                    SessionManager
-                        .sessionState
-                        .value,
-                    ownerPrincipal
-                )
-                    ?: return@launch
+            timelineDeliveryCredential(
+                SessionManager
+                    .sessionState
+                    .value,
+                ownerPrincipal
+            )
+                ?: return@launch
 
             repository
                 .markTimelineEntryPending(
                     entry.id
                 )
 
-            sendPendingEntry(
-                entry,
-                credential
-            )
+            TimelineOutboxCoordinator
+                .kick()
         }
     }
 
-    private suspend fun sendPendingEntry(
-        entry: TimelineEntry,
-        credential:
-            TimelineDeliveryCredential
-    ) {
-
-        if (
-            !isTimelineDeliverySessionCurrent(
-                SessionManager
-                    .sessionState
-                    .value,
-                credential.ownerPrincipal,
-                credential.accessToken
-            )
-        ) {
-            return
-        }
-
-        try {
-            val acknowledgement =
-                withTimeout(10_000) {
-                    timelineSender.send(
-                        entry,
-                        credential.accessToken
-                    )
-                }
-
-            repository
-                .confirmTimelineEntry(
-                    acknowledgement,
-                    credential.ownerPrincipal
-                )
-        } catch (
-            cancellation:
-                kotlinx.coroutines.CancellationException
-        ) {
-            throw cancellation
-        } catch (
-            error:
-                Throwable
-        ) {
-            repository
-                .markTimelineEntryFailed(
-                    entry.id
-                )
-        }
-    }
     // PERSISTENT_SEVERITY_OUTBOX
 
     init {
