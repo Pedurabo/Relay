@@ -49,6 +49,25 @@ internal fun shouldAcceptRealtimeSocketOpen(
             callbackAttemptId
     )
 
+internal fun <T : Any> shouldRevokeRealtimeSocketOwnership(
+    activeSocket: T?,
+    callbackSocket: T,
+    activeAttemptId: Long,
+    callbackAttemptId: Long
+): Boolean =
+    shouldProcessRealtimeSocketMessage(
+        activeSocket =
+            activeSocket,
+        callbackSocket =
+            callbackSocket
+    ) &&
+        isCurrentRealtimeAttempt(
+            activeAttemptId =
+                activeAttemptId,
+            callbackAttemptId =
+                callbackAttemptId
+        )
+
 class WebSocketRealtimeIncidentSource(
     private val url: String,
     private val tokenProvider: () -> String? = { null },
@@ -164,15 +183,26 @@ class WebSocketRealtimeIncidentSource(
                         ) {
 
                             if (
-                                !shouldApplyRealtimeSocketTerminalState(
+                                !shouldRevokeRealtimeSocketOwnership(
                                     activeSocket =
                                         activeSocket,
                                     callbackSocket =
-                                        webSocket
+                                        webSocket,
+                                    activeAttemptId =
+                                        activeAttemptId,
+                                    callbackAttemptId =
+                                        attemptId
                                 )
                             ) {
                                 return
                             }
+
+                            activeSocket =
+                                null
+
+                            activeAttemptId =
+                                0L
+
                             _connectionState.value =
                                 RealtimeConnectionState.Disconnected
 
