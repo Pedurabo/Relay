@@ -16,7 +16,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
-
+import java.util.concurrent.atomic.AtomicLong
 internal fun <T : Any> shouldApplyRealtimeSocketTerminalState(
     activeSocket: T?,
     callbackSocket: T
@@ -29,6 +29,14 @@ internal fun <T : Any> shouldProcessRealtimeSocketMessage(
     callbackSocket: T
 ): Boolean =
     activeSocket === callbackSocket
+
+internal fun shouldAcceptRealtimeSocketOpen(
+    activeAttemptId: Long,
+    callbackAttemptId: Long
+): Boolean =
+    activeAttemptId != 0L &&
+        activeAttemptId ==
+        callbackAttemptId
 
 class WebSocketRealtimeIncidentSource(
     private val url: String,
@@ -51,8 +59,22 @@ class WebSocketRealtimeIncidentSource(
     private var activeSocket:
         WebSocket? = null
 
+    private val attemptCounter =
+        AtomicLong(0L)
+
+    @Volatile
+    private var activeAttemptId =
+        0L
+
     override val events: Flow<IncidentEvent> =
         callbackFlow {
+
+            val attemptId =
+                attemptCounter
+                    .incrementAndGet()
+
+            activeAttemptId =
+                attemptId
 
             _connectionState.value =
                 RealtimeConnectionState.Connecting
@@ -85,6 +107,19 @@ class WebSocketRealtimeIncidentSource(
                         webSocket: WebSocket,
                         response: Response
                     ) {
+                        if (
+                            !shouldAcceptRealtimeSocketOpen(
+                                activeAttemptId =
+                                    activeAttemptId,
+                                callbackAttemptId =
+                                    attemptId
+                            )
+                        ) {
+                            webSocket.cancel()
+
+                            return
+                        }
+
                         activeSocket =
                             webSocket
 
@@ -241,6 +276,14 @@ class WebSocketRealtimeIncidentSource(
                 )
 
             awaitClose {
+                if (
+                    activeAttemptId ==
+                    attemptId
+                ) {
+                    activeAttemptId =
+                        0L
+                }
+
                 if (
                     activeSocket === socket
                 ) {
