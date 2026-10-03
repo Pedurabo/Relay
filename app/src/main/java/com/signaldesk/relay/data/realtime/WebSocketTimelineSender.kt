@@ -169,10 +169,44 @@ class WebSocketTimelineSender(
                             val json =
                                 JSONObject(text)
 
-                            if (
+                            val type =
                                 json.optString(
                                     "type"
-                                ) !=
+                                )
+
+                            if (
+                                type ==
+                                "timeline.entry.rejected"
+                            ) {
+
+                                if (
+                                    json.optString(
+                                        "entryId"
+                                    ) != entry.id
+                                ) {
+                                    return
+                                }
+
+                                val reason =
+                                    json.optString(
+                                        "reason",
+                                        "rejected"
+                                    )
+
+                                fail(
+                                    TimelineDeliveryRejectedException(
+                                        rejectionReason =
+                                            reason,
+                                        message =
+                                            "Timeline delivery rejected: $reason"
+                                    )
+                                )
+
+                                return
+                            }
+
+                            if (
+                                type !=
                                 "timeline.entry.added"
                             ) {
                                 return

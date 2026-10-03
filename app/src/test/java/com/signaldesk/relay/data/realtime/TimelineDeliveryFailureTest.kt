@@ -24,6 +24,23 @@ class TimelineDeliveryFailureTest {
             )
         )
     }
+    @Test
+    fun protocolTimelineRejectionIsPermanent() {
+
+        val error =
+            TimelineDeliveryRejectedException(
+                rejectionReason =
+                    "entry_id_conflict",
+                message =
+                    "Timeline delivery rejected: entry_id_conflict"
+            )
+
+        assertTrue(
+            isPermanentTimelineDeliveryFailure(
+                error
+            )
+        )
+    }
 
 
     @Test

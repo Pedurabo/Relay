@@ -3,7 +3,8 @@ package com.signaldesk.relay.data.realtime
 import java.io.IOException
 
 class TimelineDeliveryRejectedException(
-    val closeCode: Int,
+    val closeCode: Int? = null,
+    val rejectionReason: String? = null,
     message: String
 ) : IOException(message)
 

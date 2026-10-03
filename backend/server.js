@@ -1790,6 +1790,20 @@ wss.on(
                         !text.trim()
                     ) {
 
+                        send(
+                            socket,
+                            {
+                                type:
+                                    "timeline.entry.rejected",
+                                entryId:
+                                    entryId || "",
+                                incidentId:
+                                    incidentId || "",
+                                reason:
+                                    "invalid_payload"
+                            }
+                        );
+
                         console.log(
                             "TIMELINE_REJECTED_INVALID|" +
                             incidentId
@@ -1835,6 +1849,18 @@ wss.on(
                         event.incidentId !==
                             incidentId
                     ) {
+
+                        send(
+                            socket,
+                            {
+                                type:
+                                    "timeline.entry.rejected",
+                                entryId,
+                                incidentId,
+                                reason:
+                                    "entry_id_conflict"
+                            }
+                        );
 
                         console.log(
                             "TIMELINE_ENTRY_ID_CONFLICT|" +

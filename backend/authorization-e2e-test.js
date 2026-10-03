@@ -760,12 +760,24 @@ async function main() {
 
         await adminTimeline;
 
+        const timelineCollisionReject =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "timeline.entry.rejected" &&
+                    message.entryId ===
+                        "ENTRY-COLLISION"
+            );
+
         const noTimelineLeak =
             expectNoMessage(
                 operatorSocket,
                 message =>
                     message.incidentId ===
-                        INCIDENT_B
+                        INCIDENT_B &&
+                    message.type ===
+                        "timeline.entry.added"
             );
 
         operatorSocket.send(
@@ -781,7 +793,48 @@ async function main() {
             })
         );
 
+        const timelineCollision =
+            await timelineCollisionReject;
+
+        assert(
+            timelineCollision.reason ===
+                "entry_id_conflict",
+            "Timeline entry-ID collision was not explicitly rejected."
+        );
+
         await noTimelineLeak;
+
+        const invalidTimelineReject =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "timeline.entry.rejected" &&
+                    message.entryId ===
+                        "ENTRY-INVALID"
+            );
+
+        operatorSocket.send(
+            JSON.stringify({
+                type:
+                    "timeline.entry.create",
+                entryId:
+                    "ENTRY-INVALID",
+                incidentId:
+                    INCIDENT_A,
+                message:
+                    "   "
+            })
+        );
+
+        const invalidTimeline =
+            await invalidTimelineReject;
+
+        assert(
+            invalidTimeline.reason ===
+                "invalid_payload",
+            "Invalid timeline payload was not explicitly rejected."
+        );
 
         storage =
             new RelayStorage(
