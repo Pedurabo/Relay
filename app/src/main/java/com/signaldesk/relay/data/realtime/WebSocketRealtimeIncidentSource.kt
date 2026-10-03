@@ -17,6 +17,13 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
 
+internal fun <T : Any> shouldApplyRealtimeSocketTerminalState(
+    activeSocket: T?,
+    callbackSocket: T
+): Boolean =
+    activeSocket == null ||
+        activeSocket === callbackSocket
+
 class WebSocketRealtimeIncidentSource(
     private val url: String,
     private val tokenProvider: () -> String? = { null },
@@ -135,14 +142,24 @@ class WebSocketRealtimeIncidentSource(
                         reason: String
                     ) {
                         if (
-                            activeSocket ===
-                            webSocket
+                            shouldApplyRealtimeSocketTerminalState(
+                                activeSocket =
+                                    activeSocket,
+                                callbackSocket =
+                                    webSocket
+                            )
                         ) {
-                            activeSocket = null
-                        }
 
-                        _connectionState.value =
-                            RealtimeConnectionState.Disconnected
+                            if (
+                                activeSocket ===
+                                webSocket
+                            ) {
+                                activeSocket = null
+                            }
+
+                            _connectionState.value =
+                                RealtimeConnectionState.Disconnected
+                        }
 
                         close()
                     }
@@ -153,14 +170,24 @@ class WebSocketRealtimeIncidentSource(
                         response: Response?
                     ) {
                         if (
-                            activeSocket ===
-                            webSocket
+                            shouldApplyRealtimeSocketTerminalState(
+                                activeSocket =
+                                    activeSocket,
+                                callbackSocket =
+                                    webSocket
+                            )
                         ) {
-                            activeSocket = null
-                        }
 
-                        _connectionState.value =
-                            RealtimeConnectionState.Disconnected
+                            if (
+                                activeSocket ===
+                                webSocket
+                            ) {
+                                activeSocket = null
+                            }
+
+                            _connectionState.value =
+                                RealtimeConnectionState.Disconnected
+                        }
 
                         if (
                             response?.code ==
@@ -359,4 +386,3 @@ class WebSocketRealtimeIncidentSource(
             "RelayRealtime"
     }
 }
-
