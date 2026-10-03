@@ -135,6 +135,49 @@ internal suspend fun runRealtimeReplayJobSafely(
     }
 }
 
+internal suspend fun runRealtimeGapRecoverySafely(
+    isActive: () -> Boolean,
+    delayAfterFailure:
+        suspend (Int) -> Unit,
+    block: suspend () -> Unit
+) {
+    var failedAttempts =
+        0
+
+    while (
+        isActive()
+    ) {
+        try {
+
+            block()
+
+            return
+
+        } catch (
+            error: CancellationException
+        ) {
+            throw error
+
+        } catch (
+            error: Throwable
+        ) {
+
+            failedAttempts +=
+                1
+
+            if (
+                !isActive()
+            ) {
+                return
+            }
+
+            delayAfterFailure(
+                failedAttempts
+            )
+        }
+    }
+}
+
 internal class RealtimeAttemptConnectionTracker {
 
     private var sawConnecting =
@@ -195,7 +238,24 @@ class RealtimeIncidentCoordinator(
             scope.launch {
 
                 launch {
-                    recoverSequenceGaps()
+
+                    runRealtimeGapRecoverySafely(
+                        isActive = {
+                            isActive
+                        },
+                        delayAfterFailure = {
+                            attempt ->
+
+                            delay(
+                                calculateReplayBackoffMillis(
+                                    attempt
+                                )
+                            )
+                        }
+                    ) {
+
+                        recoverSequenceGaps()
+                    }
                 }
 
                 var failedAttempts = 0
