@@ -136,10 +136,20 @@ class IncidentDetailViewModel(
             )
                 ?: return@launch
 
-            repository
-                .markTimelineEntryPending(
-                    entry.id
-                )
+            val markedPending =
+                repository
+                    .markTimelineEntryPending(
+                        entryId =
+                            entry.id,
+                        ownerPrincipal =
+                            ownerPrincipal
+                    )
+
+            if (
+                !markedPending
+            ) {
+                return@launch
+            }
 
             TimelineOutboxCoordinator
                 .kick()

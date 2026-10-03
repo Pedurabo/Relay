@@ -92,23 +92,35 @@ class IncidentRepository(
             ?.ownerPrincipal
     }
     suspend fun markTimelineEntryPending(
-        entryId: String
-    ) {
-        requireTimelineDao()
+        entryId: String,
+        ownerPrincipal: String
+    ): Boolean {
+
+        return requireTimelineDao()
             .updateDeliveryState(
-                entryId,
-                DeliveryState.PENDING.name
-            )
+                entryId =
+                    entryId,
+                ownerPrincipal =
+                    ownerPrincipal,
+                deliveryState =
+                    DeliveryState.PENDING.name
+            ) == 1
     }
 
     suspend fun markTimelineEntryFailed(
-        entryId: String
-    ) {
-        requireTimelineDao()
+        entryId: String,
+        ownerPrincipal: String
+    ): Boolean {
+
+        return requireTimelineDao()
             .updateDeliveryState(
-                entryId,
-                DeliveryState.FAILED.name
-            )
+                entryId =
+                    entryId,
+                ownerPrincipal =
+                    ownerPrincipal,
+                deliveryState =
+                    DeliveryState.FAILED.name
+            ) == 1
     }
 
     suspend fun confirmTimelineEntry(

@@ -64,12 +64,14 @@ interface TimelineEntryDao {
         UPDATE timeline_entries
         SET deliveryState = :deliveryState
         WHERE entryId = :entryId
+          AND ownerPrincipal = :ownerPrincipal
         """
     )
     suspend fun updateDeliveryState(
         entryId: String,
+        ownerPrincipal: String,
         deliveryState: String
-    )
+    ): Int
 
     @Query(
         """

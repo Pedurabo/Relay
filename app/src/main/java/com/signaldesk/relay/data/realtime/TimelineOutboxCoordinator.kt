@@ -442,8 +442,12 @@ object TimelineOutboxCoordinator {
 
                             timelineDao
                                 .updateDeliveryState(
-                                    entity.entryId,
-                                    DeliveryState.FAILED.name
+                                    entryId =
+                                        entity.entryId,
+                                    ownerPrincipal =
+                                        credential.ownerPrincipal,
+                                    deliveryState =
+                                        DeliveryState.FAILED.name
                                 )
 
                             retryStates.remove(
