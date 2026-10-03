@@ -99,6 +99,52 @@ internal suspend fun runOutboxDrainSafely(
     }
 }
 
+internal suspend fun runOutboxPostDrainCheckSafely(
+    isActive: () -> Boolean,
+    delayAfterFailure:
+        suspend (Int) -> Unit,
+    hasPendingWork:
+        suspend () -> Boolean
+): Boolean {
+
+    var failedAttempts =
+        0
+
+    while (
+        isActive()
+    ) {
+
+        try {
+
+            return hasPendingWork()
+
+        } catch (
+            error: CancellationException
+        ) {
+            throw error
+
+        } catch (
+            error: Throwable
+        ) {
+
+            failedAttempts +=
+                1
+
+            if (
+                !isActive()
+            ) {
+                return false
+            }
+
+            delayAfterFailure(
+                failedAttempts
+            )
+        }
+    }
+
+    return false
+}
+
 object SeverityOutboxCoordinator {
 
     private const val TAG =
@@ -272,19 +318,46 @@ object SeverityOutboxCoordinator {
                     "OUTBOX_DRAIN_STOP"
                 )
 
-                val current =
-                    SessionManager
-                        .sessionState
-                        .value
+                val hasPendingWork =
+                    runOutboxPostDrainCheckSafely(
+                        isActive = {
+
+                            SessionManager
+                                .sessionState
+                                .value is
+                                SessionState.SignedIn
+                        },
+                        delayAfterFailure = {
+                            attempt ->
+
+                            delay(
+                                when (attempt) {
+                                    1 -> 1_000L
+                                    2 -> 2_000L
+                                    3 -> 4_000L
+                                    4 -> 8_000L
+                                    else -> 30_000L
+                                }
+                            )
+                        },
+                        hasPendingWork = {
+
+                            val current =
+                                SessionManager
+                                    .sessionState
+                                    .value
+
+                            current is
+                                SessionState.SignedIn &&
+                                store.load(
+                                    current.userId
+                                ) != null
+                        }
+                    )
 
                 if (
-                    current is
-                    SessionState.SignedIn &&
-                    store.load(
-                        current.userId
-                    ) != null
+                    hasPendingWork
                 ) {
-
                     kick()
                 }
             }
