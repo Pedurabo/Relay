@@ -209,6 +209,190 @@ function main() {
         "Incident seed sequence was not stored."
     );
 
+    const created =
+        storage.applyCreateIncidentCommand(
+            "CMD-CREATE-DB-1",
+            "INC-CREATE-DB",
+            "Created database incident",
+            "Investigating",
+            "HIGH",
+            "user-operator",
+            900
+        );
+
+    assert(
+        created.duplicate ===
+            false,
+        "First incident-create command was incorrectly deduped."
+    );
+
+    assert(
+        created.incident.id ===
+            "INC-CREATE-DB",
+        "Created incident ID was incorrect."
+    );
+
+    assert(
+        created.incident.title ===
+            "Created database incident",
+        "Created incident title was not persisted."
+    );
+
+    assert(
+        created.incident.status ===
+            "Investigating",
+        "Created incident status was not persisted."
+    );
+
+    assert(
+        created.incident.severity ===
+            "HIGH",
+        "Created incident severity was not persisted."
+    );
+
+    assert(
+        Number(
+            created.incident.sequence
+        ) ===
+            1,
+        "Created incident did not start at authoritative sequence 1."
+    );
+
+    assert(
+        Number(
+            created.incident.serverOwned
+        ) ===
+            1 ||
+        created.incident.serverOwned ===
+            true,
+        "Created incident was not marked server-owned."
+    );
+
+    assert(
+        storage.canAccessIncident(
+            "user-operator",
+            "INC-CREATE-DB"
+        ),
+        "Creating user was not granted incident access."
+    );
+
+    assert(
+        created.event.type ===
+            "incident.created",
+        "Create command did not produce incident.created."
+    );
+
+    assert(
+        created.event.eventId ===
+            "EVT-CREATE-CMD-CREATE-DB-1",
+        "Create event ID was not command-stable."
+    );
+
+    assert(
+        created.event.sequence ===
+            1,
+        "Create event sequence was incorrect."
+    );
+
+    const createReplay =
+        storage.getReplay(
+            "INC-CREATE-DB",
+            1,
+            1
+        );
+
+    assert(
+        createReplay.length ===
+            1,
+        "Created incident replay event was not persisted."
+    );
+
+    assert(
+        createReplay[0].type ===
+            "incident.created" &&
+        createReplay[0].title ===
+            "Created database incident" &&
+        createReplay[0].status ===
+            "Investigating" &&
+        createReplay[0].severity ===
+            "HIGH",
+        "Created incident replay payload was incorrect."
+    );
+
+    assert(
+        storage
+            .getProcessedCommand(
+                "CMD-CREATE-DB-1"
+            )
+            ?.type ===
+            "incident.create",
+        "Incident-create command type was not persisted."
+    );
+
+    const duplicateCreate =
+        storage.applyCreateIncidentCommand(
+            "CMD-CREATE-DB-1",
+            "INC-CREATE-DB",
+            "Attempted replacement title",
+            "Resolved",
+            "LOW",
+            "user-operator",
+            950
+        );
+
+    assert(
+        duplicateCreate.duplicate ===
+            true,
+        "Duplicate incident-create command was re-applied."
+    );
+
+    assert(
+        duplicateCreate.incident.title ===
+            "Created database incident" &&
+        duplicateCreate.incident.status ===
+            "Investigating" &&
+        duplicateCreate.incident.severity ===
+            "HIGH",
+        "Duplicate create command changed authoritative incident state."
+    );
+
+    let incidentIdConflict =
+        null;
+
+    try {
+
+        storage.applyCreateIncidentCommand(
+            "CMD-CREATE-DB-COLLISION",
+            "INC-CREATE-DB",
+            "Collision",
+            "Active",
+            "MEDIUM",
+            "user-operator",
+            975
+        );
+
+    } catch (error) {
+
+        incidentIdConflict =
+            error;
+    }
+
+    assert(
+        incidentIdConflict?.code ===
+            "INCIDENT_ID_CONFLICT",
+        "Different command ID did not reject an existing incident ID."
+    );
+
+    assert(
+        storage
+            .getIncident(
+                "INC-CREATE-DB"
+            )
+            ?.title ===
+            "Created database incident",
+        "Incident-ID collision changed authoritative incident state."
+    );
+
     const applied =
         storage.applySeverityCommand(
             "CMD-DB-1",

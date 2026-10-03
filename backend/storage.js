@@ -1287,6 +1287,204 @@ class RelayStorage {
             ) || null;
     }
 
+    applyCreateIncidentCommand(
+        commandId,
+        incidentId,
+        title,
+        status,
+        severity,
+        ownerUserId,
+        occurredAt
+    ) {
+
+        const existing =
+            this.getProcessedCommand(
+                commandId
+            );
+
+        if (existing) {
+
+            return {
+                duplicate:
+                    true,
+
+                incident:
+                    this.getIncident(
+                        existing.incidentId
+                    ),
+
+                event:
+                    null
+            };
+        }
+
+        if (
+            this.getIncident(
+                incidentId
+            )
+        ) {
+
+            const error =
+                new Error(
+                    "Incident ID already exists: " +
+                        incidentId
+                );
+
+            error.code =
+                "INCIDENT_ID_CONFLICT";
+
+            throw error;
+        }
+
+        this.database.exec(
+            "BEGIN IMMEDIATE"
+        );
+
+        try {
+
+            const sequence =
+                1;
+
+            this.database
+                .prepare(
+                    `
+                    INSERT INTO incidents (
+                        incident_id,
+                        title,
+                        status,
+                        severity,
+                        sequence,
+                        server_owned,
+                        created_at,
+                        updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+                    `
+                )
+                .run(
+                    incidentId,
+                    title,
+                    status,
+                    severity,
+                    sequence,
+                    occurredAt,
+                    occurredAt
+                );
+
+            const event = {
+                type:
+                    "incident.created",
+
+                eventId:
+                    "EVT-CREATE-" +
+                    commandId,
+
+                incidentId,
+
+                occurredAt,
+
+                title,
+
+                status,
+
+                severity,
+
+                sequence
+            };
+
+            this.database
+                .prepare(
+                    `
+                    INSERT INTO incident_events (
+                        event_id,
+                        incident_id,
+                        event_type,
+                        sequence,
+                        occurred_at,
+                        payload_json
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    `
+                )
+                .run(
+                    event.eventId,
+                    incidentId,
+                    event.type,
+                    sequence,
+                    occurredAt,
+                    JSON.stringify(
+                        event
+                    )
+                );
+
+            this.database
+                .prepare(
+                    `
+                    INSERT INTO processed_commands (
+                        command_id,
+                        incident_id,
+                        command_type,
+                        severity,
+                        processed_at
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    `
+                )
+                .run(
+                    commandId,
+                    incidentId,
+                    "incident.create",
+                    severity,
+                    occurredAt
+                );
+
+            this.database
+                .prepare(
+                    `
+                    INSERT INTO incident_access (
+                        user_id,
+                        incident_id,
+                        role,
+                        created_at
+                    )
+                    VALUES (?, ?, 'operator', ?)
+                    ON CONFLICT(user_id, incident_id)
+                    DO UPDATE SET
+                        role = excluded.role
+                    `
+                )
+                .run(
+                    ownerUserId,
+                    incidentId,
+                    occurredAt
+                );
+
+            this.database.exec(
+                "COMMIT"
+            );
+
+            return {
+                duplicate:
+                    false,
+
+                incident:
+                    this.getIncident(
+                        incidentId
+                    ),
+
+                event
+            };
+
+        } catch (error) {
+
+            this.database.exec(
+                "ROLLBACK"
+            );
+
+            throw error;
+        }
+    }
+
     applySeverityCommand(
         commandId,
         incidentId,
