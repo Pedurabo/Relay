@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.min
 
 internal fun shouldStartRealtimeCoordinator(
@@ -26,6 +27,16 @@ internal suspend fun stopRealtimeStateCollector(
     job.cancel()
     job.join()
 }
+
+internal fun removeReplayJobIfCurrent(
+    replayJobs: ConcurrentHashMap<String, Job>,
+    incidentId: String,
+    replayJob: Job
+): Boolean =
+    replayJobs.remove(
+        incidentId,
+        replayJob
+    )
 
 internal class RealtimeAttemptConnectionTracker {
 
@@ -204,7 +215,7 @@ class RealtimeIncidentCoordinator(
         kotlinx.coroutines.coroutineScope {
 
             val replayJobs =
-                mutableMapOf<
+                ConcurrentHashMap<
                     String,
                     Job
                 >()
@@ -281,6 +292,13 @@ class RealtimeIncidentCoordinator(
                     ] =
                         launch {
 
+                            val replayJob =
+                                checkNotNull(
+                                    coroutineContext[
+                                        Job
+                                    ]
+                                )
+
                             try {
 
                                 SequenceGapReplayWorker
@@ -336,8 +354,13 @@ class RealtimeIncidentCoordinator(
 
                             } finally {
 
-                                replayJobs.remove(
-                                    gap.incidentId
+                                removeReplayJobIfCurrent(
+                                    replayJobs =
+                                        replayJobs,
+                                    incidentId =
+                                        gap.incidentId,
+                                    replayJob =
+                                        replayJob
                                 )
                             }
                         }
