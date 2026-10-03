@@ -455,6 +455,69 @@ function ensureIncident(
     );
 }
 
+function buildCreateEvent(
+    incident,
+    commandId
+) {
+
+    return {
+
+        type:
+            "incident.created",
+
+        eventId:
+            "EVT-CREATE-" +
+            commandId,
+
+        incidentId:
+            incident.id,
+
+        occurredAt:
+            now(),
+
+        title:
+            incident.title,
+
+        status:
+            incident.status,
+
+        severity:
+            incident.severity,
+
+        sequence:
+            incident.serverOwned
+                ? incident.sequence
+                : 0
+    };
+}
+
+function acknowledgeCreate(
+    socket,
+    commandId,
+    incidentId,
+    duplicate
+) {
+
+    send(
+        socket,
+        {
+            type:
+                "command.accepted",
+
+            command:
+                "incident.create",
+
+            commandId,
+
+            incidentId,
+
+            duplicate:
+                duplicate === true
+        }
+    );
+}
+
+
 function buildSeverityEvent(
     incident,
     commandId
@@ -1482,6 +1545,271 @@ wss.on(
                     console.error(
                         "INVALID_JSON|" +
                         error.message
+                    );
+
+                    return;
+                }
+
+                //
+                // =================================================
+                // Incident creation command
+                // =================================================
+                //
+
+                if (
+                    message.type ===
+                    "incident.create"
+                ) {
+
+                    const commandId =
+                        message.commandId;
+
+                    const incidentId =
+                        message.incidentId;
+
+                    const title =
+                        String(
+                            message.title || ""
+                        )
+                            .trim();
+
+                    const status =
+                        String(
+                            message.status || ""
+                        )
+                            .trim();
+
+                    const severity =
+                        String(
+                            message.severity || ""
+                        )
+                            .trim()
+                            .toUpperCase();
+
+                    console.log(
+                        "INCIDENT_CREATE_COMMAND|" +
+                        commandId +
+                        "|" +
+                        incidentId +
+                        "|" +
+                        authenticatedSession.userId
+                    );
+
+                    if (
+                        !commandId ||
+                        !incidentId ||
+                        !title ||
+                        title.length > 200 ||
+                        !status ||
+                        status.length > 64 ||
+                        ![
+                            "LOW",
+                            "MEDIUM",
+                            "HIGH",
+                            "CRITICAL"
+                        ].includes(
+                            severity
+                        )
+                    ) {
+
+                        send(
+                            socket,
+                            {
+                                type:
+                                    "command.rejected",
+
+                                command:
+                                    "incident.create",
+
+                                commandId:
+                                    commandId || "",
+
+                                incidentId:
+                                    incidentId || "",
+
+                                reason:
+                                    "invalid_payload"
+                            }
+                        );
+
+                        return;
+                    }
+
+                    const existingCommand =
+                        storage
+                            .getProcessedCommand(
+                                commandId
+                            );
+
+                    if (
+                        existingCommand
+                    ) {
+
+                        if (
+                            existingCommand.type !==
+                                "incident.create" ||
+                            existingCommand.incidentId !==
+                                incidentId ||
+                            !canAccessIncident(
+                                authenticatedSession,
+                                existingCommand.incidentId
+                            )
+                        ) {
+
+                            send(
+                                socket,
+                                {
+                                    type:
+                                        "command.rejected",
+
+                                    command:
+                                        "incident.create",
+
+                                    commandId,
+
+                                    incidentId,
+
+                                    reason:
+                                        "command_id_conflict"
+                                }
+                            );
+
+                            return;
+                        }
+
+                        const duplicateIncident =
+                            storage
+                                .getIncident(
+                                    existingCommand
+                                        .incidentId
+                                );
+
+                        acknowledgeCreate(
+                            socket,
+                            commandId,
+                            duplicateIncident.id,
+                            true
+                        );
+
+                        broadcastIncident(
+                            buildCreateEvent(
+                                duplicateIncident,
+                                commandId
+                            )
+                        );
+
+                        console.log(
+                            "INCIDENT_CREATE_DEDUPED|" +
+                            commandId +
+                            "|" +
+                            duplicateIncident.id
+                        );
+
+                        return;
+                    }
+
+                    if (
+                        storage.getIncident(
+                            incidentId
+                        )
+                    ) {
+
+                        send(
+                            socket,
+                            {
+                                type:
+                                    "command.rejected",
+
+                                command:
+                                    "incident.create",
+
+                                commandId,
+
+                                incidentId,
+
+                                reason:
+                                    "incident_id_conflict"
+                            }
+                        );
+
+                        return;
+                    }
+
+                    let applied;
+
+                    try {
+
+                        applied =
+                            storage
+                                .applyCreateIncidentCommand(
+                                    commandId,
+                                    incidentId,
+                                    title,
+                                    status,
+                                    severity,
+                                    authenticatedSession.userId,
+                                    now()
+                                );
+
+                    } catch (error) {
+
+                        if (
+                            error.code ===
+                            "INCIDENT_ID_CONFLICT"
+                        ) {
+
+                            send(
+                                socket,
+                                {
+                                    type:
+                                        "command.rejected",
+
+                                    command:
+                                        "incident.create",
+
+                                    commandId,
+
+                                    incidentId,
+
+                                    reason:
+                                        "incident_id_conflict"
+                                }
+                            );
+
+                            return;
+                        }
+
+                        throw error;
+                    }
+
+                    const incident =
+                        applied.incident;
+
+                    const event =
+                        applied.event ||
+                        buildCreateEvent(
+                            incident,
+                            commandId
+                        );
+
+                    acknowledgeCreate(
+                        socket,
+                        commandId,
+                        incidentId,
+                        false
+                    );
+
+                    broadcastIncident(
+                        event
+                    );
+
+                    console.log(
+                        "INCIDENT_CREATE_APPLIED|" +
+                        commandId +
+                        "|" +
+                        incidentId +
+                        "|sequence=" +
+                        event.sequence
                     );
 
                     return;

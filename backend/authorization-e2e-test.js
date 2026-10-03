@@ -546,6 +546,185 @@ async function main() {
                 operatorSession.accessToken
             );
 
+        const CREATED_INCIDENT =
+            "INC-AUTH-CREATED";
+
+        const operatorCreateEvent =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "incident.created" &&
+                    message.incidentId ===
+                        CREATED_INCIDENT
+            );
+
+        const adminCreateEvent =
+            waitForMessage(
+                adminSocket,
+                message =>
+                    message.type ===
+                        "incident.created" &&
+                    message.incidentId ===
+                        CREATED_INCIDENT
+            );
+
+        const createAccepted =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "command.accepted" &&
+                    message.command ===
+                        "incident.create" &&
+                    message.commandId ===
+                        "CMD-CREATE-AUTH"
+            );
+
+        operatorSocket.send(
+            JSON.stringify({
+                type:
+                    "incident.create",
+                commandId:
+                    "CMD-CREATE-AUTH",
+                incidentId:
+                    CREATED_INCIDENT,
+                title:
+                    "Operator-created incident",
+                status:
+                    "Investigating",
+                severity:
+                    "HIGH"
+            })
+        );
+
+        const createdForOperator =
+            await operatorCreateEvent;
+
+        const createdForAdmin =
+            await adminCreateEvent;
+
+        const acceptedCreate =
+            await createAccepted;
+
+        assert(
+            createdForOperator.title ===
+                "Operator-created incident" &&
+            createdForOperator.status ===
+                "Investigating" &&
+            createdForOperator.severity ===
+                "HIGH" &&
+            createdForOperator.sequence ===
+                1,
+            "Creator received an incorrect incident.created event."
+        );
+
+        assert(
+            createdForAdmin.incidentId ===
+                CREATED_INCIDENT,
+            "Admin did not receive the created incident."
+        );
+
+        assert(
+            acceptedCreate.duplicate ===
+                false,
+            "First incident-create command was incorrectly marked duplicate."
+        );
+
+        const duplicateCreateEvent =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "incident.created" &&
+                    message.incidentId ===
+                        CREATED_INCIDENT
+            );
+
+        const duplicateCreateAck =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "command.accepted" &&
+                    message.command ===
+                        "incident.create" &&
+                    message.commandId ===
+                        "CMD-CREATE-AUTH" &&
+                    message.duplicate ===
+                        true
+            );
+
+        operatorSocket.send(
+            JSON.stringify({
+                type:
+                    "incident.create",
+                commandId:
+                    "CMD-CREATE-AUTH",
+                incidentId:
+                    CREATED_INCIDENT,
+                title:
+                    "Attempted replacement title",
+                status:
+                    "Resolved",
+                severity:
+                    "LOW"
+            })
+        );
+
+        const duplicateCreated =
+            await duplicateCreateEvent;
+
+        await duplicateCreateAck;
+
+        assert(
+            duplicateCreated.title ===
+                "Operator-created incident" &&
+            duplicateCreated.status ===
+                "Investigating" &&
+            duplicateCreated.severity ===
+                "HIGH",
+            "Duplicate create command changed authoritative incident state."
+        );
+
+        const incidentIdCollision =
+            waitForMessage(
+                operatorSocket,
+                message =>
+                    message.type ===
+                        "command.rejected" &&
+                    message.command ===
+                        "incident.create" &&
+                    message.commandId ===
+                        "CMD-CREATE-ID-COLLISION"
+            );
+
+        operatorSocket.send(
+            JSON.stringify({
+                type:
+                    "incident.create",
+                commandId:
+                    "CMD-CREATE-ID-COLLISION",
+                incidentId:
+                    CREATED_INCIDENT,
+                title:
+                    "Collision",
+                status:
+                    "Active",
+                severity:
+                    "MEDIUM"
+            })
+        );
+
+        const incidentCreateCollision =
+            await incidentIdCollision;
+
+        assert(
+            incidentCreateCollision.reason ===
+                "incident_id_conflict",
+            "Existing incident ID was not explicitly rejected."
+        );
+
         const operatorAEvent =
             waitForMessage(
                 operatorSocket,
@@ -642,6 +821,44 @@ async function main() {
             forbidden.reason ===
                 "forbidden",
             "Unauthorized incident write was not rejected."
+        );
+
+        const createCrossTypeCollision =
+            waitForMessage(
+                adminSocket,
+                message =>
+                    message.type ===
+                        "command.rejected" &&
+                    message.command ===
+                        "incident.create" &&
+                    message.commandId ===
+                        "CMD-AUTH-A"
+            );
+
+        adminSocket.send(
+            JSON.stringify({
+                type:
+                    "incident.create",
+                commandId:
+                    "CMD-AUTH-A",
+                incidentId:
+                    "INC-CREATE-CROSS-TYPE",
+                title:
+                    "Cross-type collision",
+                status:
+                    "Active",
+                severity:
+                    "MEDIUM"
+            })
+        );
+
+        const createCrossType =
+            await createCrossTypeCollision;
+
+        assert(
+            createCrossType.reason ===
+                "command_id_conflict",
+            "Create command did not reject a cross-command-type ID collision."
         );
 
         const operatorStatusEvent =
