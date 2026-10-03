@@ -47,6 +47,19 @@ internal suspend fun runTimelineOutboxDrainSafely(
     }
 }
 
+internal fun shouldClearTimelineRetryState(
+    sessionState: SessionState,
+    credential: TimelineDeliveryCredential
+): Boolean {
+
+    return !isTimelineDeliverySessionCurrent(
+        sessionState,
+        credential.ownerPrincipal,
+        credential.accessToken
+    )
+}
+
+
 internal suspend fun runTimelineOutboxPostDrainCheckSafely(
     isActive: () -> Boolean,
     delayAfterFailure:
@@ -234,6 +247,24 @@ object TimelineOutboxCoordinator {
                     }
                 )
             } finally {
+
+                if (
+                    shouldClearTimelineRetryState(
+                        SessionManager
+                            .sessionState
+                            .value,
+                        credential
+                    )
+                ) {
+
+                    retryStates.clear()
+
+                    Log.i(
+                        TAG,
+                        "TIMELINE_OUTBOX_RETRY_STATE_CLEARED|reason=session_changed"
+                    )
+                }
+
                 draining.set(
                     false
                 )

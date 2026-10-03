@@ -413,4 +413,126 @@ class TimelineOutboxCoordinatorTest {
             14_000L,
             nearestRetry
         )
-    }}
+    }
+    @Test
+    fun retryStateIsKeptForCurrentSessionSnapshot() {
+
+        val credential =
+            TimelineDeliveryCredential(
+                ownerPrincipal =
+                    "operator-a",
+                accessToken =
+                    "token-a"
+            )
+
+        val session =
+            com.signaldesk.relay.data.session.SessionState.SignedIn(
+                userId =
+                    "operator-a",
+                userName =
+                    "Operator A",
+                accessToken =
+                    "token-a",
+                refreshToken =
+                    "refresh-a",
+                accessTokenExpiresAt =
+                    10_000L
+            )
+
+        assertEquals(
+            false,
+            shouldClearTimelineRetryState(
+                session,
+                credential
+            )
+        )
+    }
+
+
+    @Test
+    fun tokenRefreshClearsPreviousRetryState() {
+
+        val credential =
+            TimelineDeliveryCredential(
+                ownerPrincipal =
+                    "operator-a",
+                accessToken =
+                    "token-a"
+            )
+
+        val refreshedSession =
+            com.signaldesk.relay.data.session.SessionState.SignedIn(
+                userId =
+                    "operator-a",
+                userName =
+                    "Operator A",
+                accessToken =
+                    "token-b",
+                refreshToken =
+                    "refresh-b",
+                accessTokenExpiresAt =
+                    20_000L
+            )
+
+        assertTrue(
+            shouldClearTimelineRetryState(
+                refreshedSession,
+                credential
+            )
+        )
+    }
+
+
+    @Test
+    fun accountSwitchClearsPreviousRetryState() {
+
+        val credential =
+            TimelineDeliveryCredential(
+                ownerPrincipal =
+                    "operator-a",
+                accessToken =
+                    "token-a"
+            )
+
+        val switchedSession =
+            com.signaldesk.relay.data.session.SessionState.SignedIn(
+                userId =
+                    "operator-b",
+                userName =
+                    "Operator B",
+                accessToken =
+                    "token-b",
+                refreshToken =
+                    "refresh-b",
+                accessTokenExpiresAt =
+                    30_000L
+            )
+
+        assertTrue(
+            shouldClearTimelineRetryState(
+                switchedSession,
+                credential
+            )
+        )
+    }
+
+
+    @Test
+    fun signOutClearsPreviousRetryState() {
+
+        val credential =
+            TimelineDeliveryCredential(
+                ownerPrincipal =
+                    "operator-a",
+                accessToken =
+                    "token-a"
+            )
+
+        assertTrue(
+            shouldClearTimelineRetryState(
+                com.signaldesk.relay.data.session.SessionState.SignedOut,
+                credential
+            )
+        )
+    }
+}
