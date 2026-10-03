@@ -14,6 +14,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
+internal fun shouldStartRealtimeCoordinator(
+    job: Job?
+): Boolean =
+    job == null ||
+        job.isCompleted
+
 class RealtimeIncidentCoordinator(
     private val source: RealtimeIncidentSource,
     private val processor: IncidentEventProcessor,
@@ -37,7 +43,11 @@ class RealtimeIncidentCoordinator(
     fun start(
         scope: CoroutineScope
     ) {
-        if (job != null) {
+        if (
+            !shouldStartRealtimeCoordinator(
+                job
+            )
+        ) {
             return
         }
 
