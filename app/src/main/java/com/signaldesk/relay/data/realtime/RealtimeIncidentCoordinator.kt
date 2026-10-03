@@ -151,40 +151,174 @@ class RealtimeIncidentCoordinator(
             }
     }
 
-    private suspend fun recoverSequenceGaps() {
+    private suspend fun recoverSequenceGaps() =
+        kotlinx.coroutines.coroutineScope {
 
-        combine(
-            gapDao.observeAll(),
-            source.connectionState
-        ) { gaps, state ->
-            gaps to state
-        }.collect { result ->
+            val replayJobs =
+                mutableMapOf<
+                    String,
+                    Job
+                >()
 
-            val gaps =
-                result.first
+            combine(
+                gapDao.observeAll(),
+                source.connectionState
+            ) { gaps, state ->
+                gaps to state
+            }.collect { result ->
 
-            val state =
-                result.second
+                val gaps =
+                    result.first
 
-            if (
-                state !=
-                RealtimeConnectionState.Connected
-            ) {
-                return@collect
-            }
+                val state =
+                    result.second
 
-            gaps.forEach { gap ->
+                val activeIncidentIds =
+                    gaps
+                        .map {
+                            it.incidentId
+                        }
+                        .toSet()
 
-                source.requestReplay(
-                    incidentId =
-                        gap.incidentId,
-                    fromSequence =
-                        gap.expectedSequence,
-                    throughSequence =
-                        gap.receivedSequence
-                )
+                replayJobs
+                    .keys
+                    .toList()
+                    .filter {
+                        it !in activeIncidentIds
+                    }
+                    .forEach {
+                        incidentId ->
+
+                        replayJobs
+                            .remove(
+                                incidentId
+                            )
+                            ?.cancel()
+                    }
+
+                if (
+                    state !=
+                    RealtimeConnectionState.Connected
+                ) {
+
+                    replayJobs
+                        .values
+                        .forEach {
+                            it.cancel()
+                        }
+
+                    replayJobs.clear()
+
+                    return@collect
+                }
+
+                gaps.forEach {
+                    gap ->
+
+                    val existingJob =
+                        replayJobs[
+                            gap.incidentId
+                        ]
+
+                    if (
+                        existingJob?.isActive ==
+                        true
+                    ) {
+                        return@forEach
+                    }
+
+                    replayJobs[
+                        gap.incidentId
+                    ] =
+                        launch {
+
+                            try {
+
+                                SequenceGapReplayWorker
+                                    .run(
+                                        incidentId =
+                                            gap.incidentId,
+
+                                        isConnected = {
+                                            source
+                                                .connectionState
+                                                .value ==
+                                            RealtimeConnectionState
+                                                .Connected
+                                        },
+
+                                        loadGap = {
+                                            incidentId ->
+
+                                            gapDao
+                                                .getByIncidentId(
+                                                    incidentId
+                                                )
+                                        },
+
+                                        requestReplay = {
+                                            incidentId,
+                                            fromSequence,
+                                            throughSequence ->
+
+                                            source
+                                                .requestReplay(
+                                                    incidentId =
+                                                        incidentId,
+
+                                                    fromSequence =
+                                                        fromSequence,
+
+                                                    throughSequence =
+                                                        throughSequence
+                                                )
+                                        },
+
+                                        delayForAttempt = {
+                                            attempt ->
+
+                                            delay(
+                                                calculateReplayBackoffMillis(
+                                                    attempt
+                                                )
+                                            )
+                                        }
+                                    )
+
+                            } finally {
+
+                                replayJobs.remove(
+                                    gap.incidentId
+                                )
+                            }
+                        }
+                }
             }
         }
+
+    private fun calculateReplayBackoffMillis(
+        attempt: Int
+    ): Long {
+
+        var delayMillis =
+            500L
+
+        repeat(
+            (attempt - 1)
+                .coerceAtLeast(0)
+        ) {
+
+            delayMillis =
+                min(
+                    delayMillis * 2,
+                    MAX_REPLAY_BACKOFF_MILLIS
+                )
+        }
+
+        return delayMillis
+            .coerceAtMost(
+                MAX_REPLAY_BACKOFF_MILLIS
+            )
     }
 
     fun stop() {
@@ -222,5 +356,8 @@ class RealtimeIncidentCoordinator(
     companion object {
         private const val MAX_BACKOFF_MILLIS =
             30_000L
+
+        private const val MAX_REPLAY_BACKOFF_MILLIS =
+            10_000L
     }
 }
