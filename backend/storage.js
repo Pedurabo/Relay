@@ -1444,6 +1444,158 @@ class RelayStorage {
         }
     }
 
+    applyStatusCommand(
+        commandId,
+        incidentId,
+        status,
+        occurredAt
+    ) {
+
+        const existing =
+            this.getProcessedCommand(
+                commandId
+            );
+
+        if (existing) {
+
+            return {
+                duplicate: true,
+                incident:
+                    this.getIncident(
+                        existing.incidentId
+                    ),
+                event:
+                    null
+            };
+        }
+
+        this.database.exec(
+            "BEGIN IMMEDIATE"
+        );
+
+        try {
+
+            const incident =
+                this.ensureIncident(
+                    incidentId
+                );
+
+            const nextSequence =
+                Number(
+                    incident.serverOwned
+                ) ===
+                1 ||
+                incident.serverOwned ===
+                true
+                    ? Number(
+                        incident.sequence
+                    ) + 1
+                    : 0;
+
+            this.database
+                .prepare(
+                    `
+                    UPDATE incidents
+                    SET status = ?,
+                        sequence = ?,
+                        updated_at = ?
+                    WHERE incident_id = ?
+                    `
+                )
+                .run(
+                    status,
+                    nextSequence,
+                    occurredAt,
+                    incidentId
+                );
+
+            const event = {
+                type:
+                    "incident.updated",
+                eventId:
+                    "EVT-STATUS-" +
+                    commandId,
+                incidentId,
+                occurredAt,
+                status,
+                sequence:
+                    nextSequence
+            };
+
+            if (
+                nextSequence > 0
+            ) {
+
+                this.database
+                    .prepare(
+                        `
+                        INSERT INTO incident_events (
+                            event_id,
+                            incident_id,
+                            event_type,
+                            sequence,
+                            occurred_at,
+                            payload_json
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        `
+                    )
+                    .run(
+                        event.eventId,
+                        incidentId,
+                        event.type,
+                        nextSequence,
+                        occurredAt,
+                        JSON.stringify(
+                            event
+                        )
+                    );
+            }
+
+            this.database
+                .prepare(
+                    `
+                    INSERT INTO processed_commands (
+                        command_id,
+                        incident_id,
+                        command_type,
+                        severity,
+                        processed_at
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    `
+                )
+                .run(
+                    commandId,
+                    incidentId,
+                    "incident.status.update",
+                    null,
+                    occurredAt
+                );
+
+            this.database.exec(
+                "COMMIT"
+            );
+
+            return {
+                duplicate: false,
+                incident:
+                    this.getIncident(
+                        incidentId
+                    ),
+                event
+            };
+
+        } catch (error) {
+
+            this.database.exec(
+                "ROLLBACK"
+            );
+
+            throw error;
+        }
+    }
+
     saveTimelineEntry(
         entry
     ) {

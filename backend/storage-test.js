@@ -257,6 +257,89 @@ function main() {
         "Duplicate command changed authoritative severity."
     );
 
+    const statusApplied =
+        storage.applyStatusCommand(
+            "CMD-STATUS-DB-1",
+            "INC-DB",
+            "Monitoring",
+            1250
+        );
+
+    assert(
+        statusApplied.duplicate ===
+            false,
+        "First status command was incorrectly deduped."
+    );
+
+    assert(
+        statusApplied.incident.status ===
+            "Monitoring",
+        "Status update was not persisted."
+    );
+
+    assert(
+        Number(
+            statusApplied.incident.sequence
+        ) ===
+            12,
+        "Status command did not advance the authoritative sequence."
+    );
+
+    assert(
+        statusApplied.event.status ===
+            "Monitoring",
+        "Status event payload was incorrect."
+    );
+
+    const duplicateStatus =
+        storage.applyStatusCommand(
+            "CMD-STATUS-DB-1",
+            "INC-DB",
+            "Resolved",
+            1300
+        );
+
+    assert(
+        duplicateStatus.duplicate ===
+            true,
+        "Duplicate status command was re-applied."
+    );
+
+    assert(
+        duplicateStatus.incident.status ===
+            "Monitoring",
+        "Duplicate status command changed authoritative status."
+    );
+
+    assert(
+        storage
+            .getProcessedCommand(
+                "CMD-STATUS-DB-1"
+            )
+            ?.type ===
+            "incident.status.update",
+        "Status command type was not persisted for dedupe."
+    );
+
+    const statusReplay =
+        storage.getReplay(
+            "INC-DB",
+            12,
+            12
+        );
+
+    assert(
+        statusReplay.length ===
+            1,
+        "Status event was not stored in ordered replay history."
+    );
+
+    assert(
+        statusReplay[0].status ===
+            "Monitoring",
+        "Replayed status event payload was incorrect."
+    );
+
     const timeline =
         storage.saveTimelineEntry({
             type:
