@@ -94,102 +94,30 @@ fun IncidentsScreen(
                             )
                         }
 
-                    Column(
-                        verticalArrangement =
-                            Arrangement.spacedBy(
-                                12.dp
-                            )
-                    ) {
-
-                        Text(
-                            text = "Signed out",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .titleMedium
-                        )
-
-                        Text(
-                            text =
-                                "Sign in to enable realtime coordination.",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyMedium
-                        )
-
-                        OutlinedTextField(
-                            value =
+                    SignedOutPanel(
+                        username =
+                            username,
+                        password =
+                            password,
+                        signInInProgress =
+                            signInInProgress,
+                        signInError =
+                            signInError,
+                        onUsernameChange = {
+                            username =
+                                it
+                        },
+                        onPasswordChange = {
+                            password =
+                                it
+                        },
+                        onSignIn = {
+                            onSignIn(
                                 username,
-                            onValueChange = {
-                                username =
-                                    it
-                            },
-                            modifier =
-                                Modifier.fillMaxWidth(),
-                            label = {
-                                Text(
-                                    "Username"
-                                )
-                            },
-                            singleLine =
-                                true
-                        )
-
-                        OutlinedTextField(
-                            value =
-                                password,
-                            onValueChange = {
-                                password =
-                                    it
-                            },
-                            modifier =
-                                Modifier.fillMaxWidth(),
-                            label = {
-                                Text(
-                                    "Password"
-                                )
-                            },
-                            singleLine =
-                                true,
-                            visualTransformation =
-                                PasswordVisualTransformation()
-                        )
-
-                        signInError
-                            ?.let { error ->
-
-                                Text(
-                                    text =
-                                        error,
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .bodyMedium
-                                )
-                            }
-
-                        Button(
-                            enabled =
-                                !signInInProgress,
-                            onClick = {
-                                onSignIn(
-                                    username,
-                                    password
-                                )
-                            }
-                        ) {
-                            Text(
-                                if (
-                                    signInInProgress
-                                ) {
-                                    "Signing in…"
-                                } else {
-                                    "Sign in"
-                                }
+                                password
                             )
                         }
-                    }
+                    )
                 }
             }
 
@@ -241,6 +169,124 @@ fun IncidentsScreen(
         }
     }
 }
+
+@Composable
+private fun SignedOutPanel(
+    username: String,
+    password: String,
+    signInInProgress: Boolean,
+    signInError: String?,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSignIn: () -> Unit
+) {
+    OutlinedCard(
+        modifier =
+            Modifier.fillMaxWidth()
+    ) {
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        16.dp
+                    ),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    12.dp
+                )
+        ) {
+
+            Text(
+                text =
+                    "Sign in",
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleLarge,
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Text(
+                text =
+                    "Sign in to enable realtime coordination.",
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodyMedium
+            )
+
+            OutlinedTextField(
+                value =
+                    username,
+                onValueChange =
+                    onUsernameChange,
+                modifier =
+                    Modifier.fillMaxWidth(),
+                label = {
+                    Text(
+                        "Username"
+                    )
+                },
+                singleLine =
+                    true
+            )
+
+            OutlinedTextField(
+                value =
+                    password,
+                onValueChange =
+                    onPasswordChange,
+                modifier =
+                    Modifier.fillMaxWidth(),
+                label = {
+                    Text(
+                        "Password"
+                    )
+                },
+                singleLine =
+                    true,
+                visualTransformation =
+                    PasswordVisualTransformation()
+            )
+
+            signInError
+                ?.let { error ->
+
+                    Text(
+                        text =
+                            error,
+                        style =
+                            MaterialTheme
+                                .typography
+                                .bodyMedium
+                    )
+                }
+
+            Button(
+                enabled =
+                    !signInInProgress,
+                onClick =
+                    onSignIn,
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    if (
+                        signInInProgress
+                    ) {
+                        "Signing in…"
+                    } else {
+                        "Sign in"
+                    }
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun SignedInOperationsPanel(
