@@ -11,11 +11,47 @@ import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.IncidentSeverity
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+internal suspend fun runOutboxStartupResetSafely(
+    delayAfterFailure:
+        suspend (Int) -> Unit,
+    resetInFlight:
+        suspend () -> Int
+): Int {
+
+    var failedAttempts =
+        0
+
+    while (true) {
+
+        try {
+
+            return resetInFlight()
+
+        } catch (
+            error: CancellationException
+        ) {
+            throw error
+
+        } catch (
+            error: Throwable
+        ) {
+
+            failedAttempts +=
+                1
+
+            delayAfterFailure(
+                failedAttempts
+            )
+        }
+    }
+}
 
 object SeverityOutboxCoordinator {
 
@@ -88,7 +124,24 @@ object SeverityOutboxCoordinator {
         scope.launch {
 
             val resetCount =
-                store.resetInFlight()
+                runOutboxStartupResetSafely(
+                    delayAfterFailure = {
+                        attempt ->
+
+                        delay(
+                            when (attempt) {
+                                1 -> 1_000L
+                                2 -> 2_000L
+                                3 -> 4_000L
+                                4 -> 8_000L
+                                else -> 30_000L
+                            }
+                        )
+                    },
+                    resetInFlight = {
+                        store.resetInFlight()
+                    }
+                )
 
             Log.i(
                 TAG,
