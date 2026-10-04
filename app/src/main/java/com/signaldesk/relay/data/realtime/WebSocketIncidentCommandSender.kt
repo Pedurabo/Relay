@@ -17,6 +17,24 @@ enum class IncidentCommandResult {
     TRANSPORT_FAILURE
 }
 
+internal fun incidentCommandInvalidatedToken(
+    httpStatusCode: Int?,
+    accessToken: String?
+): String? {
+
+    if (
+        httpStatusCode !=
+        401
+    ) {
+        return null
+    }
+
+    return accessToken
+        ?.takeIf {
+            it.isNotBlank()
+        }
+}
+
 internal fun correlateIncidentCommandAcknowledgement(
     type: String,
     command: String,
@@ -236,15 +254,15 @@ class WebSocketIncidentCommandSender(
                                 Response?
                         ) {
 
-                            if (
-                                response?.code ==
-                                401
-                            ) {
-                                accessToken
-                                    ?.let(
-                                        onSessionInvalidated
-                                    )
-                            }
+                            incidentCommandInvalidatedToken(
+                                httpStatusCode =
+                                    response?.code,
+                                accessToken =
+                                    accessToken
+                            )
+                                ?.let(
+                                    onSessionInvalidated
+                                )
 
                             finish(
                                 IncidentCommandResult
@@ -456,16 +474,15 @@ class WebSocketIncidentCommandSender(
                                 Response?
                         ) {
 
-                            if (
-                                response?.code ==
-                                401
-                            ) {
-
-                                accessToken
-                                    ?.let(
-                                        onSessionInvalidated
-                                    )
-                            }
+                            incidentCommandInvalidatedToken(
+                                httpStatusCode =
+                                    response?.code,
+                                accessToken =
+                                    accessToken
+                            )
+                                ?.let(
+                                    onSessionInvalidated
+                                )
 
                             finish(
                                 IncidentCommandResult
@@ -668,15 +685,15 @@ class WebSocketIncidentCommandSender(
                                 Response?
                         ) {
 
-                            if (
-                                response?.code ==
-                                401
-                            ) {
-                                accessToken
-                                    ?.let(
-                                        onSessionInvalidated
-                                    )
-                            }
+                            incidentCommandInvalidatedToken(
+                                httpStatusCode =
+                                    response?.code,
+                                accessToken =
+                                    accessToken
+                            )
+                                ?.let(
+                                    onSessionInvalidated
+                                )
 
                             finish(
                                 IncidentCommandResult
