@@ -506,6 +506,22 @@ object CreateIncidentOutboxCoordinator {
             beforeSend != null
         ) {
 
+            val resolution =
+                decideCreateIncidentResolution(
+                    authoritativeTitle =
+                        beforeSend.title,
+                    authoritativeStatus =
+                        beforeSend.status,
+                    authoritativeSeverity =
+                        beforeSend.severity,
+                    requestedTitle =
+                        pending.title,
+                    requestedStatus =
+                        pending.status,
+                    requestedSeverity =
+                        pending.severity
+                )
+
             store.clearIf(
                 pending.commandId,
                 pending.ownerPrincipal
@@ -513,17 +529,19 @@ object CreateIncidentOutboxCoordinator {
 
             Log.i(
                 TAG,
-                if (
-                    incidentMatches(
-                        pending,
-                        beforeSend.title,
-                        beforeSend.status,
-                        beforeSend.severity
-                    )
+                when (
+                    resolution
                 ) {
-                    "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=already_converged"
-                } else {
-                    "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=incident_id_superseded"
+                    CreateIncidentResolutionDecision.CONVERGED ->
+                        "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=already_converged"
+
+                    CreateIncidentResolutionDecision.SUPERSEDED ->
+                        "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=incident_id_superseded"
+
+                    CreateIncidentResolutionDecision.KEEP_PENDING ->
+                        error(
+                            "Existing incident cannot remain pending."
+                        )
                 }
             )
 
@@ -655,9 +673,43 @@ object CreateIncidentOutboxCoordinator {
                 afterFailure != null
             ) {
 
+                val resolution =
+                    decideCreateIncidentResolution(
+                        authoritativeTitle =
+                            afterFailure.title,
+                        authoritativeStatus =
+                            afterFailure.status,
+                        authoritativeSeverity =
+                            afterFailure.severity,
+                        requestedTitle =
+                            pending.title,
+                        requestedStatus =
+                            pending.status,
+                        requestedSeverity =
+                            pending.severity
+                    )
+
                 store.clearIf(
                     pending.commandId,
                     pending.ownerPrincipal
+                )
+
+                Log.i(
+                    TAG,
+                    when (
+                        resolution
+                    ) {
+                        CreateIncidentResolutionDecision.CONVERGED ->
+                            "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=converged_after_transport_failure"
+
+                        CreateIncidentResolutionDecision.SUPERSEDED ->
+                            "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=superseded_after_transport_failure"
+
+                        CreateIncidentResolutionDecision.KEEP_PENDING ->
+                            error(
+                                "Existing incident cannot remain pending."
+                            )
+                    }
                 )
 
                 return DeliveryOutcome
@@ -683,6 +735,22 @@ object CreateIncidentOutboxCoordinator {
                 current != null
             ) {
 
+                val resolution =
+                    decideCreateIncidentResolution(
+                        authoritativeTitle =
+                            current.title,
+                        authoritativeStatus =
+                            current.status,
+                        authoritativeSeverity =
+                            current.severity,
+                        requestedTitle =
+                            pending.title,
+                        requestedStatus =
+                            pending.status,
+                        requestedSeverity =
+                            pending.severity
+                    )
+
                 store.clearIf(
                     pending.commandId,
                     pending.ownerPrincipal
@@ -690,17 +758,19 @@ object CreateIncidentOutboxCoordinator {
 
                 Log.i(
                     TAG,
-                    if (
-                        incidentMatches(
-                            pending,
-                            current.title,
-                            current.status,
-                            current.severity
-                        )
+                    when (
+                        resolution
                     ) {
-                        "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=authoritative_convergence"
-                    } else {
-                        "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=superseded_after_accept"
+                        CreateIncidentResolutionDecision.CONVERGED ->
+                            "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=authoritative_convergence"
+
+                        CreateIncidentResolutionDecision.SUPERSEDED ->
+                            "CREATE_OUTBOX_RESOLVED|${pending.commandId}|reason=superseded_after_accept"
+
+                        CreateIncidentResolutionDecision.KEEP_PENDING ->
+                            error(
+                                "Existing incident cannot remain pending."
+                            )
                     }
                 )
 
@@ -726,31 +796,6 @@ object CreateIncidentOutboxCoordinator {
             .RETRY_CONFIRMATION
     }
 
-    private fun incidentMatches(
-        pending:
-            PendingCreateIncidentCommand,
-        title: String,
-        status: String,
-        severity: String
-    ): Boolean {
-
-        return (
-            title ==
-                pending.title &&
-            status ==
-                pending.status &&
-            IncidentSeverity
-                .fromStoredValue(
-                    severity
-                )
-                .name ==
-            IncidentSeverity
-                .fromStoredValue(
-                    pending.severity
-                )
-                .name
-        )
-    }
 
     private fun isCurrentOwner(
         ownerPrincipal: String
