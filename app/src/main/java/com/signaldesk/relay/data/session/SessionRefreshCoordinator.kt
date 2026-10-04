@@ -1,11 +1,37 @@
 package com.signaldesk.relay.data.session
 
+import android.util.Log
+
+internal enum class SessionRefreshFailureDisposition {
+    SIGN_OUT_INVALID_REFRESH,
+    PRESERVE_SESSION
+}
+
+internal fun classifySessionRefreshFailure(
+    error: Throwable
+): SessionRefreshFailureDisposition {
+
+    return if (
+        error is AuthHttpException &&
+        error.statusCode ==
+            401
+    ) {
+        SessionRefreshFailureDisposition
+            .SIGN_OUT_INVALID_REFRESH
+    } else {
+        SessionRefreshFailureDisposition
+            .PRESERVE_SESSION
+    }
+}
+
 internal fun shouldSignOutAfterRefreshFailure(
     error: Throwable
 ): Boolean =
-    error is AuthHttpException &&
-        error.statusCode ==
-            401
+    classifySessionRefreshFailure(
+        error
+    ) ==
+        SessionRefreshFailureDisposition
+            .SIGN_OUT_INVALID_REFRESH
 
 object SessionRefreshCoordinator {
 
@@ -42,7 +68,24 @@ object SessionRefreshCoordinator {
                         .sessionState
                         .value as?
                         SessionState.SignedIn
-                        ?: return@run false
+
+                if (
+                    current ==
+                    null
+                ) {
+
+                    Log.i(
+                        TAG,
+                        "SESSION_REFRESH_SKIPPED|reason=no_active_session"
+                    )
+
+                    return@run false
+                }
+
+                Log.i(
+                    TAG,
+                    "SESSION_REFRESH_ATTEMPT"
+                )
 
                 val refreshed =
                     try {
@@ -61,14 +104,32 @@ object SessionRefreshCoordinator {
                         error: Throwable
                     ) {
 
-                        if (
-                            shouldSignOutAfterRefreshFailure(
+                        when (
+                            classifySessionRefreshFailure(
                                 error
                             )
                         ) {
 
-                            SessionManager
-                                .signOut()
+                            SessionRefreshFailureDisposition
+                                .SIGN_OUT_INVALID_REFRESH -> {
+
+                                Log.i(
+                                    TAG,
+                                    "SESSION_REFRESH_FAILURE|action=sign_out|reason=invalid_refresh"
+                                )
+
+                                SessionManager
+                                    .signOut()
+                            }
+
+                            SessionRefreshFailureDisposition
+                                .PRESERVE_SESSION -> {
+
+                                Log.i(
+                                    TAG,
+                                    "SESSION_REFRESH_FAILURE|action=preserve_session|reason=transient_or_server"
+                                )
+                            }
                         }
 
                         return@run false
@@ -78,6 +139,11 @@ object SessionRefreshCoordinator {
                     refreshed.userId !=
                     current.userId
                 ) {
+
+                    Log.i(
+                        TAG,
+                        "SESSION_REFRESH_FAILURE|action=sign_out|reason=principal_mismatch"
+                    )
 
                     SessionManager
                         .signOut()
@@ -90,8 +156,16 @@ object SessionRefreshCoordinator {
                         refreshed
                     )
 
+                Log.i(
+                    TAG,
+                    "SESSION_REFRESH_SUCCESS"
+                )
+
                 true
             }
         )
     }
+
+    private const val TAG =
+        "RelaySessionRefresh"
 }

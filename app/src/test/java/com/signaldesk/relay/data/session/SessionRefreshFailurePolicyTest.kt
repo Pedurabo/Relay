@@ -8,6 +8,51 @@ import org.junit.Test
 class SessionRefreshFailurePolicyTest {
 
     @Test
+    fun invalidRefreshCredential_isClassifiedForSignOut() {
+
+        org.junit.Assert.assertEquals(
+            SessionRefreshFailureDisposition
+                .SIGN_OUT_INVALID_REFRESH,
+            classifySessionRefreshFailure(
+                AuthHttpException(
+                    401
+                )
+            )
+        )
+    }
+
+
+    @Test
+    fun serverFailure_isClassifiedToPreserveSession() {
+
+        org.junit.Assert.assertEquals(
+            SessionRefreshFailureDisposition
+                .PRESERVE_SESSION,
+            classifySessionRefreshFailure(
+                AuthHttpException(
+                    500
+                )
+            )
+        )
+    }
+
+
+    @Test
+    fun transportFailure_isClassifiedToPreserveSession() {
+
+        org.junit.Assert.assertEquals(
+            SessionRefreshFailureDisposition
+                .PRESERVE_SESSION,
+            classifySessionRefreshFailure(
+                IOException(
+                    "Network unavailable"
+                )
+            )
+        )
+    }
+
+
+    @Test
     fun invalidRefreshCredentialRequiresSignOut() {
 
         assertTrue(
