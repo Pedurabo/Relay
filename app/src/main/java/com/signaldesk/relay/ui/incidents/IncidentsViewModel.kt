@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.signaldesk.relay.data.local.RelayDatabase
+import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
 import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
@@ -187,6 +188,9 @@ class IncidentsViewModel(
                                 )
 
                             SeverityOutboxCoordinator
+                                .kick()
+
+                            CreateIncidentOutboxCoordinator
                                 .kick()
 
                             TimelineOutboxCoordinator

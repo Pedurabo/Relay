@@ -2,6 +2,7 @@ package com.signaldesk.relay
 
 import android.app.Application
 import com.signaldesk.relay.appstate.AppVisibilityTracker
+import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
 import com.signaldesk.relay.data.realtime.StatusOutboxCoordinator
 import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
@@ -26,6 +27,11 @@ class RelayApplication :
             )
 
         SeverityOutboxCoordinator
+            .initialize(
+                this
+            )
+
+        CreateIncidentOutboxCoordinator
             .initialize(
                 this
             )
