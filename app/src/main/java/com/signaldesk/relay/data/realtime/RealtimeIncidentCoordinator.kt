@@ -1,5 +1,6 @@
 package com.signaldesk.relay.data.realtime
 
+import android.util.Log
 import com.signaldesk.relay.data.local.IncidentSequenceGapDao
 import com.signaldesk.relay.data.remote.model.IncidentEvent
 import kotlinx.coroutines.CancellationException
@@ -263,6 +264,11 @@ class RealtimeIncidentCoordinator(
             return
         }
 
+        Log.i(
+            TAG,
+            "REALTIME_COORDINATOR_START"
+        )
+
         job =
             scope.launch {
 
@@ -275,10 +281,18 @@ class RealtimeIncidentCoordinator(
                         delayAfterFailure = {
                             attempt ->
 
-                            delay(
+                            val delayMillis =
                                 calculateReplayBackoffMillis(
                                     attempt
                                 )
+
+                            Log.i(
+                                TAG,
+                                "REALTIME_GAP_RECOVERY_RETRY|attempt=$attempt|delayMillis=$delayMillis"
+                            )
+
+                            delay(
+                                delayMillis
                             )
                         }
                     ) {
@@ -316,6 +330,11 @@ class RealtimeIncidentCoordinator(
                                             true
 
                                         failedAttempts = 0
+
+                                        Log.i(
+                                            TAG,
+                                            "REALTIME_CONNECTED"
+                                        )
                                     }
 
                                     if (
@@ -387,6 +406,11 @@ class RealtimeIncidentCoordinator(
                                 delayMillis
                         )
 
+                    Log.i(
+                        TAG,
+                        "REALTIME_RECONNECT_SCHEDULED|attempt=$failedAttempts|delayMillis=$delayMillis"
+                    )
+
                     delay(
                         delayMillis
                     )
@@ -442,6 +466,11 @@ class RealtimeIncidentCoordinator(
                             ?.let {
                                 replayJob ->
 
+                                Log.i(
+                                    TAG,
+                                    "REALTIME_REPLAY_STOPPED|incidentId=$incidentId|reason=gap_resolved"
+                                )
+
                                 stopRealtimeReplayJobs(
                                     listOf(
                                         replayJob
@@ -461,6 +490,16 @@ class RealtimeIncidentCoordinator(
                             .toList()
 
                     replayJobs.clear()
+
+                    if (
+                        replayJobsToStop.isNotEmpty()
+                    ) {
+
+                        Log.i(
+                            TAG,
+                            "REALTIME_REPLAY_STOPPED|count=${replayJobsToStop.size}|reason=disconnected"
+                        )
+                    }
 
                     stopRealtimeReplayJobs(
                         replayJobsToStop
@@ -502,10 +541,18 @@ class RealtimeIncidentCoordinator(
                                     delayAfterFailure = {
                                         attempt ->
 
-                                        delay(
+                                        val delayMillis =
                                             calculateReplayBackoffMillis(
                                                 attempt
                                             )
+
+                                        Log.i(
+                                            TAG,
+                                            "REALTIME_REPLAY_RETRY|incidentId=${gap.incidentId}|attempt=$attempt|delayMillis=$delayMillis"
+                                        )
+
+                                        delay(
+                                            delayMillis
                                         )
                                     }
                                 ) {
@@ -593,6 +640,12 @@ class RealtimeIncidentCoordinator(
     }
 
     fun stop() {
+
+        Log.i(
+            TAG,
+            "REALTIME_COORDINATOR_STOP"
+        )
+
         job?.cancel()
 
         _connectionState.value =
@@ -624,6 +677,9 @@ class RealtimeIncidentCoordinator(
     }
 
     companion object {
+        private const val TAG =
+            "RelayRealtimeCoordinator"
+
         private const val MAX_BACKOFF_MILLIS =
             30_000L
 
