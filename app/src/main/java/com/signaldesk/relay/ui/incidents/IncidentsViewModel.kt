@@ -9,6 +9,7 @@ import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
 import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
+import com.signaldesk.relay.data.realtime.StatusOutboxCoordinator
 import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
 import com.signaldesk.relay.data.repository.IncidentRepository
@@ -226,6 +227,9 @@ class IncidentsViewModel(
                         )
 
                     SeverityOutboxCoordinator
+                        .kick()
+
+                    StatusOutboxCoordinator
                         .kick()
 
                     CreateIncidentOutboxCoordinator
