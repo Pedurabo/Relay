@@ -3,33 +3,103 @@ package com.signaldesk.relay.ui.incidents
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.signaldesk.relay.data.local.PendingCreateIncidentCommand
 import com.signaldesk.relay.data.local.RelayDatabase
-import com.signaldesk.relay.data.repository.IncidentRepository
+import com.signaldesk.relay.data.local.RoomPendingCreateIncidentCommandStore
+import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
+import com.signaldesk.relay.data.session.SessionManager
+import com.signaldesk.relay.data.session.SessionState
+import com.signaldesk.relay.model.IncidentSeverity
+import java.util.UUID
 import kotlinx.coroutines.launch
 
 class CreateIncidentViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val repository = IncidentRepository(RelayDatabase.getInstance(application).incidentDao())
+    private val database =
+        RelayDatabase.getInstance(
+            application
+        )
+
+    private val pendingCreateStore =
+        RoomPendingCreateIncidentCommandStore(
+            database
+                .pendingCreateIncidentCommandDao()
+        )
 
     fun createIncident(
         title: String,
         status: String,
         onCreated: () -> Unit
     ) {
-        if (title.isBlank() || status.isBlank()) {
+
+        val normalizedTitle =
+            title.trim()
+
+        val normalizedStatus =
+            status.trim()
+
+        if (
+            normalizedTitle.isBlank() ||
+            normalizedStatus.isBlank()
+        ) {
             return
         }
 
+        val session =
+            SessionManager
+                .sessionState
+                .value
+
+        if (
+            session !is
+                SessionState.SignedIn
+        ) {
+            return
+        }
+
+        val ownerPrincipal =
+            session.userId
+
+        val incidentId =
+            "INC-" +
+                UUID.randomUUID()
+                    .toString()
+                    .take(6)
+                    .uppercase()
+
+        val commandId =
+            "CMD-CREATE-" +
+                UUID.randomUUID()
+                    .toString()
+                    .uppercase()
+
         viewModelScope.launch {
-            repository.createIncident(
-                title = title,
-                status = status
+
+            pendingCreateStore.save(
+                PendingCreateIncidentCommand(
+                    commandId =
+                        commandId,
+                    incidentId =
+                        incidentId,
+                    title =
+                        normalizedTitle,
+                    status =
+                        normalizedStatus,
+                    severity =
+                        IncidentSeverity
+                            .MEDIUM
+                            .name,
+                    ownerPrincipal =
+                        ownerPrincipal
+                )
             )
+
+            CreateIncidentOutboxCoordinator
+                .kick()
 
             onCreated()
         }
     }
 }
-

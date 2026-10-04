@@ -145,25 +145,6 @@ class IncidentRepository(
             ) == 1
     }
 
-    suspend fun createIncident(
-        title: String,
-        status: String
-    ) {
-        val id =
-            "INC-" +
-                UUID.randomUUID()
-                    .toString()
-                    .take(6)
-                    .uppercase()
-
-        incidentDao.insert(
-            IncidentEntity(
-                id = id,
-                title = title.trim(),
-                status = status.trim()
-            )
-        )
-    }
 
     suspend fun seedIfEmpty() {
         if (incidentDao.count() != 0) {
