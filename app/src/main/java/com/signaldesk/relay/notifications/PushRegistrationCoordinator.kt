@@ -1,6 +1,7 @@
 package com.signaldesk.relay.notifications
 
 import android.content.Context
+import android.util.Log
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
 import kotlinx.coroutines.CancellationException
@@ -52,7 +53,7 @@ internal suspend fun runPushRegistrationSafely(
     delayAfterFailure:
         suspend (Int) -> Unit,
     register: suspend () -> Unit
-) {
+): Boolean {
     var failedAttempts =
         0
 
@@ -63,7 +64,7 @@ internal suspend fun runPushRegistrationSafely(
 
             register()
 
-            return
+            return true
 
         } catch (
             error: CancellationException
@@ -80,7 +81,7 @@ internal suspend fun runPushRegistrationSafely(
             if (
                 !isCurrentRequest()
             ) {
-                return
+                return false
             }
 
             delayAfterFailure(
@@ -88,6 +89,8 @@ internal suspend fun runPushRegistrationSafely(
             )
         }
     }
+
+    return false
 }
 
 object PushRegistrationCoordinator {
@@ -173,10 +176,17 @@ object PushRegistrationCoordinator {
                         session.accessToken
                 )
             ) {
+
+                Log.i(
+                    TAG,
+                    "PUSH_REGISTRATION_ABANDONED|reason=session_changed_before_start"
+                )
+
                 return@launch
             }
 
-            runPushRegistrationSafely(
+            val registered =
+                runPushRegistrationSafely(
                 isCurrentRequest = {
 
                     isCurrentPushRegistrationRequest(
@@ -200,6 +210,11 @@ object PushRegistrationCoordinator {
                 delayAfterFailure = {
                     attempt ->
 
+                    Log.i(
+                        TAG,
+                        "PUSH_REGISTRATION_RETRY|attempt=$attempt"
+                    )
+
                     delay(
                         when (attempt) {
                             1 -> 1_000L
@@ -219,6 +234,17 @@ object PushRegistrationCoordinator {
                         token
                 )
             }
+
+            Log.i(
+                TAG,
+                if (
+                    registered
+                ) {
+                    "PUSH_REGISTRATION_SUCCESS"
+                } else {
+                    "PUSH_REGISTRATION_ABANDONED|reason=request_became_stale"
+                }
+            )
         }
     }
 
@@ -253,4 +279,7 @@ object PushRegistrationCoordinator {
 
         }
     }
+
+    private const val TAG =
+        "RelayPushRegistration"
 }

@@ -86,30 +86,35 @@ class PushRegistrationRetryTest {
             val delayedAttempts =
                 mutableListOf<Int>()
 
-            runPushRegistrationSafely(
-                isCurrentRequest = {
-                    current
-                },
-                delayAfterFailure = {
-                    attempt ->
+            val registered =
+                runPushRegistrationSafely(
+                    isCurrentRequest = {
+                        current
+                    },
+                    delayAfterFailure = {
+                        attempt ->
 
-                    delayedAttempts +=
-                        attempt
-                }
-            ) {
-
-                executions +=
-                    1
-
-                if (
-                    executions ==
-                    1
+                        delayedAttempts +=
+                            attempt
+                    }
                 ) {
-                    throw IllegalStateException(
-                        "Temporary network failure"
-                    )
+
+                    executions +=
+                        1
+
+                    if (
+                        executions ==
+                        1
+                    ) {
+                        throw IllegalStateException(
+                            "Temporary network failure"
+                        )
+                    }
                 }
-            }
+
+            assertTrue(
+                registered
+            )
 
             assertEquals(
                 2,
@@ -138,26 +143,31 @@ class PushRegistrationRetryTest {
             var delayed =
                 false
 
-            runPushRegistrationSafely(
-                isCurrentRequest = {
-                    current
-                },
-                delayAfterFailure = {
-                    delayed =
-                        true
+            val registered =
+                runPushRegistrationSafely(
+                    isCurrentRequest = {
+                        current
+                    },
+                    delayAfterFailure = {
+                        delayed =
+                            true
+                    }
+                ) {
+
+                    executions +=
+                        1
+
+                    current =
+                        false
+
+                    throw IllegalStateException(
+                        "Registration became stale"
+                    )
                 }
-            ) {
 
-                executions +=
-                    1
-
-                current =
-                    false
-
-                throw IllegalStateException(
-                    "Registration became stale"
-                )
-            }
+            assertFalse(
+                registered
+            )
 
             assertEquals(
                 1,
