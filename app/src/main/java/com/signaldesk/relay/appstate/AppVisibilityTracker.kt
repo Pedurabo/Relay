@@ -5,6 +5,9 @@ import android.app.Application
 import android.os.Bundle
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object AppVisibilityTracker {
 
@@ -14,9 +17,16 @@ object AppVisibilityTracker {
     private val initialized =
         AtomicBoolean(false)
 
+    private val _foregroundState =
+        MutableStateFlow(false)
+
+    val foregroundState:
+        StateFlow<Boolean> =
+        _foregroundState.asStateFlow()
+
     val isForeground: Boolean
         get() =
-            startedActivityCount.get() > 0
+            _foregroundState.value
 
     fun initialize(
         application: Application
@@ -37,18 +47,34 @@ object AppVisibilityTracker {
                 override fun onActivityStarted(
                     activity: Activity
                 ) {
-                    startedActivityCount
-                        .incrementAndGet()
+
+                    val count =
+                        startedActivityCount
+                            .incrementAndGet()
+
+                    if (
+                        count > 0
+                    ) {
+                        _foregroundState.value =
+                            true
+                    }
                 }
 
                 override fun onActivityStopped(
                     activity: Activity
                 ) {
-                    startedActivityCount
-                        .updateAndGet { current ->
-                            (current - 1)
-                                .coerceAtLeast(0)
-                        }
+
+                    val count =
+                        startedActivityCount
+                            .updateAndGet {
+                                current ->
+
+                                (current - 1)
+                                    .coerceAtLeast(0)
+                            }
+
+                    _foregroundState.value =
+                        count > 0
                 }
 
                 override fun onActivityCreated(

@@ -3,6 +3,7 @@ package com.signaldesk.relay.ui.incidents
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.signaldesk.relay.appstate.AppVisibilityTracker
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
@@ -25,6 +26,15 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+internal fun shouldRunRealtimeForLifecycle(
+    isSignedIn: Boolean,
+    isForeground: Boolean
+): Boolean {
+
+    return isSignedIn &&
+        isForeground
+}
 
 class IncidentsViewModel(
     application: Application
@@ -171,37 +181,63 @@ class IncidentsViewModel(
 
         viewModelScope.launch {
 
-            sessionState
-                .collectLatest { state ->
+            combine(
+                sessionState,
+                AppVisibilityTracker
+                    .foregroundState
+            ) {
+                state,
+                isForeground ->
 
-                    when (state) {
+                state to
+                    isForeground
+            }
+                .collectLatest {
+                    lifecycle ->
 
-                        SessionState.SignedOut -> {
-                            realtimeCoordinator
-                                .stop()
-                        }
+                    val state =
+                        lifecycle.first
 
-                        is SessionState.SignedIn -> {
-                            realtimeCoordinator
-                                .start(
-                                    viewModelScope
-                                )
+                    val isForeground =
+                        lifecycle.second
 
-                            SeverityOutboxCoordinator
-                                .kick()
+                    val shouldRunRealtime =
+                        shouldRunRealtimeForLifecycle(
+                            isSignedIn =
+                                state is
+                                    SessionState.SignedIn,
+                            isForeground =
+                                isForeground
+                        )
 
-                            CreateIncidentOutboxCoordinator
-                                .kick()
+                    if (
+                        !shouldRunRealtime
+                    ) {
 
-                            TimelineOutboxCoordinator
-                                .kick()
+                        realtimeCoordinator
+                            .stop()
 
-                            PushRegistrationCoordinator
-                                .kick(
-                                    application
-                                )
-                        }
+                        return@collectLatest
                     }
+
+                    realtimeCoordinator
+                        .start(
+                            viewModelScope
+                        )
+
+                    SeverityOutboxCoordinator
+                        .kick()
+
+                    CreateIncidentOutboxCoordinator
+                        .kick()
+
+                    TimelineOutboxCoordinator
+                        .kick()
+
+                    PushRegistrationCoordinator
+                        .kick(
+                            application
+                        )
                 }
         }
     }
