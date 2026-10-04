@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Entity(
     tableName =
@@ -70,6 +71,22 @@ interface PendingSeverityCommandDao {
         ownerPrincipal: String
     ):
         PendingSeverityCommand?
+
+    @Query(
+        """
+        SELECT *
+        FROM pending_severity_commands
+        WHERE incidentId = :incidentId
+          AND ownerPrincipal = :ownerPrincipal
+        ORDER BY createdAt ASC
+        LIMIT 1
+        """
+    )
+    fun observeOldestForIncident(
+        incidentId: String,
+        ownerPrincipal: String
+    ):
+        Flow<PendingSeverityCommand?>
 
     @Query(
         """
@@ -167,6 +184,18 @@ class RoomPendingSeverityCommandStore(
         PendingSeverityCommand? {
 
         return dao.getOldestForIncident(
+            incidentId,
+            ownerPrincipal
+        )
+    }
+
+    fun observeForIncident(
+        incidentId: String,
+        ownerPrincipal: String
+    ):
+        Flow<PendingSeverityCommand?> {
+
+        return dao.observeOldestForIncident(
             incidentId,
             ownerPrincipal
         )

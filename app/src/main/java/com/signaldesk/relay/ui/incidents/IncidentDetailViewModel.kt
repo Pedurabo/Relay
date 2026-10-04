@@ -4,7 +4,6 @@ import com.signaldesk.relay.data.local.PendingSeverityCommand
 import com.signaldesk.relay.data.local.RoomPendingStatusCommandStore
 import com.signaldesk.relay.data.local.PendingStatusCommand
 import java.util.UUID
-import kotlinx.coroutines.delay
 
 
 import com.signaldesk.relay.model.IncidentSeverity
@@ -25,6 +24,8 @@ import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.model.TimelineEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 class IncidentDetailViewModel(
@@ -483,93 +484,112 @@ class IncidentDetailViewModel(
         val baseStatus =
             pending.baseStatus
 
-        while (true) {
+        statusUpdateError.value =
+            "Status queued; waiting for authoritative sync."
 
-            val current =
-                incident.value
-
-            if (
-                current?.id ==
-                pending.incidentId
-            ) {
-
-                if (
-                    current.status ==
-                    requestedStatus
-                ) {
-
-                    optimisticStatus.value =
-                        null
-
-                    statusUpdateInProgress.value =
-                        false
-
-                    statusUpdateError.value =
-                        null
-
-                    return
-                }
-
-                if (
-                    current.status !=
-                    baseStatus &&
-                    current.status !=
-                    requestedStatus
-                ) {
-
-                    optimisticStatus.value =
-                        null
-
-                    statusUpdateInProgress.value =
-                        false
-
-                    statusUpdateError.value =
-                        "Status was superseded by a newer update: ${current.status}."
-
-                    return
-                }
-            }
-
-            val stored =
+        val result =
+            combine(
+                incident,
                 pendingStatusStore
-                    .loadForIncident(
+                    .observeForIncident(
                         pending.incidentId,
                         pending.ownerPrincipal
                     )
-
-            if (
-                stored?.commandId !=
-                pending.commandId
             ) {
+                current,
+                stored ->
 
-                optimisticStatus.value =
-                    null
+                current to
+                    stored
+            }
+                .first {
+                    state ->
 
-                statusUpdateInProgress.value =
-                    false
+                    val current =
+                        state.first
 
-                if (
-                    current?.status !=
-                    requestedStatus
-                ) {
+                    val stored =
+                        state.second
 
-                    statusUpdateError.value =
-                        "Status update ended without the requested authoritative state."
-                } else {
+                    val authoritativeTerminal =
+                        current?.id ==
+                            pending.incidentId &&
+                            (
+                                current.status ==
+                                    requestedStatus ||
+                                    (
+                                        current.status !=
+                                            baseStatus &&
+                                            current.status !=
+                                            requestedStatus
+                                    )
+                            )
 
-                    statusUpdateError.value =
-                        null
+                    authoritativeTerminal ||
+                        stored?.commandId !=
+                            pending.commandId
                 }
 
-                return
-            }
+        val current =
+            result.first
+
+        if (
+            current?.id ==
+                pending.incidentId &&
+            current.status ==
+                requestedStatus
+        ) {
+
+            optimisticStatus.value =
+                null
+
+            statusUpdateInProgress.value =
+                false
 
             statusUpdateError.value =
-                "Status queued; waiting for authoritative sync."
+                null
 
-            delay(
-                200L
-            )
+            return
+        }
+
+        if (
+            current?.id ==
+                pending.incidentId &&
+            current.status !=
+                baseStatus &&
+            current.status !=
+                requestedStatus
+        ) {
+
+            optimisticStatus.value =
+                null
+
+            statusUpdateInProgress.value =
+                false
+
+            statusUpdateError.value =
+                "Status was superseded by a newer update: ${current.status}."
+
+            return
+        }
+
+        optimisticStatus.value =
+            null
+
+        statusUpdateInProgress.value =
+            false
+
+        if (
+            current?.status !=
+                requestedStatus
+        ) {
+
+            statusUpdateError.value =
+                "Status update ended without the requested authoritative state."
+        } else {
+
+            statusUpdateError.value =
+                null
         }
     }
 
@@ -590,93 +610,112 @@ class IncidentDetailViewModel(
                     pending.baseSeverity
                 )
 
-        while (true) {
+        severityUpdateError.value =
+            "Severity queued; waiting for authoritative sync."
 
-            val current =
-                incident.value
-
-            if (
-                current?.id ==
-                pending.incidentId
-            ) {
-
-                if (
-                    current.severity ==
-                    requestedSeverity
-                ) {
-
-                    optimisticSeverity.value =
-                        null
-
-                    severityUpdateInProgress.value =
-                        false
-
-                    severityUpdateError.value =
-                        null
-
-                    return
-                }
-
-                if (
-                    current.severity !=
-                    baseSeverity &&
-                    current.severity !=
-                    requestedSeverity
-                ) {
-
-                    optimisticSeverity.value =
-                        null
-
-                    severityUpdateInProgress.value =
-                        false
-
-                    severityUpdateError.value =
-                        "Severity was superseded by a newer update: ${current.severity.name}."
-
-                    return
-                }
-            }
-
-            val stored =
+        val result =
+            combine(
+                incident,
                 pendingSeverityStore
-                    .loadForIncident(
+                    .observeForIncident(
                         pending.incidentId,
                         pending.ownerPrincipal
                     )
-
-            if (
-                stored?.commandId !=
-                pending.commandId
             ) {
+                current,
+                stored ->
 
-                optimisticSeverity.value =
-                    null
+                current to
+                    stored
+            }
+                .first {
+                    state ->
 
-                severityUpdateInProgress.value =
-                    false
+                    val current =
+                        state.first
 
-                if (
-                    current?.severity !=
-                    requestedSeverity
-                ) {
+                    val stored =
+                        state.second
 
-                    severityUpdateError.value =
-                        "Severity update ended without the requested authoritative state."
-                } else {
+                    val authoritativeTerminal =
+                        current?.id ==
+                            pending.incidentId &&
+                            (
+                                current.severity ==
+                                    requestedSeverity ||
+                                    (
+                                        current.severity !=
+                                            baseSeverity &&
+                                            current.severity !=
+                                            requestedSeverity
+                                    )
+                            )
 
-                    severityUpdateError.value =
-                        null
+                    authoritativeTerminal ||
+                        stored?.commandId !=
+                            pending.commandId
                 }
 
-                return
-            }
+        val current =
+            result.first
+
+        if (
+            current?.id ==
+                pending.incidentId &&
+            current.severity ==
+                requestedSeverity
+        ) {
+
+            optimisticSeverity.value =
+                null
+
+            severityUpdateInProgress.value =
+                false
 
             severityUpdateError.value =
-                "Severity queued; waiting for authoritative sync."
+                null
 
-            delay(
-                200L
-            )
+            return
+        }
+
+        if (
+            current?.id ==
+                pending.incidentId &&
+            current.severity !=
+                baseSeverity &&
+            current.severity !=
+                requestedSeverity
+        ) {
+
+            optimisticSeverity.value =
+                null
+
+            severityUpdateInProgress.value =
+                false
+
+            severityUpdateError.value =
+                "Severity was superseded by a newer update: ${current.severity.name}."
+
+            return
+        }
+
+        optimisticSeverity.value =
+            null
+
+        severityUpdateInProgress.value =
+            false
+
+        if (
+            current?.severity !=
+                requestedSeverity
+        ) {
+
+            severityUpdateError.value =
+                "Severity update ended without the requested authoritative state."
+        } else {
+
+            severityUpdateError.value =
+                null
         }
     }
 }
