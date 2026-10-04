@@ -10,8 +10,8 @@ The project focuses on a hard mobile-systems problem: keeping local Room state, 
 - Room-backed incident and timeline persistence
 - Real-time WebSocket incident updates
 - Ordered event processing with sequence-gap detection and replay
-- Optimistic severity updates with authoritative convergence
-- Durable severity-command outbox
+- Authoritative incident creation, severity, status, and timeline mutations
+- Durable Room-backed outboxes for create, severity, status, and timeline operations
 - Atomic Room-backed delivery leases
 - Exponential retry backoff with queue fairness
 - Process-death recovery for stranded in-flight commands
@@ -34,7 +34,7 @@ The Android application uses:
 - **Coroutines / Flow** for asynchronous state propagation
 - **OkHttp WebSockets** for real-time transport
 
-The primary data model includes incidents, timeline entries, processed events, sequence gaps, and durable pending severity commands.
+The primary data model includes incidents, timeline entries, processed events, sequence gaps, and durable pending create, severity, and status commands.
 
 ### Realtime convergence
 
@@ -49,9 +49,9 @@ Incoming incident events carry sequence information. Relay handles:
 
 This allows the app to recover from missing or reordered server traffic without duplicating timeline state.
 
-### Durable severity outbox
+### Durable command delivery
 
-Severity changes are persisted before network delivery.
+Operator mutations are persisted before network delivery. Relay uses durable Room-backed delivery for incident creation, severity updates, status updates, and timeline posts.
 
 Each pending command stores:
 
@@ -84,6 +84,10 @@ The queue is evaluated fairly, so one command in cooldown does not block eligibl
 Durable commands are owned by the authenticated principal that created them.
 
 The coordinator only loads and claims commands for the currently signed-in owner and checks that ownership again before transport. A command created by User A cannot be sent while User B is authenticated. If User A later returns, the original command ID becomes eligible again and resumes delivery.
+
+### Reactive pending-state monitoring
+
+Pending status and severity commands are observed through Room `Flow` invalidation rather than periodic database polling.
 
 ## Proven failure scenarios
 
@@ -119,9 +123,13 @@ The account-isolation proof verified that an A-owned command survived sign-out, 
 
 - Node.js
 - `ws` WebSocket library
-- durable JSON development state
+- SQLite durable state with WAL mode and foreign-key enforcement
+- schema migration and backup validation
+- hashed access and refresh session-token storage
+- authentication, authorization, and login rate limiting
 - command deduplication
 - event replay support
+- push-token registration and optional Firebase push delivery
 
 ## Project structure
 
@@ -143,6 +151,8 @@ Relay/
 │       └── ui/
 ├── backend/
 │   ├── package.json
+│   ├── test-all.js
+│   ├── storage.js
 │   └── server.js
 ├── gradle/
 ├── build.gradle.kts
@@ -153,10 +163,16 @@ Relay/
 
 ### 1. Start the development backend
 
-From `backend/`:
+From the repository root:
 
 ```bash
-npm install
+npm --prefix backend install
+npm --prefix backend test
+```
+
+Then start the backend from `backend/`:
+
+```bash
 node server.js
 ```
 
@@ -192,7 +208,7 @@ adb shell am start -n com.signaldesk.relay/.MainActivity
 
 ## Current status
 
-Relay is an active engineering project focused on resilient realtime Android architecture. The current implementation has strong local durability and failure-recovery coverage; production push delivery and production backend/auth infrastructure remain separate future hardening areas.
+Relay is a feature-complete engineering portfolio project focused on resilient realtime Android architecture and failure recovery. The repository includes durable mutation delivery, SQLite-backed backend persistence, authentication and authorization, optional Firebase push support, lifecycle hardening, observability, and extensive reliability testing. It should not be interpreted as a production-hosted service or Play Store release; production deployment, signing, secrets management, operational monitoring, and store publishing remain outside the current repository scope.
 
 ## Repository
 
