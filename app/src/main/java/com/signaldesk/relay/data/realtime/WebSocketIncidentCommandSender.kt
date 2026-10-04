@@ -17,6 +17,58 @@ enum class IncidentCommandResult {
     TRANSPORT_FAILURE
 }
 
+internal fun correlateIncidentCommandAcknowledgement(
+    type: String,
+    command: String,
+    incidentId: String,
+    commandId: String,
+    expectedCommand: String,
+    expectedIncidentId: String,
+    expectedCommandId: String
+): IncidentCommandResult? {
+
+    if (
+        type !=
+            "command.accepted" &&
+        type !=
+            "command.rejected"
+    ) {
+        return null
+    }
+
+    if (
+        command !=
+        expectedCommand
+    ) {
+        return null
+    }
+
+    if (
+        incidentId !=
+        expectedIncidentId
+    ) {
+        return null
+    }
+
+    if (
+        commandId !=
+        expectedCommandId
+    ) {
+        return null
+    }
+
+    return if (
+        type ==
+        "command.accepted"
+    ) {
+        IncidentCommandResult
+            .ACCEPTED
+    } else {
+        IncidentCommandResult
+            .REJECTED
+    }
+}
+
 class WebSocketIncidentCommandSender(
     private val url: String,
     private val tokenProvider: () -> String?,
@@ -138,58 +190,32 @@ class WebSocketIncidentCommandSender(
                                     .getOrNull()
                                     ?: return
 
-                            val type =
-                                json.optString(
-                                    "type"
-                                )
-
-                            if (
-                                type !=
-                                    "command.accepted" &&
-                                type !=
-                                    "command.rejected"
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "command"
-                                ) !=
-                                "incident.severity.update"
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "incidentId"
-                                ) !=
-                                incidentId
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "commandId"
-                                ) !=
-                                commandId
-                            ) {
-                                return
-                            }
-
                             val result =
-                                if (
-                                    type ==
-                                    "command.accepted"
-                                ) {
-                                    IncidentCommandResult
-                                        .ACCEPTED
-                                } else {
-                                    IncidentCommandResult
-                                        .REJECTED
-                                }
+                                correlateIncidentCommandAcknowledgement(
+                                    type =
+                                        json.optString(
+                                            "type"
+                                        ),
+                                    command =
+                                        json.optString(
+                                            "command"
+                                        ),
+                                    incidentId =
+                                        json.optString(
+                                            "incidentId"
+                                        ),
+                                    commandId =
+                                        json.optString(
+                                            "commandId"
+                                        ),
+                                    expectedCommand =
+                                        "incident.severity.update",
+                                    expectedIncidentId =
+                                        incidentId,
+                                    expectedCommandId =
+                                        commandId
+                                )
+                                    ?: return
 
                             finish(
                                 result
@@ -384,61 +410,32 @@ class WebSocketIncidentCommandSender(
                                     .getOrNull()
                                     ?: return
 
-                            val type =
-                                json.optString(
-                                    "type"
-                                )
-
-                            if (
-                                type !=
-                                    "command.accepted" &&
-                                type !=
-                                    "command.rejected"
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "command"
-                                ) !=
-                                "incident.create"
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "incidentId"
-                                ) !=
-                                incidentId
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "commandId"
-                                ) !=
-                                commandId
-                            ) {
-                                return
-                            }
-
                             val result =
-                                if (
-                                    type ==
-                                    "command.accepted"
-                                ) {
-
-                                    IncidentCommandResult
-                                        .ACCEPTED
-
-                                } else {
-
-                                    IncidentCommandResult
-                                        .REJECTED
-                                }
+                                correlateIncidentCommandAcknowledgement(
+                                    type =
+                                        json.optString(
+                                            "type"
+                                        ),
+                                    command =
+                                        json.optString(
+                                            "command"
+                                        ),
+                                    incidentId =
+                                        json.optString(
+                                            "incidentId"
+                                        ),
+                                    commandId =
+                                        json.optString(
+                                            "commandId"
+                                        ),
+                                    expectedCommand =
+                                        "incident.create",
+                                    expectedIncidentId =
+                                        incidentId,
+                                    expectedCommandId =
+                                        commandId
+                                )
+                                    ?: return
 
                             finish(
                                 result
@@ -625,58 +622,32 @@ class WebSocketIncidentCommandSender(
                                     .getOrNull()
                                     ?: return
 
-                            val type =
-                                json.optString(
-                                    "type"
-                                )
-
-                            if (
-                                type !=
-                                    "command.accepted" &&
-                                type !=
-                                    "command.rejected"
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "command"
-                                ) !=
-                                "incident.status.update"
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "incidentId"
-                                ) !=
-                                incidentId
-                            ) {
-                                return
-                            }
-
-                            if (
-                                json.optString(
-                                    "commandId"
-                                ) !=
-                                commandId
-                            ) {
-                                return
-                            }
-
                             val result =
-                                if (
-                                    type ==
-                                    "command.accepted"
-                                ) {
-                                    IncidentCommandResult
-                                        .ACCEPTED
-                                } else {
-                                    IncidentCommandResult
-                                        .REJECTED
-                                }
+                                correlateIncidentCommandAcknowledgement(
+                                    type =
+                                        json.optString(
+                                            "type"
+                                        ),
+                                    command =
+                                        json.optString(
+                                            "command"
+                                        ),
+                                    incidentId =
+                                        json.optString(
+                                            "incidentId"
+                                        ),
+                                    commandId =
+                                        json.optString(
+                                            "commandId"
+                                        ),
+                                    expectedCommand =
+                                        "incident.status.update",
+                                    expectedIncidentId =
+                                        incidentId,
+                                    expectedCommandId =
+                                        commandId
+                                )
+                                    ?: return
 
                             finish(
                                 result
