@@ -222,7 +222,7 @@ class IncidentsViewModel(
                     }
 
                     realtimeCoordinator
-                        .start(
+                        .startWhenAvailable(
                             viewModelScope
                         )
 

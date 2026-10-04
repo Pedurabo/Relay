@@ -22,6 +22,19 @@ internal fun shouldStartRealtimeCoordinator(
     job == null ||
         job.isCompleted
 
+internal suspend fun awaitRealtimeRestartAvailability(
+    job: Job?
+) {
+
+    if (
+        job != null &&
+        job.isCancelled &&
+        !job.isCompleted
+    ) {
+        job.join()
+    }
+}
+
 internal suspend fun stopRealtimeStateCollector(
     job: Job
 ) {
@@ -222,6 +235,22 @@ class RealtimeIncidentCoordinator(
 
     private var job:
         Job? = null
+
+    suspend fun startWhenAvailable(
+        scope: CoroutineScope
+    ) {
+
+        val previousJob =
+            job
+
+        awaitRealtimeRestartAvailability(
+            previousJob
+        )
+
+        start(
+            scope
+        )
+    }
 
     fun start(
         scope: CoroutineScope
