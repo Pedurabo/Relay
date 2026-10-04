@@ -1,6 +1,6 @@
 package com.signaldesk.relay.data.realtime
 
-import com.signaldesk.relay.ui.incidents.shouldRunRealtimeForLifecycle
+import com.signaldesk.relay.appstate.shouldRunRealtimeForLifecycle
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

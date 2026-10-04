@@ -3,14 +3,10 @@ package com.signaldesk.relay.ui.incidents
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.signaldesk.relay.appstate.AppVisibilityTracker
+import com.signaldesk.relay.appstate.IncidentOperationsLifecycleCoordinator
 import com.signaldesk.relay.data.local.RelayDatabase
-import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
 import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
-import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
-import com.signaldesk.relay.data.realtime.StatusOutboxCoordinator
-import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
 import com.signaldesk.relay.data.repository.IncidentRepository
 import com.signaldesk.relay.data.session.AuthSessionClient
@@ -23,19 +19,9 @@ import com.signaldesk.relay.notifications.PushRegistrationCoordinator
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-internal fun shouldRunRealtimeForLifecycle(
-    isSignedIn: Boolean,
-    isForeground: Boolean
-): Boolean {
-
-    return isSignedIn &&
-        isForeground
-}
 
 class IncidentsViewModel(
     application: Application
@@ -171,6 +157,14 @@ class IncidentsViewModel(
             }
         )
 
+    private val operationsLifecycleCoordinator =
+        IncidentOperationsLifecycleCoordinator(
+            context =
+                application,
+            realtimeCoordinator =
+                realtimeCoordinator
+        )
+
     val connectionState =
         realtimeCoordinator
             .connectionState
@@ -180,70 +174,10 @@ class IncidentsViewModel(
             repository.seedIfEmpty()
         }
 
-        viewModelScope.launch {
-
-            combine(
-                sessionState,
-                AppVisibilityTracker
-                    .foregroundState
-            ) {
-                state,
-                isForeground ->
-
-                state to
-                    isForeground
-            }
-                .collectLatest {
-                    lifecycle ->
-
-                    val state =
-                        lifecycle.first
-
-                    val isForeground =
-                        lifecycle.second
-
-                    val shouldRunRealtime =
-                        shouldRunRealtimeForLifecycle(
-                            isSignedIn =
-                                state is
-                                    SessionState.SignedIn,
-                            isForeground =
-                                isForeground
-                        )
-
-                    if (
-                        !shouldRunRealtime
-                    ) {
-
-                        realtimeCoordinator
-                            .stop()
-
-                        return@collectLatest
-                    }
-
-                    realtimeCoordinator
-                        .startWhenAvailable(
-                            viewModelScope
-                        )
-
-                    SeverityOutboxCoordinator
-                        .kick()
-
-                    StatusOutboxCoordinator
-                        .kick()
-
-                    CreateIncidentOutboxCoordinator
-                        .kick()
-
-                    TimelineOutboxCoordinator
-                        .kick()
-
-                    PushRegistrationCoordinator
-                        .kick(
-                            application
-                        )
-                }
-        }
+        operationsLifecycleCoordinator
+            .start(
+                viewModelScope
+            )
     }
 
     fun signIn(
@@ -348,7 +282,10 @@ class IncidentsViewModel(
     }
 
     override fun onCleared() {
-        realtimeCoordinator.stop()
+
+        operationsLifecycleCoordinator
+            .stop()
+
         super.onCleared()
     }
 }
