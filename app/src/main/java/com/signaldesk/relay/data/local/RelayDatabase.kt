@@ -12,12 +12,13 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         
         PendingSeverityCommand::class,
         PendingStatusCommand::class,
+        PendingCreateIncidentCommand::class,
         IncidentEntity::class,
         ProcessedEventEntity::class,
         TimelineEntryEntity::class,
         IncidentSequenceGapEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 abstract class RelayDatabase :
@@ -41,6 +42,9 @@ abstract class RelayDatabase :
 
     abstract fun pendingStatusCommandDao():
         PendingStatusCommandDao
+
+    abstract fun pendingCreateIncidentCommandDao():
+        PendingCreateIncidentCommandDao
 
 companion object {
 
@@ -220,7 +224,8 @@ companion object {
                                 MIGRATION_7_8,
                                 MIGRATION_8_9,
                                 MIGRATION_9_10,
-                                MIGRATION_10_11
+                                MIGRATION_10_11,
+                                MIGRATION_11_12
                             )
                             .build()
                             .also {
@@ -328,6 +333,35 @@ companion object {
                             incidentId TEXT NOT NULL,
                             status TEXT NOT NULL,
                             baseStatus TEXT NOT NULL,
+                            ownerPrincipal TEXT NOT NULL,
+                            createdAt INTEGER NOT NULL,
+                            deliveryState TEXT NOT NULL,
+                            PRIMARY KEY(commandId)
+                        )
+                        """.trimIndent()
+                    )
+                }
+            }
+
+        val MIGRATION_11_12 =
+            object : Migration(
+                11,
+                12
+            ) {
+
+                override fun migrate(
+                    db:
+                        SupportSQLiteDatabase
+                ) {
+
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS pending_create_incident_commands (
+                            commandId TEXT NOT NULL,
+                            incidentId TEXT NOT NULL,
+                            title TEXT NOT NULL,
+                            status TEXT NOT NULL,
+                            severity TEXT NOT NULL,
                             ownerPrincipal TEXT NOT NULL,
                             createdAt INTEGER NOT NULL,
                             deliveryState TEXT NOT NULL,
