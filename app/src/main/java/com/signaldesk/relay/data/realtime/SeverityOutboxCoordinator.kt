@@ -783,8 +783,16 @@ object SeverityOutboxCoordinator {
                     )
 
             if (
-                currentSeverity ==
-                requestedSeverity
+                decideMutationConvergence(
+                    currentValue =
+                        currentSeverity.name,
+                    baseValue =
+                        baseSeverity.name,
+                    requestedValue =
+                        requestedSeverity.name
+                ) ==
+                    MutationConvergenceDecision
+                        .CONVERGED
             ) {
 
                 store.clearIf(
@@ -801,10 +809,16 @@ object SeverityOutboxCoordinator {
             }
 
             if (
-                currentSeverity !=
-                baseSeverity &&
-                currentSeverity !=
-                requestedSeverity
+                decideMutationConvergence(
+                    currentValue =
+                        currentSeverity.name,
+                    baseValue =
+                        baseSeverity.name,
+                    requestedValue =
+                        requestedSeverity.name
+                ) ==
+                    MutationConvergenceDecision
+                        .SUPERSEDED
             ) {
 
                 store.clearIf(
@@ -954,9 +968,17 @@ object SeverityOutboxCoordinator {
                         )
 
                 if (
-                    currentSeverity ==
-                    requestedSeverity
-                ) {
+                decideMutationConvergence(
+                    currentValue =
+                        currentSeverity.name,
+                    baseValue =
+                        baseSeverity.name,
+                    requestedValue =
+                        requestedSeverity.name
+                ) ==
+                    MutationConvergenceDecision
+                        .CONVERGED
+            ) {
 
                     store.clearIf(
                         pending.commandId,
@@ -972,11 +994,17 @@ object SeverityOutboxCoordinator {
                 }
 
                 if (
-                    currentSeverity !=
-                    baseSeverity &&
-                    currentSeverity !=
-                    requestedSeverity
-                ) {
+                decideMutationConvergence(
+                    currentValue =
+                        currentSeverity.name,
+                    baseValue =
+                        baseSeverity.name,
+                    requestedValue =
+                        requestedSeverity.name
+                ) ==
+                    MutationConvergenceDecision
+                        .SUPERSEDED
+            ) {
 
                     store.clearIf(
                         pending.commandId,
@@ -1016,9 +1044,17 @@ object SeverityOutboxCoordinator {
                         )
 
                 if (
-                    currentSeverity ==
-                    requestedSeverity
-                ) {
+                decideMutationConvergence(
+                    currentValue =
+                        currentSeverity.name,
+                    baseValue =
+                        baseSeverity.name,
+                    requestedValue =
+                        requestedSeverity.name
+                ) ==
+                    MutationConvergenceDecision
+                        .CONVERGED
+            ) {
 
                     store.clearIf(
                         pending.commandId,
@@ -1034,11 +1070,17 @@ object SeverityOutboxCoordinator {
                 }
 
                 if (
-                    currentSeverity !=
-                    baseSeverity &&
-                    currentSeverity !=
-                    requestedSeverity
-                ) {
+                decideMutationConvergence(
+                    currentValue =
+                        currentSeverity.name,
+                    baseValue =
+                        baseSeverity.name,
+                    requestedValue =
+                        requestedSeverity.name
+                ) ==
+                    MutationConvergenceDecision
+                        .SUPERSEDED
+            ) {
 
                     store.clearIf(
                         pending.commandId,

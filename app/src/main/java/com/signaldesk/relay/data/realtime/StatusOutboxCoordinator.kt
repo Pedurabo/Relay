@@ -514,8 +514,16 @@ object StatusOutboxCoordinator {
         ) {
 
             if (
-                beforeSend.status ==
-                requestedStatus
+                decideMutationConvergence(
+                    currentValue =
+                        beforeSend.status,
+                    baseValue =
+                        baseStatus,
+                    requestedValue =
+                        requestedStatus
+                ) ==
+                    MutationConvergenceDecision
+                        .CONVERGED
             ) {
 
                 store.clearIf(
@@ -527,10 +535,16 @@ object StatusOutboxCoordinator {
             }
 
             if (
-                beforeSend.status !=
-                baseStatus &&
-                beforeSend.status !=
-                requestedStatus
+                decideMutationConvergence(
+                    currentValue =
+                        beforeSend.status,
+                    baseValue =
+                        baseStatus,
+                    requestedValue =
+                        requestedStatus
+                ) ==
+                    MutationConvergenceDecision
+                        .SUPERSEDED
             ) {
 
                 store.clearIf(
@@ -654,9 +668,17 @@ object StatusOutboxCoordinator {
             ) {
 
                 if (
-                    afterFailure.status ==
-                    requestedStatus
-                ) {
+                decideMutationConvergence(
+                    currentValue =
+                        afterFailure.status,
+                    baseValue =
+                        baseStatus,
+                    requestedValue =
+                        requestedStatus
+                ) ==
+                    MutationConvergenceDecision
+                        .CONVERGED
+            ) {
 
                     store.clearIf(
                         pending.commandId,
@@ -667,11 +689,17 @@ object StatusOutboxCoordinator {
                 }
 
                 if (
-                    afterFailure.status !=
-                    baseStatus &&
-                    afterFailure.status !=
-                    requestedStatus
-                ) {
+                decideMutationConvergence(
+                    currentValue =
+                        afterFailure.status,
+                    baseValue =
+                        baseStatus,
+                    requestedValue =
+                        requestedStatus
+                ) ==
+                    MutationConvergenceDecision
+                        .SUPERSEDED
+            ) {
 
                     store.clearIf(
                         pending.commandId,
@@ -702,9 +730,17 @@ object StatusOutboxCoordinator {
             ) {
 
                 if (
-                    current.status ==
-                    requestedStatus
-                ) {
+                decideMutationConvergence(
+                    currentValue =
+                        current.status,
+                    baseValue =
+                        baseStatus,
+                    requestedValue =
+                        requestedStatus
+                ) ==
+                    MutationConvergenceDecision
+                        .CONVERGED
+            ) {
 
                     store.clearIf(
                         pending.commandId,
@@ -715,11 +751,17 @@ object StatusOutboxCoordinator {
                 }
 
                 if (
-                    current.status !=
-                    baseStatus &&
-                    current.status !=
-                    requestedStatus
-                ) {
+                decideMutationConvergence(
+                    currentValue =
+                        current.status,
+                    baseValue =
+                        baseStatus,
+                    requestedValue =
+                        requestedStatus
+                ) ==
+                    MutationConvergenceDecision
+                        .SUPERSEDED
+            ) {
 
                     store.clearIf(
                         pending.commandId,
