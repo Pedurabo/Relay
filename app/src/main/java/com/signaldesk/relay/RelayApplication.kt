@@ -9,6 +9,7 @@ import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.notifications.FirebasePushInitializer
 import com.signaldesk.relay.notifications.PushRegistrationCoordinator
+import com.signaldesk.relay.notifications.PushTokenStore
 
 class RelayApplication :
     Application() {
@@ -50,6 +51,24 @@ class RelayApplication :
             .initialize(
                 this
             )
+
+        FirebasePushInitializer
+            .fetchToken(
+                this
+            ) { token ->
+
+                PushTokenStore(
+                    this
+                )
+                    .save(
+                        token
+                    )
+
+                PushRegistrationCoordinator
+                    .kick(
+                        this
+                    )
+            }
 
         PushRegistrationCoordinator
             .initialize(

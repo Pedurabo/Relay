@@ -114,22 +114,6 @@ object PushRegistrationCoordinator {
         val appContext =
             context.applicationContext
 
-        FirebasePushInitializer
-            .fetchToken(
-                appContext
-            ) { token ->
-
-                PushTokenStore(
-                    appContext
-                )
-                    .save(
-                        token
-                    )
-
-                kick(
-                    appContext
-                )
-            }
 
         kick(
             appContext
