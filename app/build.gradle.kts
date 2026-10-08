@@ -65,6 +65,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:realtime"))
     implementation(project(":core:notifications"))
+    implementation(project(":feature:incidents"))
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
