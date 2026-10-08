@@ -63,6 +63,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:session"))
     implementation(project(":core:database"))
+    implementation(project(":core:realtime"))
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
