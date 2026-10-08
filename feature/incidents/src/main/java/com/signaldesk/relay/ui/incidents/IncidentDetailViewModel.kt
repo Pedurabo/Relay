@@ -1,7 +1,4 @@
 package com.signaldesk.relay.ui.incidents
-import com.signaldesk.relay.data.local.IncidentStoreFactory
-import com.signaldesk.relay.data.local.PendingSeverityCommand
-import com.signaldesk.relay.data.local.PendingStatusCommand
 import java.util.UUID
 
 
@@ -14,7 +11,11 @@ import androidx.lifecycle.viewModelScope
 import com.signaldesk.relay.data.repository.IncidentRepositoryFactory
 import com.signaldesk.relay.data.realtime.timelineDeliveryCredential
 import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
+import com.signaldesk.relay.data.realtime.PendingSeverityMutation
+import com.signaldesk.relay.data.realtime.SeverityCommandGateway
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
+import com.signaldesk.relay.data.realtime.PendingStatusMutation
+import com.signaldesk.relay.data.realtime.StatusCommandGateway
 import com.signaldesk.relay.data.realtime.StatusOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
@@ -32,17 +33,15 @@ class IncidentDetailViewModel(
 ) : AndroidViewModel(application) {
 
     private val pendingSeverityStore by lazy {
-        IncidentStoreFactory.pendingSeverity(
-            application
+        SeverityCommandGateway(
+            getApplication<Application>()
         )
     }
-
     private val pendingStatusStore by lazy {
-        IncidentStoreFactory.pendingStatus(
-            application
+        StatusCommandGateway(
+            getApplication<Application>()
         )
     }
-
     val statusUpdateInProgress =
         MutableStateFlow(false)
 
@@ -309,7 +308,7 @@ class IncidentDetailViewModel(
             }
 
         val pending =
-            PendingSeverityCommand(
+            PendingSeverityMutation(
                 commandId =
                     UUID
                         .randomUUID()
@@ -420,7 +419,7 @@ class IncidentDetailViewModel(
             }
 
         val pending =
-            PendingStatusCommand(
+            PendingStatusMutation(
                 commandId =
                     UUID
                         .randomUUID()
@@ -465,7 +464,7 @@ class IncidentDetailViewModel(
 
     private suspend fun monitorPendingStatus(
         pending:
-            PendingStatusCommand
+            PendingStatusMutation
     ) {
 
         val requestedStatus =
@@ -585,7 +584,7 @@ class IncidentDetailViewModel(
 
     private suspend fun monitorPendingSeverity(
         pending:
-            PendingSeverityCommand
+            PendingSeverityMutation
     ) {
 
         val requestedSeverity =

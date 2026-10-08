@@ -3,8 +3,7 @@ package com.signaldesk.relay.ui.incidents
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.signaldesk.relay.data.local.PendingCreateIncidentCommand
-import com.signaldesk.relay.data.local.IncidentStoreFactory
+import com.signaldesk.relay.data.realtime.CreateIncidentCommandQueue
 import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
@@ -16,11 +15,6 @@ class CreateIncidentViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-
-    private val pendingCreateStore =
-        IncidentStoreFactory.pendingCreate(
-            application
-        )
 
     fun createIncident(
         title: String,
@@ -71,23 +65,23 @@ class CreateIncidentViewModel(
 
         viewModelScope.launch {
 
-            pendingCreateStore.save(
-                PendingCreateIncidentCommand(
-                    commandId =
-                        commandId,
-                    incidentId =
-                        incidentId,
-                    title =
-                        normalizedTitle,
-                    status =
-                        normalizedStatus,
-                    severity =
-                        IncidentSeverity
-                            .MEDIUM
-                            .name,
-                    ownerPrincipal =
-                        ownerPrincipal
-                )
+            CreateIncidentCommandQueue.enqueue(
+                context =
+                    getApplication<Application>(),
+                commandId =
+                    commandId,
+                incidentId =
+                    incidentId,
+                title =
+                    normalizedTitle,
+                status =
+                    normalizedStatus,
+                severity =
+                    IncidentSeverity
+                        .MEDIUM
+                        .name,
+                ownerPrincipal =
+                    ownerPrincipal
             )
 
             CreateIncidentOutboxCoordinator
