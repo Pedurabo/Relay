@@ -1,7 +1,6 @@
 package com.signaldesk.relay.ui.incidents
-import com.signaldesk.relay.data.local.RoomPendingSeverityCommandStore
+import com.signaldesk.relay.data.local.IncidentStoreFactory
 import com.signaldesk.relay.data.local.PendingSeverityCommand
-import com.signaldesk.relay.data.local.RoomPendingStatusCommandStore
 import com.signaldesk.relay.data.local.PendingStatusCommand
 import java.util.UUID
 
@@ -12,8 +11,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.signaldesk.relay.data.local.RelayDatabase
-import com.signaldesk.relay.data.repository.IncidentRepository
+import com.signaldesk.relay.data.repository.IncidentRepositoryFactory
 import com.signaldesk.relay.data.realtime.timelineDeliveryCredential
 import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
@@ -34,16 +32,14 @@ class IncidentDetailViewModel(
 ) : AndroidViewModel(application) {
 
     private val pendingSeverityStore by lazy {
-        RoomPendingSeverityCommandStore(
-            database
-                .pendingSeverityCommandDao()
+        IncidentStoreFactory.pendingSeverity(
+            application
         )
     }
 
     private val pendingStatusStore by lazy {
-        RoomPendingStatusCommandStore(
-            database
-                .pendingStatusCommandDao()
+        IncidentStoreFactory.pendingStatus(
+            application
         )
     }
 
@@ -71,15 +67,9 @@ class IncidentDetailViewModel(
             savedStateHandle["incidentId"]
         )
 
-    private val database =
-        RelayDatabase.getInstance(application)
-
     private val repository =
-        IncidentRepository(
-            incidentDao =
-                database.incidentDao(),
-            timelineEntryDao =
-                database.timelineEntryDao()
+        IncidentRepositoryFactory.create(
+            application
         )
 
     val incident: StateFlow<Incident?> =

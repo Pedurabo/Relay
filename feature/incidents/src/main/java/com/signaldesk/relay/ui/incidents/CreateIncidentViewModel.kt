@@ -4,8 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.signaldesk.relay.data.local.PendingCreateIncidentCommand
-import com.signaldesk.relay.data.local.RelayDatabase
-import com.signaldesk.relay.data.local.RoomPendingCreateIncidentCommandStore
+import com.signaldesk.relay.data.local.IncidentStoreFactory
 import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
@@ -17,15 +16,10 @@ class CreateIncidentViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val database =
-        RelayDatabase.getInstance(
-            application
-        )
 
     private val pendingCreateStore =
-        RoomPendingCreateIncidentCommandStore(
-            database
-                .pendingCreateIncidentCommandDao()
+        IncidentStoreFactory.pendingCreate(
+            application
         )
 
     fun createIncident(
