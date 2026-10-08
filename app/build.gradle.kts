@@ -62,6 +62,7 @@ android {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:session"))
+    implementation(project(":core:database"))
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
