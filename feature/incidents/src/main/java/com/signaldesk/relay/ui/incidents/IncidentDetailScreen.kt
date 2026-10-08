@@ -40,11 +40,13 @@ fun IncidentDetailScreen(
     onRetry: (TimelineEntry) -> Unit,
     optimisticStatus: String? = null,
     statusUpdateInProgress: Boolean = false,
+    statusUpdateMessage: String? = null,
     statusUpdateError: String? = null,
     onStatusChange:
         (String) -> Unit = {},
     optimisticSeverity: IncidentSeverity? = null,
     severityUpdateInProgress: Boolean = false,
+    severityUpdateMessage: String? = null,
     severityUpdateError: String? = null,
     onSeverityChange:
         (IncidentSeverity) -> Unit = {},
@@ -119,7 +121,7 @@ fun IncidentDetailScreen(
                 syncing =
                     statusUpdateInProgress,
                 supportingMessage =
-                    statusUpdateError,
+                    statusUpdateError ?: statusUpdateMessage,
                 onStatusChange =
                     onStatusChange
             )
@@ -137,7 +139,7 @@ fun IncidentDetailScreen(
                 syncing =
                     severityUpdateInProgress,
                 supportingMessage =
-                    severityUpdateError,
+                    severityUpdateError ?: severityUpdateMessage,
                 onSeverityChange =
                     onSeverityChange
             )
@@ -347,7 +349,7 @@ private fun StatusSelector(
                 if (
                     syncing
                 ) {
-                    "Syncing $status…"
+                    "Syncing $status..."
                 } else {
                     "Current status: $status"
                 },
@@ -489,7 +491,7 @@ private fun SeveritySelector(
                 if (
                     syncing
                 ) {
-                    "Syncing ${severity.name}…"
+                    "Syncing ${severity.name}Ã¢â‚¬Â¦"
                 } else {
                     "Current severity: ${severity.name}"
                 },

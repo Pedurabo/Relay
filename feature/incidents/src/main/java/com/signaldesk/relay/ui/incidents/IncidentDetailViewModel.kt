@@ -45,6 +45,9 @@ class IncidentDetailViewModel(
     val statusUpdateInProgress =
         MutableStateFlow(false)
 
+    val statusUpdateMessage =
+        MutableStateFlow<String?>(null)
+
     val statusUpdateError =
         MutableStateFlow<String?>(null)
 
@@ -53,6 +56,9 @@ class IncidentDetailViewModel(
 
     val severityUpdateInProgress =
         MutableStateFlow(false)
+
+    val severityUpdateMessage =
+        MutableStateFlow<String?>(null)
 
     val severityUpdateError =
         MutableStateFlow<String?>(null)
@@ -203,8 +209,8 @@ class IncidentDetailViewModel(
                     statusUpdateInProgress.value =
                         true
 
-                    statusUpdateError.value =
-                        "Pending status update restored."
+                    statusUpdateMessage.value =
+            "Pending status update restored.`"
 
                     monitorPendingStatus(
                         pending
@@ -254,8 +260,8 @@ class IncidentDetailViewModel(
                     severityUpdateInProgress.value =
                         true
 
-                    severityUpdateError.value =
-                        "Pending severity update restored."
+                    severityUpdateMessage.value =
+            "Pending severity update restored.`"
 
                     monitorPendingSeverity(
                         pending
@@ -341,8 +347,8 @@ class IncidentDetailViewModel(
         severityUpdateInProgress.value =
             true
 
-        severityUpdateError.value =
-            "Severity queued for sync."
+        severityUpdateMessage.value =
+            "Severity change saved. Syncing...`"
 
         viewModelScope.launch {
 
@@ -444,8 +450,8 @@ class IncidentDetailViewModel(
         statusUpdateInProgress.value =
             true
 
-        statusUpdateError.value =
-            "Status queued for sync."
+        statusUpdateMessage.value =
+            "Status change saved. Syncing...`"
 
         viewModelScope.launch {
 
@@ -473,8 +479,8 @@ class IncidentDetailViewModel(
         val baseStatus =
             pending.baseStatus
 
-        statusUpdateError.value =
-            "Status queued; waiting for authoritative sync."
+        statusUpdateMessage.value =
+            "Status change saved. Waiting for confirmation.`"
 
         val result =
             combine(
@@ -599,8 +605,8 @@ class IncidentDetailViewModel(
                     pending.baseSeverity
                 )
 
-        severityUpdateError.value =
-            "Severity queued; waiting for authoritative sync."
+        severityUpdateMessage.value =
+            "Severity change saved. Waiting for confirmation.`"
 
         val result =
             combine(

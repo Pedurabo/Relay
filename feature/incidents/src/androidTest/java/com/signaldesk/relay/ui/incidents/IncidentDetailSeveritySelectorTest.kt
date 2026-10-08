@@ -99,8 +99,8 @@ class IncidentDetailSeveritySelectorTest {
                     IncidentSeverity.CRITICAL,
                 severityUpdateInProgress =
                     true,
-                severityUpdateError =
-                    "Severity queued; waiting for authoritative sync.",
+                severityUpdateMessage =
+                    "Severity change saved. Waiting for confirmation.",
                 onSeverityChange = {}
             )
         }

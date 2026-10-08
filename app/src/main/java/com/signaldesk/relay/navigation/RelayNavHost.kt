@@ -179,6 +179,13 @@ fun RelayNavHost(
                     .collectAsState()
                     .value
 
+            val statusUpdateMessage =
+                viewModel
+                    .statusUpdateMessage
+                    .collectAsState()
+                    .value
+
+
             val statusUpdateError =
                 viewModel
                     .statusUpdateError
@@ -197,6 +204,13 @@ fun RelayNavHost(
                     .collectAsState()
                     .value
 
+            val severityUpdateMessage =
+                viewModel
+                    .severityUpdateMessage
+                    .collectAsState()
+                    .value
+
+
             val severityUpdateError =
                 viewModel
                     .severityUpdateError
@@ -210,6 +224,8 @@ fun RelayNavHost(
                     optimisticStatus,
                 statusUpdateInProgress =
                     statusUpdateInProgress,
+                statusUpdateMessage =
+                    statusUpdateMessage,
                 statusUpdateError =
                     statusUpdateError,
                 onStatusChange = { status ->
@@ -231,6 +247,8 @@ fun RelayNavHost(
                     optimisticSeverity,
                 severityUpdateInProgress =
                     severityUpdateInProgress,
+                severityUpdateMessage =
+                    severityUpdateMessage,
                 severityUpdateError =
                     severityUpdateError,
                 onSeverityChange = { severity ->
