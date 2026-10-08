@@ -165,7 +165,7 @@ object TimelineOutboxCoordinator {
         sender =
             WebSocketTimelineSender(
                 url =
-                    "ws://127.0.0.1:9000",
+                    RealtimeEndpointConfig.webSocketUrl,
                 onSessionInvalidated = {
                     rejectedAccessToken ->
 

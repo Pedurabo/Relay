@@ -1,5 +1,7 @@
 package com.signaldesk.relay.ui.incidents
 
+import com.signaldesk.relay.BuildConfig
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -91,7 +93,7 @@ class IncidentsViewModel(
     private val authSessionClient =
         AuthSessionClient(
             baseUrl =
-                "http://127.0.0.1:9000"
+                BuildConfig.RELAY_HTTP_BASE_URL
         )
 
     val sessionState =
@@ -107,7 +109,7 @@ class IncidentsViewModel(
     private val realtimeSource =
         WebSocketRealtimeIncidentSource(
             url =
-                "ws://127.0.0.1:9000",
+                BuildConfig.RELAY_WEBSOCKET_URL,
             tokenProvider = {
 
                 when (

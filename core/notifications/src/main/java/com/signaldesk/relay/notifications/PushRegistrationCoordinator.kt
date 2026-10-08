@@ -101,11 +101,24 @@ object PushRegistrationCoordinator {
                 Dispatchers.IO
         )
 
-    private val client =
-        PushRegistrationClient(
-            baseUrl =
-                "http://127.0.0.1:9000"
+    private var client:
+        PushRegistrationClient? =
+        null
+
+    fun configure(
+        baseUrl: String
+    ) {
+
+        require(
+            baseUrl.isNotBlank()
         )
+
+        client =
+            PushRegistrationClient(
+                baseUrl =
+                    baseUrl
+            )
+    }
 
     fun initialize(
         context: Context
@@ -211,7 +224,9 @@ object PushRegistrationCoordinator {
                 }
             ) {
 
-                client.register(
+                checkNotNull(client) {
+                    "PushRegistrationCoordinator must be configured before use."
+                }.register(
                     accessToken =
                         session.accessToken,
                     registrationToken =
@@ -253,7 +268,9 @@ object PushRegistrationCoordinator {
 
             attemptPushUnregistration {
 
-                client.unregister(
+                checkNotNull(client) {
+                    "PushRegistrationCoordinator must be configured before use."
+                }.unregister(
                     accessToken =
                         accessToken,
                     registrationToken =

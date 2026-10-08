@@ -32,6 +32,27 @@ android {
         buildConfigField("String", "FIREBASE_PROJECT_ID", "\"$firebaseProjectId\"")
         buildConfigField("String", "FIREBASE_API_KEY", "\"$firebaseApiKey\"")
         buildConfigField("String", "FIREBASE_SENDER_ID", "\"$firebaseSenderId\"")
+        val relayHttpBaseUrl =
+            providers.gradleProperty("relayHttpBaseUrl")
+                .orElse(System.getenv("RELAY_HTTP_BASE_URL") ?: "http://127.0.0.1:9000")
+                .get()
+
+        val relayWebSocketUrl =
+            providers.gradleProperty("relayWebSocketUrl")
+                .orElse(System.getenv("RELAY_WEBSOCKET_URL") ?: "ws://127.0.0.1:9000")
+                .get()
+
+        buildConfigField(
+            "String",
+            "RELAY_HTTP_BASE_URL",
+            "\"$relayHttpBaseUrl\""
+        )
+
+        buildConfigField(
+            "String",
+            "RELAY_WEBSOCKET_URL",
+            "\"$relayWebSocketUrl\""
+        )
         minSdk = 26
         targetSdk = 36
         versionCode = 1

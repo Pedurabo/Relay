@@ -35,11 +35,24 @@ internal fun shouldSignOutAfterRefreshFailure(
 
 object SessionRefreshCoordinator {
 
-    private val client =
-        AuthSessionClient(
-            baseUrl =
-                "http://127.0.0.1:9000"
+    private var client:
+        AuthSessionClient? =
+        null
+
+    fun configure(
+        baseUrl: String
+    ) {
+
+        require(
+            baseUrl.isNotBlank()
         )
+
+        client =
+            AuthSessionClient(
+                baseUrl =
+                    baseUrl
+            )
+    }
 
     private val gate =
         SingleFlightRefreshGate()
@@ -90,7 +103,9 @@ object SessionRefreshCoordinator {
                 val refreshed =
                     try {
 
-                        client
+                        checkNotNull(client) {
+                            "SessionRefreshCoordinator must be configured before use."
+                        }
                             .refreshSession(
                                 current.refreshToken
                             )

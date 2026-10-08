@@ -570,7 +570,7 @@ object CreateIncidentOutboxCoordinator {
         val sender =
             WebSocketIncidentCommandSender(
                 url =
-                    "ws://127.0.0.1:9000",
+                    RealtimeEndpointConfig.webSocketUrl,
 
                 tokenProvider = {
                     deliveryToken
