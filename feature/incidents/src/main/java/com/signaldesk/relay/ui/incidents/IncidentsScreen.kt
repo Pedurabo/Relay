@@ -388,10 +388,10 @@ private fun ConnectionStateRow(
                 "Realtime: Connected"
 
             RealtimeConnectionState.Connecting ->
-                "Realtime: Connecting…"
+                "Realtime: Connecting"
 
             RealtimeConnectionState.Disconnected ->
-                "Realtime: Disconnected"
+                "Realtime: Offline"
 
             is RealtimeConnectionState.Retrying -> {
 
@@ -402,8 +402,7 @@ private fun ConnectionStateRow(
                         )
                         .coerceAtLeast(1)
 
-                "Realtime: Retrying in ${seconds}s " +
-                    "(attempt ${state.attempt})"
+                "Realtime: Reconnecting in ${seconds}s"
             }
         }
 
@@ -415,7 +414,6 @@ private fun ConnectionStateRow(
                 .labelLarge
     )
 }
-
 @Composable
 private fun EmptyIncidentsState() {
     OutlinedCard(
