@@ -34,6 +34,11 @@ class RelayApplication :
                 BuildConfig.RELAY_HTTP_BASE_URL
             )
 
+
+        RealtimeEndpointConfig
+            .configure(
+                BuildConfig.RELAY_WEBSOCKET_URL
+            )
         SeverityOutboxCoordinator
             .initialize(
                 this
