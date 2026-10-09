@@ -45,6 +45,7 @@ fun IncidentsScreen(
     sessionState: SessionState,
     signInInProgress: Boolean,
     signInError: String?,
+    operationMessage: String? = null,
     onIncidentClick: (String) -> Unit,
     onCreateIncidentClick: () -> Unit,
     onSignIn: (
@@ -131,6 +132,8 @@ fun IncidentsScreen(
                             sessionState.userName,
                         connectionState =
                             connectionState,
+                        operationMessage =
+                            operationMessage,
                         onCreateIncidentClick =
                             onCreateIncidentClick,
                         onSignOut =
@@ -291,6 +294,7 @@ private fun SignedOutPanel(
 private fun SignedInOperationsPanel(
     userName: String,
     connectionState: RealtimeConnectionState,
+    operationMessage: String?,
     onCreateIncidentClick: () -> Unit,
     onSignOut: () -> Unit
 ) {
@@ -361,6 +365,19 @@ private fun SignedInOperationsPanel(
                 state =
                     connectionState
             )
+
+            operationMessage
+                ?.let { message ->
+
+                    Text(
+                        text =
+                            message,
+                        style =
+                            MaterialTheme
+                                .typography
+                                .bodyMedium
+                    )
+                }
 
             Button(
                 onClick =

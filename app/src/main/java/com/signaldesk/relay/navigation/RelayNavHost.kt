@@ -18,11 +18,13 @@ import com.signaldesk.relay.ui.incidents.IncidentDetailScreen
 import com.signaldesk.relay.ui.incidents.IncidentDetailViewModel
 import com.signaldesk.relay.ui.incidents.IncidentsScreen
 import com.signaldesk.relay.ui.incidents.IncidentsViewModel
+import kotlinx.coroutines.delay
 
 private object Routes {
     const val INCIDENTS = "incidents"
     const val CREATE_INCIDENT = "incidents/create"
     const val INCIDENT_DETAIL = "incident/{incidentId}"
+    const val CREATE_FEEDBACK = "create_feedback"
 
     fun incidentDetail(
         incidentId: String
@@ -65,7 +67,7 @@ fun RelayNavHost(
 
         composable(
             route = Routes.INCIDENTS
-        ) {
+        ) { backStackEntry ->
             val viewModel:
                 IncidentsViewModel = viewModel()
 
@@ -84,6 +86,29 @@ fun RelayNavHost(
             val signInError by
                 viewModel.signInError.collectAsState()
 
+            val createFeedback by
+                backStackEntry
+                    .savedStateHandle
+                    .getStateFlow<String?>(
+                        Routes.CREATE_FEEDBACK,
+                        null
+                    )
+                    .collectAsState()
+
+            LaunchedEffect(
+                createFeedback
+            ) {
+                if (createFeedback != null) {
+                    delay(4_000L)
+
+                    backStackEntry
+                        .savedStateHandle
+                        .remove<String>(
+                            Routes.CREATE_FEEDBACK
+                        )
+                }
+            }
+
             IncidentsScreen(
                 incidents = incidents,
                 connectionState = connectionState,
@@ -92,6 +117,8 @@ fun RelayNavHost(
                     signInInProgress,
                 signInError =
                     signInError,
+                operationMessage =
+                    createFeedback,
                 onIncidentClick = { incidentId ->
                     navController.navigate(
                         Routes.incidentDetail(
@@ -127,6 +154,14 @@ fun RelayNavHost(
                         title = title,
                         status = status,
                         onCreated = {
+                            navController
+                                .previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set(
+                                    Routes.CREATE_FEEDBACK,
+                                    "Incident saved. Waiting to sync."
+                                )
+
                             navController.popBackStack()
                         }
                     )
