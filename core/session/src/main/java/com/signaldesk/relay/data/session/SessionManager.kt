@@ -16,6 +16,15 @@ object SessionManager {
         StateFlow<SessionState> =
         _sessionState.asStateFlow()
 
+    private val _sessionTerminationReason =
+        MutableStateFlow<SessionTerminationReason?>(
+            null
+        )
+
+    val sessionTerminationReason:
+        StateFlow<SessionTerminationReason?> =
+        _sessionTerminationReason.asStateFlow()
+
     private var credentialStore:
         SessionCredentialStore? =
         null
@@ -101,6 +110,9 @@ object SessionManager {
             session
         )
 
+        _sessionTerminationReason.value =
+            null
+
         _sessionState.value =
             SessionState.SignedIn(
                 userId =
@@ -116,10 +128,16 @@ object SessionManager {
             )
     }
 
-    fun signOut() {
+    fun signOut(
+        reason: SessionTerminationReason? =
+            null
+    ) {
 
         credentialStore
             ?.clear()
+
+        _sessionTerminationReason.value =
+            reason
 
         _sessionState.value =
             SessionState.SignedOut

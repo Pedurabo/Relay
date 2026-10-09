@@ -17,6 +17,7 @@ import com.signaldesk.relay.data.session.classifyAuthLoginFailure
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
+import com.signaldesk.relay.data.session.SessionTerminationReason
 import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.notifications.IncidentNotificationManager
 import com.signaldesk.relay.notifications.PushRegistrationCoordinator
@@ -176,6 +177,26 @@ class IncidentsViewModel(
     init {
         viewModelScope.launch {
             repository.seedIfEmpty()
+        }
+
+        viewModelScope.launch {
+            SessionManager
+                .sessionTerminationReason
+                .collect { reason ->
+
+                    when (reason) {
+                        SessionTerminationReason.EXPIRED ->
+                            signInError.value =
+                                "Your session expired. Sign in again."
+
+                        SessionTerminationReason.PRINCIPAL_CHANGED ->
+                            signInError.value =
+                                "Your session changed. Sign in again."
+
+                        null ->
+                            Unit
+                    }
+                }
         }
 
         operationsLifecycleCoordinator

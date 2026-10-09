@@ -134,7 +134,9 @@ object SessionRefreshCoordinator {
                                 )
 
                                 SessionManager
-                                    .signOut()
+                                    .signOut(
+                                        SessionTerminationReason.EXPIRED
+                                    )
                             }
 
                             SessionRefreshFailureDisposition
@@ -161,7 +163,9 @@ object SessionRefreshCoordinator {
                     )
 
                     SessionManager
-                        .signOut()
+                        .signOut(
+                            SessionTerminationReason.PRINCIPAL_CHANGED
+                        )
 
                     return@run false
                 }
