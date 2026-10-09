@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 class IncidentDetailViewModel(
     application: Application,
@@ -347,17 +348,46 @@ class IncidentDetailViewModel(
         severityUpdateInProgress.value =
             true
 
+        severityUpdateError.value =
+            null
+
         severityUpdateMessage.value =
-            "Severity change saved. Syncing...`"
+            "Saving severity change..."
 
         viewModelScope.launch {
 
-            /*
-             * Room commit happens before any network send.
-             */
-            pendingSeverityStore.save(
-                pending
-            )
+            try {
+
+                pendingSeverityStore.save(
+                    pending
+                )
+
+            } catch (
+                error: CancellationException
+            ) {
+                throw error
+
+            } catch (
+                error: Exception
+            ) {
+
+                optimisticSeverity.value =
+                    null
+
+                severityUpdateInProgress.value =
+                    false
+
+                severityUpdateMessage.value =
+                    null
+
+                severityUpdateError.value =
+                    "Unable to save severity change. Try again."
+
+                return@launch
+            }
+
+            severityUpdateMessage.value =
+                "Severity change saved. Syncing..."
 
             /*
              * Delivery belongs to the process-scoped coordinator.
@@ -450,14 +480,46 @@ class IncidentDetailViewModel(
         statusUpdateInProgress.value =
             true
 
+        statusUpdateError.value =
+            null
+
         statusUpdateMessage.value =
-            "Status change saved. Syncing...`"
+            "Saving status change..."
 
         viewModelScope.launch {
 
-            pendingStatusStore.save(
-                pending
-            )
+            try {
+
+                pendingStatusStore.save(
+                    pending
+                )
+
+            } catch (
+                error: CancellationException
+            ) {
+                throw error
+
+            } catch (
+                error: Exception
+            ) {
+
+                optimisticStatus.value =
+                    null
+
+                statusUpdateInProgress.value =
+                    false
+
+                statusUpdateMessage.value =
+                    null
+
+                statusUpdateError.value =
+                    "Unable to save status change. Try again."
+
+                return@launch
+            }
+
+            statusUpdateMessage.value =
+                "Status change saved. Syncing..."
 
             StatusOutboxCoordinator
                 .kick()
