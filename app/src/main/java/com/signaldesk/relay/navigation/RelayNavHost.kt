@@ -145,7 +145,21 @@ fun RelayNavHost(
             val viewModel:
                 CreateIncidentViewModel = viewModel()
 
+            val createInProgress by
+                viewModel
+                    .createInProgress
+                    .collectAsState()
+
+            val createError by
+                viewModel
+                    .createError
+                    .collectAsState()
+
             CreateIncidentScreen(
+                createInProgress =
+                    createInProgress,
+                createError =
+                    createError,
                 onCreateIncident = {
                     title,
                     status ->

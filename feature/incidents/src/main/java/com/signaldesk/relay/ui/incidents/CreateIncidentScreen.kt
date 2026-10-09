@@ -24,6 +24,8 @@ fun CreateIncidentScreen(
         title: String,
         status: String
     ) -> Unit,
+    createInProgress: Boolean = false,
+    createError: String? = null,
     modifier: Modifier = Modifier
 ) {
     var title by remember {
@@ -91,7 +93,9 @@ fun CreateIncidentScreen(
                         )
                     },
                     singleLine =
-                        true
+                        true,
+                    enabled =
+                        !createInProgress
                 )
 
                 OutlinedTextField(
@@ -109,8 +113,23 @@ fun CreateIncidentScreen(
                         )
                     },
                     singleLine =
-                        true
+                        true,
+                    enabled =
+                        !createInProgress
                 )
+
+                createError
+                    ?.let { error ->
+
+                        Text(
+                            text =
+                                error,
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyMedium
+                        )
+                    }
 
                 Button(
                     onClick = {
@@ -120,12 +139,17 @@ fun CreateIncidentScreen(
                         )
                     },
                     enabled =
-                        canCreate,
+                        canCreate &&
+                            !createInProgress,
                     modifier =
                         Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        "Create incident"
+                        if (createInProgress) {
+                            "Saving..."
+                        } else {
+                            "Create incident"
+                        }
                     )
                 }
             }

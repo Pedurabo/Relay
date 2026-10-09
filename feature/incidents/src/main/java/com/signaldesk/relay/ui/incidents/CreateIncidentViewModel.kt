@@ -9,6 +9,8 @@ import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.IncidentSeverity
 import java.util.UUID
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class CreateIncidentViewModel(
@@ -16,6 +18,11 @@ class CreateIncidentViewModel(
 ) : AndroidViewModel(application) {
 
 
+    val createInProgress =
+        MutableStateFlow(false)
+
+    val createError =
+        MutableStateFlow<String?>(null)
     fun createIncident(
         title: String,
         status: String,
@@ -63,29 +70,66 @@ class CreateIncidentViewModel(
                     .toString()
                     .uppercase()
 
+        if (createInProgress.value) {
+            return
+        }
+
+        createError.value =
+            null
+
+        createInProgress.value =
+            true
+
         viewModelScope.launch {
 
-            CreateIncidentCommandQueue.enqueue(
-                context =
-                    getApplication<Application>(),
-                commandId =
-                    commandId,
-                incidentId =
-                    incidentId,
-                title =
-                    normalizedTitle,
-                status =
-                    normalizedStatus,
-                severity =
-                    IncidentSeverity
-                        .MEDIUM
-                        .name,
-                ownerPrincipal =
-                    ownerPrincipal
-            )
+            try {
 
+                CreateIncidentCommandQueue.enqueue(
+                    context =
+                        getApplication<Application>(),
+                    commandId =
+                        commandId,
+                    incidentId =
+                        incidentId,
+                    title =
+                        normalizedTitle,
+                    status =
+                        normalizedStatus,
+                    severity =
+                        IncidentSeverity
+                            .MEDIUM
+                            .name,
+                    ownerPrincipal =
+                        ownerPrincipal
+                )
+
+            } catch (
+                error: CancellationException
+            ) {
+                throw error
+
+            } catch (
+                error: Exception
+            ) {
+
+                createError.value =
+                    "Unable to save incident. Try again."
+
+                createInProgress.value =
+                    false
+
+                return@launch
+            }
+
+            /*
+             * Persistence succeeded. The operator's intent is now
+             * durable before delivery is requested.
+             */
             CreateIncidentOutboxCoordinator
                 .kick()
+
+            createInProgress.value =
+                false
 
             onCreated()
         }
