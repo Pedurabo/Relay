@@ -143,7 +143,7 @@ class IncidentDetailTimelineCardTest {
 
         composeRule
             .onNodeWithContentDescription(
-                "Timeline update by You, sending"
+                "Timeline update by You, waiting to sync"
             )
             .assertExists()
 

@@ -591,7 +591,7 @@ private fun TimelineEntryItem(
         ) {
 
             DeliveryState.PENDING ->
-                "sending"
+                "waiting to sync"
 
             DeliveryState.SENT ->
                 "delivered"
@@ -670,7 +670,7 @@ private fun TimelineEntryItem(
 
                     Text(
                         text =
-                            "Sending...",
+                            "Waiting to sync",
                         style =
                             MaterialTheme
                                 .typography
