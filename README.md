@@ -206,6 +206,68 @@ On macOS/Linux:
 adb shell am start -n com.signaldesk.relay/.MainActivity
 ```
 
+## Backend endpoint configuration
+
+Relay resolves its HTTP and WebSocket backend endpoints from Gradle properties or environment variables.
+
+### Debug builds
+
+Debug builds default to the local development backend:
+
+- HTTP: `http://127.0.0.1:9000`
+- WebSocket: `ws://127.0.0.1:9000`
+
+When using a physical Android device, expose the host backend to the device with:
+
+```bash
+adb reverse tcp:9000 tcp:9000
+```
+
+The debug manifest permits cleartext HTTP so the local backend can be used during development.
+
+The defaults can be overridden with Gradle properties.
+
+On Windows PowerShell:
+
+```powershell
+.\gradlew.bat assembleDebug `
+    -PrelayHttpBaseUrl=https://example.test `
+    -PrelayWebSocketUrl=wss://example.test
+```
+
+Or with environment variables:
+
+```powershell
+$env:RELAY_HTTP_BASE_URL = "https://example.test"
+$env:RELAY_WEBSOCKET_URL = "wss://example.test"
+
+.\gradlew.bat assembleDebug
+```
+
+### Release builds
+
+Release builds do not fall back to localhost. Both backend endpoints must be configured explicitly.
+
+Supported Gradle properties:
+
+- `relayHttpBaseUrl`
+- `relayWebSocketUrl`
+
+Supported environment variables:
+
+- `RELAY_HTTP_BASE_URL`
+- `RELAY_WEBSOCKET_URL`
+
+Example release build on Windows PowerShell:
+
+```powershell
+$env:RELAY_HTTP_BASE_URL = "https://relay.example.com"
+$env:RELAY_WEBSOCKET_URL = "wss://relay.example.com"
+
+.\gradlew.bat assembleRelease
+```
+
+A release build fails during Gradle configuration when either endpoint is missing or points to `localhost` or `127.0.0.1`.
 ## Current status
 
 Relay is a feature-complete engineering portfolio project focused on resilient realtime Android architecture and failure recovery. The repository includes durable mutation delivery, SQLite-backed backend persistence, authentication and authorization, optional Firebase push support, lifecycle hardening, observability, and extensive reliability testing. It should not be interpreted as a production-hosted service or Play Store release; production deployment, signing, secrets management, operational monitoring, and store publishing remain outside the current repository scope.
