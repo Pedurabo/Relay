@@ -155,7 +155,7 @@ class IncidentDetailTimelineCardTest {
 
         composeRule
             .onNodeWithText(
-                "Sending..."
+                "Waiting to sync"
             )
             .assertExists()
     }

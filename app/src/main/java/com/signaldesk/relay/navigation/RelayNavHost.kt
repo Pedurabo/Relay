@@ -216,6 +216,21 @@ fun RelayNavHost(
             val timeline by
                 viewModel.timeline.collectAsState()
 
+            val timelinePostInProgress by
+                viewModel
+                    .timelinePostInProgress
+                    .collectAsState()
+
+            val timelinePostError by
+                viewModel
+                    .timelinePostError
+                    .collectAsState()
+
+            val timelinePostSaved by
+                viewModel
+                    .timelinePostSaved
+                    .collectAsState()
+
             val optimisticStatus =
                 viewModel
                     .optimisticStatus
@@ -316,6 +331,14 @@ fun RelayNavHost(
                 },
                 incident = incident,
                 timeline = timeline,
+                timelinePostInProgress =
+                    timelinePostInProgress,
+                timelinePostError =
+                    timelinePostError,
+                timelinePostSaved =
+                    timelinePostSaved,
+                onTimelinePostSavedConsumed =
+                    viewModel::consumeTimelinePostSaved,
                 onPostUpdate =
                     viewModel::postUpdate,
                 onRetry =

@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,10 @@ fun IncidentDetailScreen(
     incident: Incident?,
     timeline: List<TimelineEntry>,
     onPostUpdate: (String) -> Unit,
+    timelinePostInProgress: Boolean = false,
+    timelinePostError: String? = null,
+    timelinePostSaved: Boolean = false,
+    onTimelinePostSavedConsumed: () -> Unit = {},
     onRetry: (TimelineEntry) -> Unit,
     optimisticStatus: String? = null,
     statusUpdateInProgress: Boolean = false,
@@ -56,6 +61,17 @@ fun IncidentDetailScreen(
         remember {
             mutableStateOf("")
         }
+
+    LaunchedEffect(
+        timelinePostSaved
+    ) {
+        if (timelinePostSaved) {
+            message =
+                ""
+
+            onTimelinePostSavedConsumed()
+        }
+    }
 
     if (incident == null) {
         Column(
@@ -91,19 +107,17 @@ fun IncidentDetailScreen(
             UpdateComposer(
                 message =
                     message,
+                posting =
+                    timelinePostInProgress,
+                error =
+                    timelinePostError,
                 onMessageChange = {
                     message =
                         it
                 },
                 onPostUpdate = {
-                    val update =
-                        message.trim()
-
-                    message =
-                        ""
-
                     onPostUpdate(
-                        update
+                        message.trim()
                     )
                 }
             )
@@ -178,6 +192,8 @@ fun IncidentDetailScreen(
 @Composable
 private fun UpdateComposer(
     message: String,
+    posting: Boolean,
+    error: String?,
     onMessageChange: (String) -> Unit,
     onPostUpdate: () -> Unit
 ) {
@@ -221,19 +237,38 @@ private fun UpdateComposer(
                     Text(
                         "What changed?"
                     )
-                }
+                },
+                enabled =
+                    !posting
             )
+
+            error
+                ?.let { errorMessage ->
+                    Text(
+                        text =
+                            errorMessage,
+                        style =
+                            MaterialTheme
+                                .typography
+                                .bodyMedium
+                    )
+                }
 
             Button(
                 enabled =
-                    message.isNotBlank(),
+                    message.isNotBlank() &&
+                        !posting,
                 onClick =
                     onPostUpdate,
                 modifier =
                     Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Post update"
+                    if (posting) {
+                        "Saving..."
+                    } else {
+                        "Post update"
+                    }
                 )
             }
         }

@@ -43,6 +43,15 @@ class IncidentDetailViewModel(
             getApplication<Application>()
         )
     }
+    val timelinePostInProgress =
+        MutableStateFlow(false)
+
+    val timelinePostError =
+        MutableStateFlow<String?>(null)
+
+    val timelinePostSaved =
+        MutableStateFlow(false)
+
     val statusUpdateInProgress =
         MutableStateFlow(false)
 
@@ -103,33 +112,80 @@ class IncidentDetailViewModel(
     fun postUpdate(
         message: String
     ) {
-        if (message.isBlank()) {
+        val normalizedMessage =
+            message.trim()
+
+        if (
+            normalizedMessage.isBlank() ||
+            timelinePostInProgress.value
+        ) {
             return
         }
 
-        viewModelScope.launch {
-            val currentSession =
-                SessionManager
-                    .sessionState
-                    .value as?
-                    SessionState.SignedIn
-                    ?: return@launch
+        val currentSession =
+            SessionManager
+                .sessionState
+                .value as?
+                SessionState.SignedIn
+                ?: return
 
-            val pending =
+        timelinePostError.value =
+            null
+
+        timelinePostSaved.value =
+            false
+
+        timelinePostInProgress.value =
+            true
+
+        viewModelScope.launch {
+
+            try {
+
                 repository
                     .createPendingTimelineEntry(
                         incidentId =
                             incidentId,
                         message =
-                            message,
+                            normalizedMessage,
                         author =
                             "You",
                         ownerPrincipal =
                             currentSession.userId
                     )
+
+            } catch (
+                error: CancellationException
+            ) {
+                throw error
+
+            } catch (
+                error: Exception
+            ) {
+
+                timelinePostInProgress.value =
+                    false
+
+                timelinePostError.value =
+                    "Unable to save timeline update. Try again."
+
+                return@launch
+            }
+
+            timelinePostInProgress.value =
+                false
+
+            timelinePostSaved.value =
+                true
+
             TimelineOutboxCoordinator
                 .kick()
         }
+    }
+
+    fun consumeTimelinePostSaved() {
+        timelinePostSaved.value =
+            false
     }
 
     fun retry(
