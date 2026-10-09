@@ -43,6 +43,15 @@ class IncidentDetailViewModel(
             getApplication<Application>()
         )
     }
+    val timelineRetryInProgressEntryId =
+        MutableStateFlow<String?>(null)
+
+    val timelineRetryErrorEntryId =
+        MutableStateFlow<String?>(null)
+
+    val timelineRetryError =
+        MutableStateFlow<String?>(null)
+
     val timelinePostInProgress =
         MutableStateFlow(false)
 
@@ -191,6 +200,22 @@ class IncidentDetailViewModel(
     fun retry(
         entry: TimelineEntry
     ) {
+        if (
+            timelineRetryInProgressEntryId.value ==
+            entry.id
+        ) {
+            return
+        }
+
+        timelineRetryErrorEntryId.value =
+            null
+
+        timelineRetryError.value =
+            null
+
+        timelineRetryInProgressEntryId.value =
+            entry.id
+
         viewModelScope.launch {
 
             val ownerPrincipal =
@@ -198,7 +223,12 @@ class IncidentDetailViewModel(
                     .getTimelineEntryOwnerPrincipal(
                         entry.id
                     )
-                    ?: return@launch
+                    ?: run {
+                        timelineRetryInProgressEntryId.value =
+                            null
+
+                        return@launch
+                    }
 
             timelineDeliveryCredential(
                 SessionManager
@@ -206,22 +236,52 @@ class IncidentDetailViewModel(
                     .value,
                 ownerPrincipal
             )
-                ?: return@launch
+                ?: run {
+                    timelineRetryInProgressEntryId.value =
+                        null
+
+                    return@launch
+                }
 
             val markedPending =
-                repository
-                    .markTimelineEntryPending(
-                        entryId =
-                            entry.id,
-                        ownerPrincipal =
-                            ownerPrincipal
-                    )
+                try {
+
+                    repository
+                        .markTimelineEntryPending(
+                            entryId =
+                                entry.id,
+                            ownerPrincipal =
+                                ownerPrincipal
+                        )
+
+                } catch (
+                    error: CancellationException
+                ) {
+                    throw error
+
+                } catch (
+                    error: Exception
+                ) {
+                    false
+                }
 
             if (
                 !markedPending
             ) {
+                timelineRetryInProgressEntryId.value =
+                    null
+
+                timelineRetryErrorEntryId.value =
+                    entry.id
+
+                timelineRetryError.value =
+                    "Unable to retry timeline update. Try again."
+
                 return@launch
             }
+
+            timelineRetryInProgressEntryId.value =
+                null
 
             TimelineOutboxCoordinator
                 .kick()

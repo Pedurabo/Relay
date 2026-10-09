@@ -43,6 +43,9 @@ fun IncidentDetailScreen(
     timelinePostSaved: Boolean = false,
     onTimelinePostSavedConsumed: () -> Unit = {},
     onRetry: (TimelineEntry) -> Unit,
+    timelineRetryInProgressEntryId: String? = null,
+    timelineRetryErrorEntryId: String? = null,
+    timelineRetryError: String? = null,
     optimisticStatus: String? = null,
     statusUpdateInProgress: Boolean = false,
     statusUpdateMessage: String? = null,
@@ -182,8 +185,19 @@ fun IncidentDetailScreen(
             }
         ) { entry ->
             TimelineEntryItem(
-                entry = entry,
-                onRetry = onRetry
+                entry =
+                    entry,
+                retrying =
+                    timelineRetryInProgressEntryId ==
+                        entry.id,
+                retryError =
+                    timelineRetryError
+                        ?.takeIf {
+                            timelineRetryErrorEntryId ==
+                                entry.id
+                        },
+                onRetry =
+                    onRetry
             )
         }
     }
@@ -617,6 +631,8 @@ private fun SeveritySelector(
 @Composable
 private fun TimelineEntryItem(
     entry: TimelineEntry,
+    retrying: Boolean,
+    retryError: String?,
     onRetry: (TimelineEntry) -> Unit
 ) {
 
@@ -743,7 +759,21 @@ private fun TimelineEntryItem(
                                     .labelMedium
                         )
 
+                        retryError
+                            ?.let { error ->
+                                Text(
+                                    text =
+                                        error,
+                                    style =
+                                        MaterialTheme
+                                            .typography
+                                            .bodyMedium
+                                )
+                            }
+
                         Button(
+                            enabled =
+                                !retrying,
                             onClick = {
                                 onRetry(
                                     entry
@@ -751,7 +781,11 @@ private fun TimelineEntryItem(
                             }
                         ) {
                             Text(
-                                "Retry"
+                                if (retrying) {
+                                    "Retrying..."
+                                } else {
+                                    "Retry"
+                                }
                             )
                         }
                     }

@@ -216,6 +216,21 @@ fun RelayNavHost(
             val timeline by
                 viewModel.timeline.collectAsState()
 
+            val timelineRetryInProgressEntryId by
+                viewModel
+                    .timelineRetryInProgressEntryId
+                    .collectAsState()
+
+            val timelineRetryErrorEntryId by
+                viewModel
+                    .timelineRetryErrorEntryId
+                    .collectAsState()
+
+            val timelineRetryError by
+                viewModel
+                    .timelineRetryError
+                    .collectAsState()
+
             val timelinePostInProgress by
                 viewModel
                     .timelinePostInProgress
@@ -341,6 +356,12 @@ fun RelayNavHost(
                     viewModel::consumeTimelinePostSaved,
                 onPostUpdate =
                     viewModel::postUpdate,
+                timelineRetryInProgressEntryId =
+                    timelineRetryInProgressEntryId,
+                timelineRetryErrorEntryId =
+                    timelineRetryErrorEntryId,
+                timelineRetryError =
+                    timelineRetryError,
                 onRetry =
                     viewModel::retry
             )

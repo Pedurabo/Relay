@@ -159,4 +159,60 @@ class IncidentDetailTimelineCardTest {
             )
             .assertExists()
     }
+
+    @Test
+    fun retryPersistenceFailureShowsRetryableError() {
+
+        composeRule.setContent {
+
+            IncidentDetailScreen(
+                incident =
+                    Incident(
+                        id =
+                            "INC-UI-RETRY-FAILURE",
+                        title =
+                            "Retry persistence UX",
+                        status =
+                            "Active",
+                        severity =
+                            IncidentSeverity.HIGH
+                    ),
+                timeline =
+                    listOf(
+                        TimelineEntry(
+                            id =
+                                "ENTRY-RETRY-FAILURE",
+                            incidentId =
+                                "INC-UI-RETRY-FAILURE",
+                            message =
+                                "Retry me",
+                            author =
+                                "You",
+                            occurredAt =
+                                3_000L,
+                            deliveryState =
+                                DeliveryState.FAILED
+                        )
+                    ),
+                timelineRetryErrorEntryId =
+                    "ENTRY-RETRY-FAILURE",
+                timelineRetryError =
+                    "Unable to retry timeline update. Try again.",
+                onPostUpdate = {},
+                onRetry = {}
+            )
+        }
+
+        composeRule
+            .onNodeWithText(
+                "Unable to retry timeline update. Try again."
+            )
+            .assertExists()
+
+        composeRule
+            .onNodeWithText(
+                "Retry"
+            )
+            .assertExists()
+    }
 }
