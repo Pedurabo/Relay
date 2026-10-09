@@ -32,27 +32,6 @@ android {
         buildConfigField("String", "FIREBASE_PROJECT_ID", "\"$firebaseProjectId\"")
         buildConfigField("String", "FIREBASE_API_KEY", "\"$firebaseApiKey\"")
         buildConfigField("String", "FIREBASE_SENDER_ID", "\"$firebaseSenderId\"")
-        val relayHttpBaseUrl =
-            providers.gradleProperty("relayHttpBaseUrl")
-                .orElse(System.getenv("RELAY_HTTP_BASE_URL") ?: "http://127.0.0.1:9000")
-                .get()
-
-        val relayWebSocketUrl =
-            providers.gradleProperty("relayWebSocketUrl")
-                .orElse(System.getenv("RELAY_WEBSOCKET_URL") ?: "ws://127.0.0.1:9000")
-                .get()
-
-        buildConfigField(
-            "String",
-            "RELAY_HTTP_BASE_URL",
-            "\"$relayHttpBaseUrl\""
-        )
-
-        buildConfigField(
-            "String",
-            "RELAY_WEBSOCKET_URL",
-            "\"$relayWebSocketUrl\""
-        )
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -62,10 +41,127 @@ android {
     }
 
     buildTypes {
+        debug {
+            val relayHttpBaseUrl =
+                providers.gradleProperty("relayHttpBaseUrl")
+                    .orElse(
+                        providers.environmentVariable(
+                            "RELAY_HTTP_BASE_URL"
+                        )
+                    )
+                    .orElse(
+                        "http://127.0.0.1:9000"
+                    )
+                    .get()
+
+            val relayWebSocketUrl =
+                providers.gradleProperty("relayWebSocketUrl")
+                    .orElse(
+                        providers.environmentVariable(
+                            "RELAY_WEBSOCKET_URL"
+                        )
+                    )
+                    .orElse(
+                        "ws://127.0.0.1:9000"
+                    )
+                    .get()
+
+            buildConfigField(
+                "String",
+                "RELAY_HTTP_BASE_URL",
+                "\"$relayHttpBaseUrl\""
+            )
+
+            buildConfigField(
+                "String",
+                "RELAY_WEBSOCKET_URL",
+                "\"$relayWebSocketUrl\""
+            )
+        }
+
         release {
+            val relayHttpBaseUrl =
+                providers.gradleProperty("relayHttpBaseUrl")
+                    .orElse(
+                        providers.environmentVariable(
+                            "RELAY_HTTP_BASE_URL"
+                        )
+                    )
+                    .orNull
+
+            val relayWebSocketUrl =
+                providers.gradleProperty("relayWebSocketUrl")
+                    .orElse(
+                        providers.environmentVariable(
+                            "RELAY_WEBSOCKET_URL"
+                        )
+                    )
+                    .orNull
+
+            val releaseRequested =
+                gradle.startParameter.taskNames.any {
+                    it.contains(
+                        "release",
+                        ignoreCase = true
+                    )
+                }
+
+            if (releaseRequested) {
+                require(
+                    !relayHttpBaseUrl.isNullOrBlank()
+                ) {
+                    "Release requires relayHttpBaseUrl or RELAY_HTTP_BASE_URL."
+                }
+
+                require(
+                    !relayWebSocketUrl.isNullOrBlank()
+                ) {
+                    "Release requires relayWebSocketUrl or RELAY_WEBSOCKET_URL."
+                }
+
+                require(
+                    !relayHttpBaseUrl.contains(
+                        "127.0.0.1"
+                    ) &&
+                        !relayHttpBaseUrl.contains(
+                            "localhost",
+                            ignoreCase = true
+                        )
+                ) {
+                    "Release HTTP endpoint must not use localhost."
+                }
+
+                require(
+                    !relayWebSocketUrl.contains(
+                        "127.0.0.1"
+                    ) &&
+                        !relayWebSocketUrl.contains(
+                            "localhost",
+                            ignoreCase = true
+                        )
+                ) {
+                    "Release WebSocket endpoint must not use localhost."
+                }
+            }
+
+            buildConfigField(
+                "String",
+                "RELAY_HTTP_BASE_URL",
+                "\"${relayHttpBaseUrl.orEmpty()}\""
+            )
+
+            buildConfigField(
+                "String",
+                "RELAY_WEBSOCKET_URL",
+                "\"${relayWebSocketUrl.orEmpty()}\""
+            )
+
             isMinifyEnabled = false
+
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
+                getDefaultProguardFile(
+                    "proguard-android-optimize.txt"
+                ),
                 "proguard-rules.pro"
             )
         }
