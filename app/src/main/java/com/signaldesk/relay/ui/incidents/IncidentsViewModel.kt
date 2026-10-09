@@ -11,7 +11,9 @@ import com.signaldesk.relay.data.realtime.IncidentEventProcessor
 import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
 import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
 import com.signaldesk.relay.data.repository.IncidentRepository
+import com.signaldesk.relay.data.session.AuthLoginFailure
 import com.signaldesk.relay.data.session.AuthSessionClient
+import com.signaldesk.relay.data.session.classifyAuthLoginFailure
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
@@ -233,13 +235,32 @@ class IncidentsViewModel(
                     signInError.value =
                         null
                 }
-                .onFailure {
+                .onFailure { error ->
 
                     SessionManager
                         .signOut()
 
                     signInError.value =
-                        "Sign-in failed. Check your credentials."
+                        when (
+                            classifyAuthLoginFailure(
+                                error
+                            )
+                        ) {
+                            AuthLoginFailure.INVALID_CREDENTIALS ->
+                                "Incorrect username or password."
+
+                            AuthLoginFailure.RATE_LIMITED ->
+                                "Too many sign-in attempts. Try again later."
+
+                            AuthLoginFailure.NETWORK_UNAVAILABLE ->
+                                "Unable to reach Relay. Check your connection."
+
+                            AuthLoginFailure.SERVER_ERROR ->
+                                "Relay is temporarily unavailable. Try again later."
+
+                            AuthLoginFailure.UNEXPECTED ->
+                                "Sign-in failed. Try again."
+                        }
                 }
 
             signInInProgress.value =
