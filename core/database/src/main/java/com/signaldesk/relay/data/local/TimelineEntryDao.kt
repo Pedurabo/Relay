@@ -59,28 +59,39 @@ interface TimelineEntryDao {
         entry: TimelineEntryEntity
     )
 
+
     @Query(
         """
         UPDATE timeline_entries
-        SET deliveryState = :deliveryState
+        SET deliveryState = 'PENDING'
         WHERE entryId = :entryId
           AND ownerPrincipal = :ownerPrincipal
+          AND deliveryState = 'FAILED'
         """
     )
-    suspend fun updateDeliveryState(
+    suspend fun retryFailed(
         entryId: String,
-        ownerPrincipal: String,
-        deliveryState: String
+        ownerPrincipal: String
     ): Int
 
     @Query(
         """
         UPDATE timeline_entries
-        SET incidentId = :incidentId,
-            message = :message,
-            author = :author,
-            occurredAt = :occurredAt,
-            deliveryState = 'SENT'
+        SET deliveryState = 'FAILED'
+        WHERE entryId = :entryId
+          AND ownerPrincipal = :ownerPrincipal
+          AND deliveryState = 'PENDING'
+        """
+    )
+    suspend fun failPending(
+        entryId: String,
+        ownerPrincipal: String
+    ): Int
+
+    @Query(
+        """
+        UPDATE timeline_entries
+        SET deliveryState = 'SENT'
         WHERE entryId = :entryId
           AND ownerPrincipal = :ownerPrincipal
           AND deliveryState = 'PENDING'
@@ -88,11 +99,7 @@ interface TimelineEntryDao {
     )
     suspend fun acknowledgePending(
         entryId: String,
-        ownerPrincipal: String,
-        incidentId: String,
-        message: String,
-        author: String,
-        occurredAt: Long
+        ownerPrincipal: String
     ): Int
     @Query(
         """
@@ -116,3 +123,4 @@ interface TimelineEntryDao {
     fun observeLatestForAllIncidents():
         Flow<List<TimelineEntryEntity>>
 }
+

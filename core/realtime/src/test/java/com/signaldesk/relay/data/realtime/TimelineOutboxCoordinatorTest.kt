@@ -1,4 +1,8 @@
 package com.signaldesk.relay.data.realtime
+import com.signaldesk.relay.data.session.SessionState
+import kotlinx.coroutines.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
@@ -533,6 +537,172 @@ class TimelineOutboxCoordinatorTest {
                 com.signaldesk.relay.data.session.SessionState.SignedOut,
                 credential
             )
+        )
+    }
+    @Test
+    fun staleCredentialAfterSendCannotPersistAcknowledgement() =
+        runBlocking {
+
+            val credential =
+                TimelineDeliveryCredential(
+                    ownerPrincipal =
+                        "operator-a",
+                    accessToken =
+                        "token-a"
+                )
+
+            var session:
+                SessionState =
+                SessionState.SignedIn(
+                    userId =
+                        "operator-a",
+                    userName =
+                        "Operator A",
+                    accessToken =
+                        "token-a",
+                    refreshToken =
+                        "refresh-a",
+                    accessTokenExpiresAt =
+                        10_000L
+                )
+
+            val sendStarted =
+                CompletableDeferred<Unit>()
+
+            val allowSendToFinish =
+                CompletableDeferred<Unit>()
+
+            var acknowledgementPersisted =
+                false
+
+            val sendAttempt =
+                async(
+                    Dispatchers.Default
+                ) {
+
+                    sendStarted.complete(
+                        Unit
+                    )
+
+                    allowSendToFinish.await()
+
+                    "ACK"
+                }
+
+            sendStarted.await()
+
+            /*
+             * Same principal, refreshed token.
+             * The original credential must now be stale.
+             */
+            session =
+                SessionState.SignedIn(
+                    userId =
+                        "operator-a",
+                    userName =
+                        "Operator A",
+                    accessToken =
+                        "token-b",
+                    refreshToken =
+                        "refresh-b",
+                    accessTokenExpiresAt =
+                        20_000L
+                )
+
+            allowSendToFinish.complete(
+                Unit
+            )
+
+            val acknowledgement =
+                sendAttempt.await()
+
+            if (
+                isTimelineDeliverySessionCurrent(
+                    session,
+                    credential.ownerPrincipal,
+                    credential.accessToken
+                )
+            ) {
+                acknowledgementPersisted =
+                    acknowledgement ==
+                        "ACK"
+            }
+
+            assertEquals(
+                false,
+                acknowledgementPersisted
+            )
+        }
+
+    @Test
+    fun transportTimeoutIsRetryableButJobCancellationEscapes() =
+        runBlocking {
+
+            var timeout:
+                CancellationException? =
+                null
+
+            try {
+
+                kotlinx.coroutines.withTimeout(
+                    1L
+                ) {
+                    kotlinx.coroutines.delay(
+                        50L
+                    )
+                }
+
+            } catch (
+                error:
+                    CancellationException
+            ) {
+                timeout =
+                    error
+            }
+
+            assertTrue(
+                timeout != null
+            )
+
+            assertEquals(
+                false,
+                shouldRethrowTimelineCancellation(
+                    timeout!!
+                )
+            )
+
+            assertTrue(
+                shouldRethrowTimelineCancellation(
+                    CancellationException(
+                        "job cancelled"
+                    )
+                )
+            )
+        }
+
+    @Test
+    fun nonPendingTimelineEntriesAreRemovedFromRetryState() {
+
+        val stale =
+            staleTimelineRetryEntryIds(
+                retryEntryIds =
+                    setOf(
+                        "ENTRY-A",
+                        "ENTRY-B",
+                        "ENTRY-C"
+                    ),
+                pendingEntryIds =
+                    setOf(
+                        "ENTRY-B"
+                    )
+            )
+
+        assertEquals(
+            setOf(
+                "ENTRY-A",
+                "ENTRY-C"
+            ),
+            stale
         )
     }
 }

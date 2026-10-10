@@ -10,6 +10,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [
         
+        DeferredRealtimeEventEntity::class,
+        DeferredIncidentUpdateEntity::class,
         PendingSeverityCommand::class,
         PendingStatusCommand::class,
         PendingCreateIncidentCommand::class,
@@ -18,8 +20,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TimelineEntryEntity::class,
         IncidentSequenceGapEntity::class
     ],
-    version = 12,
-    exportSchema = false
+    version = 14,
+    exportSchema = true
 )
 abstract class RelayDatabase :
     RoomDatabase() {
@@ -29,6 +31,12 @@ abstract class RelayDatabase :
 
     abstract fun processedEventDao():
         ProcessedEventDao
+
+    abstract fun deferredRealtimeEventDao():
+        DeferredRealtimeEventDao
+
+    abstract fun deferredIncidentUpdateDao():
+        DeferredIncidentUpdateDao
 
     abstract fun timelineEntryDao():
         TimelineEntryDao
@@ -225,8 +233,10 @@ companion object {
                                 MIGRATION_8_9,
                                 MIGRATION_9_10,
                                 MIGRATION_10_11,
-                                MIGRATION_11_12
-                            )
+                                MIGRATION_11_12,
+                                MIGRATION_12_13,
+                                  MIGRATION_13_14
+                              )
                             .build()
                             .also {
                                 INSTANCE = it
@@ -367,6 +377,77 @@ companion object {
                             deliveryState TEXT NOT NULL,
                             PRIMARY KEY(commandId)
                         )
+                        """.trimIndent()
+                    )
+                }
+            }
+        val MIGRATION_12_13 =
+            object : Migration(
+                12,
+                13
+            ) {
+
+                override fun migrate(
+                    db:
+                        SupportSQLiteDatabase
+                ) {
+
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS deferred_realtime_events (
+                            eventId TEXT NOT NULL,
+                            incidentId TEXT NOT NULL,
+                            entryId TEXT NOT NULL,
+                            message TEXT NOT NULL,
+                            author TEXT NOT NULL,
+                            occurredAt INTEGER NOT NULL,
+                            deferredAt INTEGER NOT NULL,
+                            PRIMARY KEY(eventId)
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_deferred_realtime_events_incidentId
+                        ON deferred_realtime_events(incidentId)
+                        """.trimIndent()
+                    )
+                }
+            }
+        val MIGRATION_13_14 =
+            object : Migration(
+                13,
+                14
+            ) {
+
+                override fun migrate(
+                    db:
+                        SupportSQLiteDatabase
+                ) {
+
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS deferred_incident_updates (
+                            eventId TEXT NOT NULL,
+                            incidentId TEXT NOT NULL,
+                            occurredAt INTEGER NOT NULL,
+                            sequence INTEGER NOT NULL,
+                            title TEXT,
+                            status TEXT,
+                            severity TEXT,
+                            deferredAt INTEGER NOT NULL,
+                            PRIMARY KEY(eventId)
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_deferred_incident_updates_incidentId
+                        ON deferred_incident_updates(incidentId)
                         """.trimIndent()
                     )
                 }

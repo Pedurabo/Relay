@@ -2,7 +2,9 @@ package com.signaldesk.relay
 
 import android.app.Application
 import com.signaldesk.relay.appstate.AppVisibilityTracker
+import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.realtime.CreateIncidentOutboxCoordinator
+import com.signaldesk.relay.data.realtime.IncidentEventProcessor
 import com.signaldesk.relay.data.realtime.RealtimeEndpointConfig
 import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
 import com.signaldesk.relay.data.realtime.StatusOutboxCoordinator
@@ -12,9 +14,19 @@ import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.notifications.FirebasePushInitializer
 import com.signaldesk.relay.notifications.PushRegistrationCoordinator
 import com.signaldesk.relay.notifications.PushTokenStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class RelayApplication :
     Application() {
+
+    private val applicationScope =
+        CoroutineScope(
+            SupervisorJob() +
+                Dispatchers.IO
+        )
 
     override fun onCreate() {
         super.onCreate()
@@ -28,6 +40,23 @@ class RelayApplication :
             .initialize(
                 this
             )
+
+        applicationScope.launch {
+
+            val processor =
+                IncidentEventProcessor(
+                    RelayDatabase
+                        .getInstance(
+                            this@RelayApplication
+                        )
+                )
+
+            processor
+                .recoverDeferredTimelineEvents()
+
+            processor
+                .recoverDeferredIncidentUpdates()
+        }
 
         SessionRefreshCoordinator
             .configure(

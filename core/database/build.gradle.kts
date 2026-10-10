@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp.plugin)
+    alias(libs.plugins.androidx.room)
 }
 
 android {
@@ -16,7 +17,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-}
+
+    room {
+        schemaDirectory(
+            "$projectDir/schemas"
+        )
+    }}
 
 dependencies {
     implementation(project(":core:model"))
@@ -30,5 +36,6 @@ dependencies {
     testImplementation(libs.junit)
 
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.espresso.core)
 }

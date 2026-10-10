@@ -16,9 +16,16 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+
+internal fun shouldRethrowTimelineCancellation(
+    error: CancellationException
+): Boolean =
+    error !is TimeoutCancellationException
+
 
 internal suspend fun runTimelineOutboxDrainSafely(
     isActive: () -> Boolean,
@@ -46,6 +53,14 @@ internal suspend fun runTimelineOutboxDrainSafely(
         }
     }
 }
+
+internal fun staleTimelineRetryEntryIds(
+    retryEntryIds: Set<String>,
+    pendingEntryIds: Set<String>
+): Set<String> =
+    retryEntryIds -
+        pendingEntryIds
+
 
 internal fun shouldClearTimelineRetryState(
     sessionState: SessionState,
@@ -351,6 +366,29 @@ object TimelineOutboxCoordinator {
                         credential.ownerPrincipal
                     )
 
+            val pendingEntryIds =
+                pending
+                    .map {
+                        it.entryId
+                    }
+                    .toSet()
+
+            staleTimelineRetryEntryIds(
+                retryEntryIds =
+                    retryStates
+                        .keys
+                        .toSet(),
+                pendingEntryIds =
+                    pendingEntryIds
+            )
+                .forEach {
+                    staleEntryId ->
+
+                    retryStates.remove(
+                        staleEntryId
+                    )
+                }
+
             if (
                 pending.isEmpty()
             ) {
@@ -432,21 +470,84 @@ object TimelineOutboxCoordinator {
                 val acknowledgement =
                     try {
 
-                        withTimeout(
-                            10_000L
-                        ) {
+                        sendTimelineEntryIfCurrent(
+                            entryId =
+                                entity.entryId,
 
-                            sender.send(
-                                entity.toDomain(),
-                                credential.accessToken
-                            )
-                        }
+                            loadCurrent = {
+
+                                timelineDao
+                                    .getById(
+                                        entity.entryId
+                                    )
+                            },
+
+                            isEligible = {
+                                current ->
+
+                                current.ownerPrincipal ==
+                                    credential.ownerPrincipal &&
+                                current.deliveryState ==
+                                    DeliveryState.PENDING.name &&
+                                isTimelineDeliverySessionCurrent(
+                                    SessionManager
+                                        .sessionState
+                                        .value,
+                                    credential.ownerPrincipal,
+                                    credential.accessToken
+                                )
+                            },
+
+                            send = {
+                                current ->
+
+                                withTimeout(
+                                    10_000L
+                                ) {
+
+                                    sender.send(
+                                        current.toDomain(),
+                                        credential.accessToken
+                                    )
+                                }
+                            }
+                        )
 
                     } catch (
                         error:
                             CancellationException
                     ) {
-                        throw error
+
+                        if (
+                            shouldRethrowTimelineCancellation(
+                                error
+                            )
+                        ) {
+                            throw error
+                        }
+
+                        if (
+                            !isTimelineDeliverySessionCurrent(
+                                SessionManager
+                                    .sessionState
+                                    .value,
+                                credential.ownerPrincipal,
+                                credential.accessToken
+                            )
+                        ) {
+                            return
+                        }
+
+                        scheduleTransportRetry(
+                            entity.entryId
+                        )
+
+                        Log.i(
+                            TAG,
+                            "TIMELINE_OUTBOX_RETRY|entryId=${entity.entryId}|reason=timeout"
+                        )
+
+                        continue
 
                     } catch (
                         error:
@@ -472,13 +573,11 @@ object TimelineOutboxCoordinator {
                         ) {
 
                             timelineDao
-                                .updateDeliveryState(
+                                .failPending(
                                     entryId =
                                         entity.entryId,
                                     ownerPrincipal =
-                                        credential.ownerPrincipal,
-                                    deliveryState =
-                                        DeliveryState.FAILED.name
+                                        credential.ownerPrincipal
                                 )
 
                             retryStates.remove(
@@ -505,21 +604,57 @@ object TimelineOutboxCoordinator {
                         continue
                     }
 
+                if (
+                    acknowledgement == null
+                ) {
+
+                    retryStates.remove(
+                        entity.entryId
+                    )
+
+                    if (
+                        !isTimelineDeliverySessionCurrent(
+                            SessionManager
+                                .sessionState
+                                .value,
+                            credential.ownerPrincipal,
+                            credential.accessToken
+                        )
+                    ) {
+                        return
+                    }
+
+                    Log.i(
+                        TAG,
+                        "TIMELINE_OUTBOX_SEND_SKIPPED|entryId=${entity.entryId}|reason=state_changed"
+                    )
+
+                    continue
+                }
+                if (
+                    !isTimelineDeliverySessionCurrent(
+                        SessionManager
+                            .sessionState
+                            .value,
+                        credential.ownerPrincipal,
+                        credential.accessToken
+                    )
+                ) {
+
+                    retryStates.remove(
+                        entity.entryId
+                    )
+
+                    return
+                }
+
                 val acknowledged =
                     timelineDao
                         .acknowledgePending(
                             entryId =
                                 acknowledgement.entryId,
                             ownerPrincipal =
-                                credential.ownerPrincipal,
-                            incidentId =
-                                acknowledgement.incidentId,
-                            message =
-                                acknowledgement.message,
-                            author =
-                                acknowledgement.author,
-                            occurredAt =
-                                acknowledgement.occurredAt
+                                credential.ownerPrincipal
                         )
 
                 if (

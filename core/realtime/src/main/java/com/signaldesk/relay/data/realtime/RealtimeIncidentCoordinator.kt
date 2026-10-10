@@ -430,100 +430,86 @@ class RealtimeIncidentCoordinator(
                     Job
                 >()
 
-            combine(
-                gapDao.observeAll(),
-                source.connectionState
+
+            collectRealtimeReplayInputs(
+                gaps =
+                    gapDao.observeAll(),
+                connectionState =
+                    source.connectionState
             ) { gaps, state ->
-                gaps to state
-            }.collect { result ->
+val replayReconciliation =
+                    calculateRealtimeReplayReconciliation(
+                        gapIncidentIds =
+                            gaps
+                                .map {
+                                    it.incidentId
+                                }
+                                .toSet(),
+                        registeredReplayIncidentIds =
+                            replayJobs
+                                .keys
+                                .toSet(),
+                        activeReplayIncidentIds =
+                            replayJobs
+                                .entries
+                                .filter {
+                                    it.value.isActive
+                                }
+                                .map {
+                                    it.key
+                                }
+                                .toSet(),
+                        state =
+                            state
+                    )
 
-                val gaps =
-                    result.first
+                val replayExecution =
+                    applyRealtimeReplayReconciliation(
+                        replayJobs =
+                            replayJobs,
+                        reconciliation =
+                            replayReconciliation
+                    )
 
-                val state =
-                    result.second
-
-                val activeIncidentIds =
-                    gaps
-                        .map {
-                            it.incidentId
-                        }
-                        .toSet()
-
-                replayJobs
-                    .keys
-                    .toList()
-                    .filter {
-                        it !in activeIncidentIds
-                    }
-                    .forEach {
-                        incidentId ->
-
-                        replayJobs
-                            .remove(
-                                incidentId
-                            )
-                            ?.let {
-                                replayJob ->
-
-                                Log.i(
-                                    TAG,
-                                    "REALTIME_REPLAY_STOPPED|incidentId=$incidentId|reason=gap_resolved"
-                                )
-
-                                stopRealtimeReplayJobs(
-                                    listOf(
-                                        replayJob
-                                    )
-                                )
-                            }
-                    }
-
-                if (
-                    state !=
-                    RealtimeConnectionState.Connected
-                ) {
-
-                    val replayJobsToStop =
-                        replayJobs
-                            .values
-                            .toList()
-
-                    replayJobs.clear()
-
-                    if (
-                        replayJobsToStop.isNotEmpty()
-                    ) {
+                replayExecution
+                    .resolvedIncidentIdsStopped
+                    .forEach { incidentId ->
 
                         Log.i(
                             TAG,
-                            "REALTIME_REPLAY_STOPPED|count=${replayJobsToStop.size}|reason=disconnected"
+                            "REALTIME_REPLAY_STOPPED|incidentId=$incidentId|reason=gap_resolved"
                         )
                     }
 
-                    stopRealtimeReplayJobs(
-                        replayJobsToStop
+                if (
+                    replayExecution
+                        .disconnectedReplayCount >
+                    0
+                ) {
+                    Log.i(
+                        TAG,
+                        "REALTIME_REPLAY_STOPPED|count=${replayExecution.disconnectedReplayCount}|reason=disconnected"
                     )
+                }
 
-                    return@collect
+                if (
+                    replayReconciliation
+                        .stopAllForDisconnect
+                ) {
+                    return@collectRealtimeReplayInputs
                 }
 
                 gaps.forEach {
                     gap ->
 
-                    val existingJob =
-                        replayJobs[
-                            gap.incidentId
-                        ]
 
                     if (
-                        existingJob?.isActive ==
-                        true
+                        gap.incidentId !in
+                        replayExecution.incidentIdsToStart
                     ) {
                         return@forEach
                     }
-
-                    launchRegisteredRealtimeReplayJob(
+launchRegisteredRealtimeReplayJob(
                         replayJobs =
                             replayJobs,
                         incidentId =

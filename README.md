@@ -1,111 +1,319 @@
 # Relay
 
-**Relay** is a real-time incident coordination Android application built to stay correct across unreliable networks, retries, process death, reconnects, and account changes.
+**Relay** is a realtime incident-coordination Android application engineered to remain correct across unreliable networks, reordered events, retries, reconnects, process death, and account changes.
 
-The project focuses on a hard mobile-systems problem: keeping local Room state, optimistic UI, outbound commands, and authoritative server events convergent without duplicate or lost operations.
+The project focuses on a difficult mobile-systems problem: keeping durable local Room state, optimistic operator actions, outbound commands, and authoritative realtime server events convergent without duplicate effects, lost work, stale ownership, or incorrect recovery.
 
 ## Highlights
 
-- Native Android UI with Kotlin and Jetpack Compose
-- Room-backed incident and timeline persistence
-- Real-time WebSocket incident updates
-- Ordered event processing with sequence-gap detection and replay
-- Authoritative incident creation, severity, status, and timeline mutations
-- Durable Room-backed outboxes for create, severity, status, and timeline operations
-- Atomic Room-backed delivery leases
-- Exponential retry backoff with queue fairness
-- Process-death recovery for stranded in-flight commands
-- Stable command IDs for idempotent retries
-- Session-bound outbox ownership and cross-account isolation
-- Background high-priority incident notifications
-- Physical-device validation on Android
+- Native Android application built with Kotlin and Jetpack Compose
+- Room-backed durable incident and timeline state
+- Processed-event persistence for idempotent realtime handling
+- Durable sequence-gap detection and replay
+- Deferred incident-update persistence
+- Deferred realtime/timeline event persistence
+- Process-death-safe recovery
+- Durable command outboxes
+- Stable command and event identities
+- Atomic delivery leases
+- Authoritative acknowledgement convergence
+- Generation-safe replay-job ownership
+- Explicit coroutine cancellation barriers
+- Bounded retry backoff
+- Cross-incident queue fairness
+- Session-bound command ownership
+- Cross-account isolation
+- Room database version 14 with exported schema history
+- Unit, migration, instrumentation, and physical-device reliability validation
 
 ## Architecture
 
-Relay separates local state, transport, delivery coordination, and presentation responsibilities.
+Relay separates durable local state, transport, realtime convergence, command delivery, and presentation responsibilities.
 
 ### Android client
 
 The Android application uses:
 
-- **Jetpack Compose** for UI
-- **Room** for durable local state
-- **Navigation Compose** for screen navigation
-- **Coroutines / Flow** for asynchronous state propagation
-- **OkHttp WebSockets** for real-time transport
+- Kotlin
+- Jetpack Compose
+- Room
+- Navigation Compose
+- Coroutines and Flow
+- OkHttp WebSockets
+- Material 3
+- Firebase integration
 
-The primary data model includes incidents, timeline entries, processed events, sequence gaps, and durable pending create, severity, and status commands.
+Core persisted state includes:
 
-### Realtime convergence
+- incidents,
+- timeline entries,
+- processed realtime events,
+- incident sequence gaps,
+- deferred incident updates,
+- deferred realtime events,
+- pending incident-creation commands,
+- pending severity commands,
+- pending status commands, and
+- durable timeline delivery state.
 
-Incoming incident events carry sequence information. Relay handles:
+## Realtime convergence
 
-- next-in-order events,
-- stale events,
-- duplicate events,
+Incoming realtime events can be:
+
+- next-in-order,
+- duplicate,
+- stale,
+- future events that reveal a sequence gap,
+- updates whose parent incident does not exist yet, or
+- authoritative timeline events racing local delivery.
+
+Relay does not simply discard events that cannot yet be applied.
+
+Instead, deferred events are stored durably and reconsidered when the local state becomes ready.
+
+### Deferred incident updates
+
+An incident update can arrive before its incident exists or before missing predecessor sequences have been replayed.
+
+Relay persists those events.
+
+Deferred updates are processed deterministically by:
+
+1. sequence,
+2. deferred timestamp,
+3. event ID.
+
+The same durable payload survives process death.
+
+For duplicate event IDs, the first persisted payload wins.
+
+### Durable sequence gaps
+
+When a future update reveals a sequence gap, Relay persists both:
+
+- the gap metadata, and
+- the event that exposed the gap.
+
+The event is not marked processed until it reaches a terminal outcome such as:
+
+- applied,
+- duplicate, or
+- intentionally ignored as stale.
+
+This prevents process death from losing the event that originally revealed missing history.
+
+Gap ranges shrink as missing predecessors arrive.
+
+## Replay architecture
+
+Reconnect replay has been decomposed into production seams instead of relying on a parallel lifecycle simulator.
+
+### RealtimeReplayInputCollector
+
+Combines:
+
+- durable sequence-gap state, and
+- realtime connection state.
+
+### RealtimeReplayReconciliation
+
+Calculates:
+
+- resolved incident replay owners that should stop,
+- whether all replay work must stop because the connection is unavailable, and
+- incident IDs that require new replay workers.
+
+### RealtimeReplayReconciliationExecution
+
+Applies reconciliation decisions to registered replay jobs.
+
+Resolved jobs are removed and stopped.
+
+Disconnect clears registered replay ownership and waits for cancellation to finish.
+
+### Registered replay ownership
+
+Replay jobs are registered before they start.
+
+Cleanup uses generation-safe conditional removal.
+
+An older coroutine therefore cannot remove a replacement replay owner during stale `finally` cleanup.
+
+### Cancellation barriers
+
+Disconnect and lifecycle teardown cancel replay jobs and then join them.
+
+Shutdown does not claim to be complete while cancelled jobs are still unwinding.
+
+### SequenceGapReplayWorker
+
+The replay worker reloads durable gap state on each attempt.
+
+That means the next replay request uses the current authoritative persisted range rather than stale bounds captured when the coroutine originally started.
+
+## Reconnect lifecycle consolidation
+
+The original large reconnect lifecycle simulator was retired after its behaviors were migrated into direct production-seam tests.
+
+Replay behavior is now tested through:
+
+- input collection,
+- reconciliation policy,
+- reconciliation execution,
+- job registration,
+- ownership generation,
+- cancellation barriers,
+- worker behavior, and
+- real stale-cleanup races.
+
+Covered scenarios include:
+
+- gap deletion,
+- gap reappearance,
+- replacement ownership,
+- repeated reconnect epochs,
+- offline membership mutation,
+- introduction of new gaps while disconnected,
+- stale cleanup after replacement,
+- disconnect during stale cleanup,
+- generation-safe multi-incident cleanup, and
+- current durable range usage after reconnect.
+
+## Durable command delivery
+
+Operator mutations are persisted before network delivery.
+
+Relay uses durable Room-backed command delivery for:
+
+- incident creation,
+- severity changes,
+- status changes, and
+- timeline messages.
+
+Each durable operation keeps a stable identity across retries and process restarts.
+
+The delivery coordinator claims eligible work atomically, sends it, waits for authoritative convergence, and retries when appropriate.
+
+## Delivery leases and process death
+
+Pending commands transition through durable delivery states.
+
+If the Android process dies while work is in flight, startup recovery returns abandoned work to an eligible state without generating a new command identity.
+
+The same command resumes.
+
+This prevents process death from creating duplicate logical operations.
+
+## Timeline convergence
+
+Timeline delivery is protected against local-send and authoritative-event races.
+
+The timeline delivery gate serializes work by stable timeline-entry identity.
+
+This supports scenarios where:
+
+- authoritative SENT arrives before the local send boundary,
+- an ACK arrives before the realtime broadcast,
+- the realtime broadcast arrives before a late ACK,
+- duplicate timeline events are received, or
+- incompatible authoritative data arrives for an existing entry ID.
+
+Only eligible pending state transitions to SENT.
+
+Authoritative state does not regress because of stale local completion.
+
+## Retry behavior and fairness
+
+Transient failures use bounded exponential retry.
+
+Queue processing is designed so one delayed command or incident does not unnecessarily block unrelated eligible work.
+
+Failure-isolation coverage includes:
+
+- unexpected outbox failures,
+- startup reset failures,
+- post-drain handoff failures,
+- replay failures,
+- gap-recovery failures,
+- cancellation escaping retry boundaries, and
+- stopping retries when the relevant coordinator is no longer active.
+
+## Account isolation
+
+Durable commands belong to the authenticated principal that created them.
+
+The coordinator:
+
+- loads work for the current owner,
+- claims work for that owner,
+- rechecks ownership before transport.
+
+A command created by User A cannot be sent while User B is authenticated.
+
+When User A returns, the original command can resume with the same stable ID.
+
+## Room database evolution
+
+Relay currently uses **Room database version 14** with schema export enabled.
+
+The project includes migration coverage for durable deferred realtime state.
+
+Migration validation includes Room-open tests so the schema is exercised through the actual Room database opening path.
+
+Historical schema files are treated as real engineering artifacts rather than reconstructed after the fact.
+
+## Proven reliability scenarios
+
+Relay has deterministic coverage for scenarios including:
+
+- duplicate realtime events,
+- stale realtime events,
 - sequence gaps,
-- replay of missing events, and
-- convergence after reconnect.
-
-This allows the app to recover from missing or reordered server traffic without duplicating timeline state.
-
-### Durable command delivery
-
-Operator mutations are persisted before network delivery. Relay uses durable Room-backed delivery for incident creation, severity updates, status updates, and timeline posts.
-
-Each pending command stores:
-
-- a stable command ID,
-- incident ID,
-- requested severity,
-- base severity,
-- authenticated owner principal,
-- creation time, and
-- delivery state.
-
-A process-scoped coordinator claims eligible commands atomically in Room, delivers them, waits for authoritative convergence, and retries when necessary.
-
-### Delivery leases and process death
-
-Pending commands move from `PENDING` to `IN_FLIGHT` through an atomic Room update.
-
-If the process dies while a command is in flight, Relay resets abandoned leases on the next process start and reclaims the same durable command instead of creating a new one.
-
-### Retry fairness
-
-Transport failures use bounded exponential backoff:
-
-`1s → 2s → 4s → 8s → 16s → 30s max`
-
-The queue is evaluated fairly, so one command in cooldown does not block eligible commands for other incidents.
-
-### Account isolation
-
-Durable commands are owned by the authenticated principal that created them.
-
-The coordinator only loads and claims commands for the currently signed-in owner and checks that ownership again before transport. A command created by User A cannot be sent while User B is authenticated. If User A later returns, the original command ID becomes eligible again and resumes delivery.
-
-### Reactive pending-state monitoring
-
-Pending status and severity commands are observed through Room `Flow` invalidation rather than periodic database polling.
-
-## Proven failure scenarios
-
-Relay has been exercised against deterministic failure-mode tests including:
-
-- duplicate and stale realtime events,
-- missing sequence ranges and active replay,
-- reconnect convergence,
-- offline timeline posting and retry,
-- hostile out-of-order severity updates,
-- ambiguous server commit after lost acknowledgement,
-- process death with a stranded delivery lease,
-- multi-command recovery,
-- retry fairness under prolonged transport failure,
+- missing predecessor recovery,
+- gap shrinking,
+- gap expansion,
+- stable upper and lower gap bounds,
+- multiple future updates,
+- process death during unresolved gaps,
+- startup recovery of complete deferred chains,
+- startup recovery of blocked deferred chains,
+- cross-incident recovery isolation,
+- concurrent startup and live recovery,
+- incident updates arriving before parent creation,
+- stale incident creation,
+- sequenced incident creation,
+- replay after process death,
+- same event ID with conflicting payloads,
+- first durable payload preservation,
+- offline timeline posting,
+- authoritative timeline convergence,
+- ACK-first delivery,
+- broadcast-first delivery,
+- duplicate timeline delivery,
+- process death with stranded delivery leases,
+- retry fairness,
+- reconnect membership mutation,
+- repeated connection epochs,
+- replay replacement,
+- stale replay cleanup,
+- disconnect during stale cleanup,
 - signed-out outbox behavior, and
 - cross-account command isolation.
 
-The account-isolation proof verified that an A-owned command survived sign-out, remained untouched while B was authenticated, resumed with the same command ID when A returned, applied exactly once, converged in Room, and then cleared from the outbox.
+## Coordinator lifecycle
+
+Relay also directly tests coordinator lifecycle behavior.
+
+Current lifecycle coverage includes:
+
+- initial start,
+- duplicate-start prevention,
+- restart after completion,
+- restart availability after cancellation cleanup,
+- state-collector cancellation barriers, and
+- replay cancellation barriers.
+
+The next reliability phase is focused on non-replay coordinator failure boundaries, especially event-collector and connection-attempt failure semantics.
 
 ## Tech stack
 
@@ -118,160 +326,134 @@ The account-isolation proof verified that an A-owned command survived sign-out, 
 - Coroutines / Flow
 - OkHttp WebSockets
 - Material 3
+- Firebase
 
 ### Development backend
 
 - Node.js
-- `ws` WebSocket library
-- SQLite durable state with WAL mode and foreign-key enforcement
-- schema migration and backup validation
-- hashed access and refresh session-token storage
-- authentication, authorization, and login rate limiting
+- WebSockets
+- SQLite
+- WAL mode
+- foreign-key enforcement
+- schema migration
+- authentication
+- authorization
+- hashed access and refresh session tokens
+- login rate limiting
 - command deduplication
-- event replay support
-- push-token registration and optional Firebase push delivery
+- event replay
+- push-token registration
+- optional Firebase push delivery
 
 ## Project structure
 
-```text
+~~~text
 Relay/
 ├── app/
-│   └── src/main/java/com/signaldesk/relay/
-│       ├── appstate/
-│       ├── data/
-│       │   ├── local/
-│       │   ├── mapper/
-│       │   ├── realtime/
-│       │   ├── remote/
-│       │   ├── repository/
-│       │   └── session/
-│       ├── model/
-│       ├── navigation/
-│       ├── notifications/
-│       └── ui/
+│   └── src/
+├── core/
+│   ├── database/
+│   │   ├── schemas/
+│   │   └── src/
+│   └── realtime/
+│       └── src/
 ├── backend/
-│   ├── package.json
-│   ├── test-all.js
-│   ├── storage.js
-│   └── server.js
 ├── gradle/
 ├── build.gradle.kts
 └── settings.gradle.kts
-```
+~~~
+
+The reliability-sensitive Android architecture is split into dedicated database and realtime modules so persistence, convergence, replay, migrations, and coroutine lifecycle behavior can be tested independently.
 
 ## Run locally
 
-### 1. Start the development backend
+### Start the backend
 
-From the repository root:
-
-```bash
+~~~bash
 npm --prefix backend install
 npm --prefix backend test
-```
-
-Then start the backend from `backend/`:
-
-```bash
-node server.js
-```
+node backend/server.js
+~~~
 
 The development WebSocket server listens on port `9000`.
 
-### 2. Connect an Android device
+### Connect a physical Android device
 
-For a physical Android device connected over ADB:
-
-```bash
+~~~bash
 adb reverse tcp:9000 tcp:9000
-```
+~~~
 
-### 3. Build and install
+### Build and install
 
-On Windows:
+Windows:
 
-```powershell
-.\gradlew.bat installDebug
-```
+~~~powershell
+.\gradlew installDebug
+~~~
 
-On macOS/Linux:
+macOS/Linux:
 
-```bash
+~~~bash
 ./gradlew installDebug
-```
+~~~
 
-### 4. Launch Relay
+### Launch Relay
 
-```bash
+~~~bash
 adb shell am start -n com.signaldesk.relay/.MainActivity
-```
+~~~
 
-## Backend endpoint configuration
+## Testing
 
-Relay resolves its HTTP and WebSocket backend endpoints from Gradle properties or environment variables.
+Run the realtime unit suite:
 
-### Debug builds
+~~~powershell
+.\gradlew :core:realtime:testDebugUnitTest
+~~~
 
-Debug builds default to the local development backend:
+Compile the reliability-sensitive modules:
 
-- HTTP: `http://127.0.0.1:9000`
-- WebSocket: `ws://127.0.0.1:9000`
+~~~powershell
+.\gradlew :core:database:compileDebugKotlin :core:realtime:compileDebugKotlin :app:compileDebugKotlin
+~~~
 
-When using a physical Android device, expose the host backend to the device with:
+Instrumentation tests are intentionally kept separate from manual physical-device verification.
 
-```bash
-adb reverse tcp:9000 tcp:9000
-```
+Connected instrumentation runs can replace or remove the installed debug application, so manual product testing uses `installDebug` separately.
 
-The debug manifest permits cleartext HTTP so the local backend can be used during development.
-
-The defaults can be overridden with Gradle properties.
-
-On Windows PowerShell:
-
-```powershell
-.\gradlew.bat assembleDebug `
-    -PrelayHttpBaseUrl=https://example.test `
-    -PrelayWebSocketUrl=wss://example.test
-```
-
-Or with environment variables:
-
-```powershell
-$env:RELAY_HTTP_BASE_URL = "https://example.test"
-$env:RELAY_WEBSOCKET_URL = "wss://example.test"
-
-.\gradlew.bat assembleDebug
-```
-
-### Release builds
-
-Release builds do not fall back to localhost. Both backend endpoints must be configured explicitly.
-
-Supported Gradle properties:
-
-- `relayHttpBaseUrl`
-- `relayWebSocketUrl`
-
-Supported environment variables:
-
-- `RELAY_HTTP_BASE_URL`
-- `RELAY_WEBSOCKET_URL`
-
-Example release build on Windows PowerShell:
-
-```powershell
-$env:RELAY_HTTP_BASE_URL = "https://relay.example.com"
-$env:RELAY_WEBSOCKET_URL = "wss://relay.example.com"
-
-.\gradlew.bat assembleRelease
-```
-
-A release build fails during Gradle configuration when either endpoint is missing or points to `localhost` or `127.0.0.1`.
 ## Current status
 
-Relay is a feature-complete engineering portfolio project focused on resilient realtime Android architecture and failure recovery. The repository includes durable mutation delivery, SQLite-backed backend persistence, authentication and authorization, optional Firebase push support, lifecycle hardening, observability, and extensive reliability testing. It should not be interpreted as a production-hosted service or Play Store release; production deployment, signing, secrets management, operational monitoring, and store publishing remain outside the current repository scope.
+Relay is an active engineering portfolio project focused on resilient realtime Android architecture.
 
-## Repository
+The current hardening phase has established:
 
-Built as part of a project-driven Android engineering program focused on reliability, offline behavior, realtime consistency, and production-oriented mobile architecture.
+- durable deferred realtime processing,
+- Room v14 migration infrastructure,
+- process-death-safe gap recovery,
+- deterministic deferred update ordering,
+- durable first-payload preservation,
+- generation-safe replay ownership,
+- cancellation-safe disconnect behavior,
+- production-seam replay tests,
+- durable command delivery,
+- timeline convergence,
+- account isolation, and
+- broad reliability regression coverage.
+
+The project should not be interpreted as a production-hosted service or Play Store release.
+
+Production hosting, signing and secrets operations, monitoring, deployment infrastructure, and store publishing remain outside the current repository scope.
+
+## Engineering focus
+
+Relay is being developed as part of a project-driven Android engineering program centered on:
+
+- realtime consistency,
+- local-first architecture,
+- durable state machines,
+- process-death recovery,
+- coroutine lifecycle correctness,
+- cancellation safety,
+- reliable background work,
+- deterministic failure testing, and
+- production-oriented mobile system design.

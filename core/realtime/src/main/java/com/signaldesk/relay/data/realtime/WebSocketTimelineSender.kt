@@ -213,9 +213,20 @@ class WebSocketTimelineSender(
                             }
 
                             if (
-                                json.optString(
-                                    "entryId"
-                                ) != entry.id
+                                !isMatchingTimelineAcknowledgement(
+                                    actualEntryId =
+                                        json.optString(
+                                            "entryId"
+                                        ),
+                                    actualIncidentId =
+                                        json.optString(
+                                            "incidentId"
+                                        ),
+                                    expectedEntryId =
+                                        entry.id,
+                                    expectedIncidentId =
+                                        entry.incidentId
+                                )
                             ) {
                                 return
                             }
@@ -322,3 +333,13 @@ class WebSocketTimelineSender(
             "RelayTimelineSender"
     }
 }
+
+
+internal fun isMatchingTimelineAcknowledgement(
+    actualEntryId: String,
+    actualIncidentId: String,
+    expectedEntryId: String,
+    expectedIncidentId: String
+): Boolean =
+    actualEntryId == expectedEntryId &&
+        actualIncidentId == expectedIncidentId

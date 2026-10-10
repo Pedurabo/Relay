@@ -1,6 +1,8 @@
 package com.signaldesk.relay.data.realtime
 
 import androidx.room.withTransaction
+import com.signaldesk.relay.data.local.DeferredIncidentUpdateEntity
+import com.signaldesk.relay.data.local.DeferredRealtimeEventEntity
 import com.signaldesk.relay.data.local.IncidentEntity
 import com.signaldesk.relay.data.local.IncidentSequenceGapEntity
 import com.signaldesk.relay.data.local.ProcessedEventEntity
@@ -12,6 +14,27 @@ import com.signaldesk.relay.data.remote.model.IncidentUpdatedEvent
 import com.signaldesk.relay.data.remote.model.TimelineEntryAddedEvent
 import com.signaldesk.relay.model.DeliveryState
 
+internal const val DEFERRED_TIMELINE_ORPHAN_RETENTION_MILLIS =
+    30L * 24L * 60L * 60L * 1_000L
+
+internal fun deferredTimelineRetentionCutoff(
+    nowMillis: Long
+): Long =
+    nowMillis -
+        DEFERRED_TIMELINE_ORPHAN_RETENTION_MILLIS
+
+
+internal fun shouldRecoverDeferredTimelineEvents(
+    result: EventProcessingResult
+): Boolean =
+    result ==
+        EventProcessingResult.APPLIED ||
+        result ==
+        EventProcessingResult.DUPLICATE ||
+        result ==
+        EventProcessingResult.IGNORED_STALE
+
+
 class IncidentEventProcessor(
     private val database: RelayDatabase
 ) {
@@ -21,6 +44,12 @@ class IncidentEventProcessor(
 
     private val processedEventDao =
         database.processedEventDao()
+
+    private val deferredRealtimeEventDao =
+        database.deferredRealtimeEventDao()
+
+    private val deferredIncidentUpdateDao =
+        database.deferredIncidentUpdateDao()
 
     private val timelineEntryDao =
         database.timelineEntryDao()
@@ -32,6 +61,65 @@ class IncidentEventProcessor(
         event: IncidentEvent
     ): EventProcessingResult {
 
+        val result =
+            if (
+                event is TimelineEntryAddedEvent
+            ) {
+
+                TimelineEntryDeliveryGate
+                    .withEntry(
+                        event.entryId
+                    ) {
+
+                        processInTransaction(
+                            event
+                        )
+                    }
+
+            } else {
+
+                processInTransaction(
+                    event
+                )
+            }
+
+        if (
+            event is IncidentCreatedEvent &&
+            (
+                result == EventProcessingResult.APPLIED ||
+                result == EventProcessingResult.DUPLICATE ||
+                result == EventProcessingResult.IGNORED_STALE
+            )
+        ) {
+
+            recoverDeferredIncidentUpdatesForIncident(
+                event.incidentId
+            )
+
+            recoverDeferredTimelineEventsForIncident(
+                event.incidentId
+            )
+        }
+
+        if (
+            event is IncidentUpdatedEvent &&
+            shouldRecoverDeferredIncidentUpdatesAfterSequenceProgress(
+                result
+            )
+        ) {
+
+            recoverDeferredIncidentUpdatesForIncident(
+                event.incidentId
+            )
+        }
+        return result
+    }
+
+
+    private suspend fun processInTransaction(
+        event: IncidentEvent
+    ): EventProcessingResult {
+
         return database.withTransaction {
 
             if (
@@ -39,6 +127,17 @@ class IncidentEventProcessor(
                     event.eventId
                 )
             ) {
+
+                deferredRealtimeEventDao
+                    .deleteByEventId(
+                        event.eventId
+                    )
+
+                deferredIncidentUpdateDao
+                    .deleteByEventId(
+                        event.eventId
+                    )
+
                 return@withTransaction EventProcessingResult.DUPLICATE
             }
 
@@ -68,10 +167,121 @@ class IncidentEventProcessor(
                                 System.currentTimeMillis()
                         )
                     )
+
+                    deferredRealtimeEventDao
+                        .deleteByEventId(
+                            event.eventId
+                        )
+                    deferredIncidentUpdateDao
+                        .deleteByEventId(
+                            event.eventId
+                        )
                 }
 
-                EventProcessingResult.DEFERRED,
-                EventProcessingResult.GAP_DETECTED,
+                EventProcessingResult.DEFERRED -> {
+
+                    if (
+                        event is TimelineEntryAddedEvent
+                    ) {
+
+                        deferredRealtimeEventDao
+                            .insert(
+                                DeferredRealtimeEventEntity(
+                                    eventId =
+                                        event.eventId,
+                                    incidentId =
+                                        event.incidentId,
+                                    entryId =
+                                        event.entryId,
+                                    message =
+                                        event.message,
+                                    author =
+                                        event.author,
+                                    occurredAt =
+                                        event.occurredAt,
+                                    deferredAt =
+                                        System.currentTimeMillis()
+                                )
+                            )
+                    }
+                    
+                    if (
+                        event is IncidentUpdatedEvent
+                    ) {
+
+                        val now =
+                            System.currentTimeMillis()
+
+                        deferredIncidentUpdateDao
+                            .insert(
+                                DeferredIncidentUpdateEntity(
+                                    eventId =
+                                        event.eventId,
+                                    incidentId =
+                                        event.incidentId,
+                                    occurredAt =
+                                        event.occurredAt,
+                                    sequence =
+                                        event.sequence,
+                                    title =
+                                        event.title,
+                                    status =
+                                        event.status,
+                                    severity =
+                                        event.severity,
+                                    deferredAt =
+                                        now
+                                )
+                            )
+
+                        deferredIncidentUpdateDao
+                            .deleteOrphansBefore(
+                                now -
+                                    DEFERRED_INCIDENT_UPDATE_ORPHAN_RETENTION_MILLIS
+                            )
+                    }
+
+                    pruneDeferredTimelineOrphans()
+                }
+
+                EventProcessingResult.GAP_DETECTED -> {
+
+                    /*
+                     * GAP_DETECTED is non-terminal, but the first observed
+                     * authoritative payload must remain stable while its
+                     * predecessor is missing.
+                     *
+                     * Reuse deferred_incident_updates as the durable
+                     * unresolved-event store. Its eventId primary key with
+                     * IGNORE semantics makes the first payload win.
+                     */
+                    if (
+                        event is IncidentUpdatedEvent
+                    ) {
+                        deferredIncidentUpdateDao
+                            .insert(
+                                DeferredIncidentUpdateEntity(
+                                    eventId =
+                                        event.eventId,
+                                    incidentId =
+                                        event.incidentId,
+                                    occurredAt =
+                                        event.occurredAt,
+                                    sequence =
+                                        event.sequence,
+                                    title =
+                                        event.title,
+                                    status =
+                                        event.status,
+                                    severity =
+                                        event.severity,
+                                    deferredAt =
+                                        System.currentTimeMillis()
+                                )
+                            )
+                    }
+                }
+
                 EventProcessingResult.DUPLICATE -> Unit
             }
 
@@ -87,6 +297,25 @@ class IncidentEventProcessor(
             incidentDao.getById(
                 event.incidentId
             )
+
+        /*
+         * Creation establishes incident identity exactly once.
+         *
+         * An existing latestSequence == 0 row may still be optimistic or
+         * pre-sequence state and can be canonicalized by its authoritative
+         * create event.
+         *
+         * Once sequenced state has begun, however, every later create is
+         * stale regardless of whether its sequence is lower, equal, NEXT,
+         * or farther ahead. A create must never behave like an update.
+         */
+        if (
+            current != null &&
+            current.latestSequence > 0L
+        ) {
+            return EventProcessingResult
+                .IGNORED_STALE
+        }
 
         if (
             current != null &&
@@ -254,6 +483,22 @@ class IncidentEventProcessor(
                     event.entryId
                 )
 
+        if (
+            existingTimelineEntry != null &&
+            !isCompatibleTimelineAuthoritativeEvent(
+                existingIncidentId =
+                    existingTimelineEntry.incidentId,
+                existingMessage =
+                    existingTimelineEntry.message,
+                incomingIncidentId =
+                    event.incidentId,
+                incomingMessage =
+                    event.message
+            )
+        ) {
+            return EventProcessingResult.IGNORED_STALE
+        }
+
         timelineEntryDao.upsert(
             TimelineEntryEntity(
                 entryId =
@@ -386,4 +631,215 @@ class IncidentEventProcessor(
         STALE,
         GAP
     }
+
+    suspend fun recoverDeferredIncidentUpdates() {
+
+        val now =
+            System.currentTimeMillis()
+
+        deferredIncidentUpdateDao
+            .deleteOrphansBefore(
+                now -
+                    DEFERRED_INCIDENT_UPDATE_ORPHAN_RETENTION_MILLIS
+            )
+
+        val incidentIds =
+            deferredIncidentUpdateDao
+                .loadAll()
+                .map {
+                    it.incidentId
+                }
+                .distinct()
+
+        for (
+            incidentId in incidentIds
+        ) {
+
+            if (
+                incidentDao.getById(
+                    incidentId
+                ) == null
+            ) {
+                continue
+            }
+
+            /*
+             * Use the per-incident DAO ordering:
+             *
+             * sequence ASC,
+             * deferredAt ASC,
+             * eventId ASC.
+             *
+             * This avoids processing a stale global snapshot out of
+             * sequence and lets contiguous durable work converge in
+             * one bounded drain without re-entering public process().
+             */
+            recoverDeferredIncidentUpdatesForIncident(
+                incidentId
+            )
+        }
+    }
+
+    private suspend fun recoverDeferredIncidentUpdatesForIncident(
+        incidentId: String
+    ) {
+
+        val deferred =
+            deferredIncidentUpdateDao
+                .loadForIncident(
+                    incidentId
+                )
+
+        for (
+            stored in deferred
+        ) {
+
+            processInTransaction(
+                stored.toIncidentUpdatedEvent()
+            )
+        }
+    }
+
+
+    private suspend fun recoverDeferredTimelineEventsForIncident(
+        incidentId: String
+    ) {
+
+        val deferred =
+            deferredRealtimeEventDao
+                .loadForIncident(
+                    incidentId
+                )
+
+        for (
+            stored in deferred
+        ) {
+
+            process(
+                TimelineEntryAddedEvent(
+                    eventId =
+                        stored.eventId,
+                    incidentId =
+                        stored.incidentId,
+                    occurredAt =
+                        stored.occurredAt,
+                    entryId =
+                        stored.entryId,
+                    message =
+                        stored.message,
+                    author =
+                        stored.author
+                )
+            )
+        }
+    }
+
+
+    private fun DeferredIncidentUpdateEntity.toIncidentUpdatedEvent():
+        IncidentUpdatedEvent =
+        IncidentUpdatedEvent(
+            eventId =
+                eventId,
+            incidentId =
+                incidentId,
+            occurredAt =
+                occurredAt,
+            title =
+                title,
+            status =
+                status,
+            severity =
+                severity,
+            sequence =
+                sequence
+        )
+
+
+    suspend fun recoverDeferredTimelineEvents() {
+
+        pruneDeferredTimelineOrphans()
+
+        val deferred =
+            deferredRealtimeEventDao
+                .loadAll()
+
+        for (
+            stored in deferred
+        ) {
+
+            if (
+                incidentDao.getById(
+                    stored.incidentId
+                ) == null
+            ) {
+                continue
+            }
+
+            process(
+                TimelineEntryAddedEvent(
+                    eventId =
+                        stored.eventId,
+                    incidentId =
+                        stored.incidentId,
+                    occurredAt =
+                        stored.occurredAt,
+                    entryId =
+                        stored.entryId,
+                    message =
+                        stored.message,
+                    author =
+                        stored.author
+                )
+            )
+        }
+    }
+
+
+    private suspend fun pruneDeferredTimelineOrphans() {
+
+        deferredRealtimeEventDao
+            .deleteOrphansBefore(
+                deferredTimelineRetentionCutoff(
+                    System.currentTimeMillis()
+                )
+            )
+    }
+
+    companion object {
+
+        private const val
+            DEFERRED_INCIDENT_UPDATE_ORPHAN_RETENTION_MILLIS =
+                30L *
+                    24L *
+                    60L *
+                    60L *
+                    1_000L
+    }
 }
+
+
+internal fun shouldRecoverDeferredIncidentUpdatesAfterSequenceProgress(
+    result: EventProcessingResult
+): Boolean =
+    when (
+        result
+    ) {
+
+        EventProcessingResult.APPLIED,
+        EventProcessingResult.DUPLICATE,
+        EventProcessingResult.IGNORED_STALE ->
+            true
+
+        EventProcessingResult.DEFERRED,
+        EventProcessingResult.GAP_DETECTED ->
+            false
+    }
+
+internal fun isCompatibleTimelineAuthoritativeEvent(
+    existingIncidentId: String,
+    existingMessage: String,
+    incomingIncidentId: String,
+    incomingMessage: String
+): Boolean =
+    existingIncidentId == incomingIncidentId &&
+        existingMessage == incomingMessage

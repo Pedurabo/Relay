@@ -97,13 +97,11 @@ class IncidentRepository(
     ): Boolean {
 
         return requireTimelineDao()
-            .updateDeliveryState(
+            .retryFailed(
                 entryId =
                     entryId,
                 ownerPrincipal =
-                    ownerPrincipal,
-                deliveryState =
-                    DeliveryState.PENDING.name
+                    ownerPrincipal
             ) == 1
     }
 
@@ -113,13 +111,11 @@ class IncidentRepository(
     ): Boolean {
 
         return requireTimelineDao()
-            .updateDeliveryState(
+            .failPending(
                 entryId =
                     entryId,
                 ownerPrincipal =
-                    ownerPrincipal,
-                deliveryState =
-                    DeliveryState.FAILED.name
+                    ownerPrincipal
             ) == 1
     }
 
@@ -133,15 +129,7 @@ class IncidentRepository(
                 entryId =
                     event.entryId,
                 ownerPrincipal =
-                    ownerPrincipal,
-                incidentId =
-                    event.incidentId,
-                message =
-                    event.message,
-                author =
-                    event.author,
-                occurredAt =
-                    event.occurredAt
+                    ownerPrincipal
             ) == 1
     }
 
@@ -180,3 +168,4 @@ class IncidentRepository(
         }
     }
 }
+
