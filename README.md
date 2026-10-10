@@ -23,7 +23,7 @@ The project focuses on a difficult mobile-systems problem: keeping durable local
 - Cross-incident queue fairness
 - Session-bound command ownership
 - Cross-account isolation
-- Room database version 14 with exported schema history
+- Room database version 15 with exported schema history and composite indexes for hot recovery/outbox paths
 - Unit, migration, instrumentation, and physical-device reliability validation
 
 ## Architecture
@@ -254,7 +254,7 @@ When User A returns, the original command can resume with the same stable ID.
 
 ## Room database evolution
 
-Relay currently uses **Room database version 14** with schema export enabled.
+Relay currently uses **Room database version 15** with schema export enabled.
 
 The project includes migration coverage for durable deferred realtime state.
 
@@ -310,10 +310,32 @@ Current lifecycle coverage includes:
 - duplicate-start prevention,
 - restart after completion,
 - restart availability after cancellation cleanup,
-- state-collector cancellation barriers, and
-- replay cancellation barriers.
+- state-collector cancellation barriers,
+- replay cancellation barriers,
+- explicit failure observability for realtime boundaries, and
+- safe outbox diagnostics around recovery and delivery failures.
 
-The next reliability phase is focused on non-replay coordinator failure boundaries, especially event-collector and connection-attempt failure semantics.
+This reliability phase is complete enough to support the current production-readiness and product-quality work without relying on a parallel lifecycle simulator.
+
+
+## Product quality and UX readiness
+
+Relay's current product-quality pass focuses on making reliability visible and usable, not only correct internally.
+
+Recent improvements include:
+
+- accessible realtime, operation, sign-in-error, and composer status announcements,
+- keyboard-aware sign-in flow with validation, focus movement, password IME submission, and focus dismissal,
+- actionable empty-state creation flow,
+- semantic headings and explicit incident severity/status descriptions,
+- clearer incident identifiers and timeline state labeling,
+- whitespace-safe timeline update submission,
+- sentence-capitalized update entry,
+- accessible posting/error feedback,
+- a distinct initial-loading state before showing a true empty incident list, and
+- manual regression verification on a physical Android 13 device using the normal debug install path.
+
+Instrumentation remains intentionally separate from manual product verification so connected test runs do not replace the app being inspected.
 
 ## Tech stack
 
@@ -352,11 +374,15 @@ Relay/
 ├── app/
 │   └── src/
 ├── core/
+│   ├── model/
+│   ├── session/
 │   ├── database/
 │   │   ├── schemas/
 │   │   └── src/
-│   └── realtime/
-│       └── src/
+│   ├── realtime/
+│   └── notifications/
+├── feature/
+│   └── incidents/
 ├── backend/
 ├── gradle/
 ├── build.gradle.kts
@@ -428,7 +454,7 @@ Relay is an active engineering portfolio project focused on resilient realtime A
 The current hardening phase has established:
 
 - durable deferred realtime processing,
-- Room v14 migration infrastructure,
+- Room v15 migration infrastructure with exported schema history,
 - process-death-safe gap recovery,
 - deterministic deferred update ordering,
 - durable first-payload preservation,
@@ -437,7 +463,13 @@ The current hardening phase has established:
 - production-seam replay tests,
 - durable command delivery,
 - timeline convergence,
-- account isolation, and
+- account isolation,
+- structured realtime/outbox diagnostics,
+- release endpoint validation, minification/resource shrinking, optional secure signing, and CI release/debug gates,
+- feature-level incidents ViewModel ownership with app-layer factory/lifecycle seams,
+- accessibility and keyboard-flow hardening across sign-in, incident cards, detail timelines, and update composition,
+- explicit initial-loading versus true-empty incident-list states,
+- physical-device product verification on Android 13, and
 - broad reliability regression coverage.
 
 The project should not be interpreted as a production-hosted service or Play Store release.
