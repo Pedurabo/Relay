@@ -1,7 +1,6 @@
 package com.signaldesk.relay.data.realtime
 
 import android.app.Application
-import android.util.Log
 import com.signaldesk.relay.data.local.PendingCreateIncidentCommand
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.local.RoomPendingCreateIncidentCommandStore
@@ -18,10 +17,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 object CreateIncidentOutboxCoordinator {
-
-    private const val TAG =
-        "RelayCreateOutbox"
-
     private enum class DeliveryOutcome {
         COMPLETE,
         RETRY_TRANSPORT,
@@ -103,10 +98,9 @@ object CreateIncidentOutboxCoordinator {
                     }
                 )
 
-            Log.i(
-                TAG,
-                "CREATE_OUTBOX_STARTUP|resetInFlight=$resetCount"
-            )
+            reportOutboxEvent(
+"CREATE_OUTBOX_STARTUP|resetInFlight=$resetCount"
+)
 
             ready.set(
                 true
@@ -331,10 +325,9 @@ object CreateIncidentOutboxCoordinator {
                         error: Throwable
                     ) {
 
-                        Log.i(
-                            TAG,
-                            "CREATE_OUTBOX_EXCEPTION|${command.commandId}|${error::class.simpleName}"
-                        )
+                        reportOutboxEvent(
+"CREATE_OUTBOX_EXCEPTION|${command.commandId}|${error::class.simpleName}"
+)
 
                         DeliveryOutcome
                             .RETRY_TRANSPORT
@@ -527,9 +520,8 @@ object CreateIncidentOutboxCoordinator {
                 pending.ownerPrincipal
             )
 
-            Log.i(
-                TAG,
-                when (
+            reportOutboxEvent(
+when (
                     resolution
                 ) {
                     CreateIncidentResolutionDecision.CONVERGED ->
@@ -543,7 +535,7 @@ object CreateIncidentOutboxCoordinator {
                             "Existing incident cannot remain pending."
                         )
                 }
-            )
+)
 
             return DeliveryOutcome
                 .COMPLETE
@@ -637,10 +629,9 @@ object CreateIncidentOutboxCoordinator {
                         .TRANSPORT_FAILURE
                 }
 
-        Log.i(
-            TAG,
-            "CREATE_OUTBOX_RESULT|${pending.commandId}|result=${result.name}"
-        )
+        reportOutboxEvent(
+"CREATE_OUTBOX_RESULT|${pending.commandId}|result=${result.name}"
+)
 
         if (
             result ==
@@ -694,9 +685,8 @@ object CreateIncidentOutboxCoordinator {
                     pending.ownerPrincipal
                 )
 
-                Log.i(
-                    TAG,
-                    when (
+                reportOutboxEvent(
+when (
                         resolution
                     ) {
                         CreateIncidentResolutionDecision.CONVERGED ->
@@ -710,7 +700,7 @@ object CreateIncidentOutboxCoordinator {
                                 "Existing incident cannot remain pending."
                             )
                     }
-                )
+)
 
                 return DeliveryOutcome
                     .COMPLETE
@@ -756,9 +746,8 @@ object CreateIncidentOutboxCoordinator {
                     pending.ownerPrincipal
                 )
 
-                Log.i(
-                    TAG,
-                    when (
+                reportOutboxEvent(
+when (
                         resolution
                     ) {
                         CreateIncidentResolutionDecision.CONVERGED ->
@@ -772,7 +761,7 @@ object CreateIncidentOutboxCoordinator {
                                 "Existing incident cannot remain pending."
                             )
                     }
-                )
+)
 
                 return DeliveryOutcome
                     .COMPLETE

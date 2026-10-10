@@ -7,7 +7,21 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "timeline_entries",
     indices = [
-        Index(value = ["incidentId"])
+        Index(
+            value = [
+                "incidentId",
+                "occurredAt",
+                "entryId"
+            ]
+        ),
+        Index(
+            value = [
+                "ownerPrincipal",
+                "deliveryState",
+                "occurredAt",
+                "entryId"
+            ]
+        )
     ]
 )
 data class TimelineEntryEntity(

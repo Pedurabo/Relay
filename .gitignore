@@ -1,4 +1,4 @@
-﻿# Android / Gradle
+# Android / Gradle
 .gradle/
 **/build/
 local.properties
@@ -120,3 +120,9 @@ backend/relay-storage-test.sqlite-shm
 
 backend/relay-firebase-service-account.json
 backend/firebase-service-account*.json
+
+# Android release signing material
+*.jks
+*.keystore
+keystore.properties
+signing.properties

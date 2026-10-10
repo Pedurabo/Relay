@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.local
+package com.signaldesk.relay.data.local
 
 import androidx.room.Entity
 import androidx.room.Index
@@ -8,7 +8,18 @@ import androidx.room.PrimaryKey
     tableName = "deferred_incident_updates",
     indices = [
         Index(
-            value = ["incidentId"]
+            value = [
+                "incidentId",
+                "sequence",
+                "deferredAt",
+                "eventId"
+            ]
+        ),
+        Index(
+            value = [
+                "deferredAt",
+                "eventId"
+            ]
         )
     ]
 )

@@ -1,10 +1,25 @@
-﻿package com.signaldesk.relay.data.local
+package com.signaldesk.relay.data.local
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "deferred_realtime_events"
+    tableName = "deferred_realtime_events",
+    indices = [
+        Index(
+            value = [
+                "incidentId",
+                "deferredAt"
+            ]
+        ),
+        Index(
+            value = [
+                "deferredAt",
+                "eventId"
+            ]
+        )
+    ]
 )
 data class DeferredRealtimeEventEntity(
     @PrimaryKey

@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,10 +38,23 @@ import com.signaldesk.relay.data.realtime.RealtimeConnectionState
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.model.IncidentSeverity
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.contentDescription
 
 @Composable
 fun IncidentsScreen(
     incidents: List<Incident>,
+    incidentsLoaded: Boolean,
     connectionState: RealtimeConnectionState,
     sessionState: SessionState,
     signInInProgress: Boolean,
@@ -141,11 +155,19 @@ fun IncidentsScreen(
                     )
                 }
 
-                if (incidents.isEmpty()) {
+                if (!incidentsLoaded) {
 
                     item {
 
-                        EmptyIncidentsState()
+                        LoadingIncidentsState()
+                    }
+                } else if (incidents.isEmpty()) {
+
+                    item {
+
+                        EmptyIncidentsState(
+                            onCreateIncidentClick = onCreateIncidentClick
+                        )
                     }
                 }
 
@@ -182,6 +204,7 @@ private fun SignedOutPanel(
     onPasswordChange: (String) -> Unit,
     onSignIn: () -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
     OutlinedCard(
         modifier =
             Modifier.fillMaxWidth()
@@ -233,7 +256,21 @@ private fun SignedOutPanel(
                     )
                 },
                 singleLine =
-                    true
+                    true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Ascii,
+                        capitalization = KeyboardCapitalization.None,
+                        imeAction = ImeAction.Next
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onNext = {
+                            focusManager.moveFocus(
+                                FocusDirection.Down
+                            )
+                        }
+                    )
             )
 
             OutlinedTextField(
@@ -250,6 +287,25 @@ private fun SignedOutPanel(
                 },
                 singleLine =
                     true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType =
+                            KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onDone = {
+                            if (
+                                !signInInProgress &&
+                                username.isNotBlank() &&
+                                password.isNotBlank()
+                            ) {
+                                focusManager.clearFocus()
+                                onSignIn()
+                            }
+                        }
+                    ),
                 visualTransformation =
                     PasswordVisualTransformation()
             )
@@ -260,6 +316,10 @@ private fun SignedOutPanel(
                     Text(
                         text =
                             error,
+                        modifier =
+                            Modifier.semantics {
+                                liveRegion = LiveRegionMode.Assertive
+                            },
                         style =
                             MaterialTheme
                                 .typography
@@ -269,9 +329,14 @@ private fun SignedOutPanel(
 
             Button(
                 enabled =
-                    !signInInProgress,
+                    !signInInProgress &&
+                        username.isNotBlank() &&
+                        password.isNotBlank(),
                 onClick =
-                    onSignIn,
+                    {
+                    focusManager.clearFocus()
+                    onSignIn()
+                },
                 modifier =
                     Modifier.fillMaxWidth()
             ) {
@@ -279,7 +344,7 @@ private fun SignedOutPanel(
                     if (
                         signInInProgress
                     ) {
-                        "Signing in…"
+                        "Signing in..."
                     } else {
                         "Sign in"
                     }
@@ -370,6 +435,10 @@ private fun SignedInOperationsPanel(
                 ?.let { message ->
 
                     Text(
+                    modifier =
+                        Modifier.semantics {
+                            liveRegion = LiveRegionMode.Polite
+                        },
                         text =
                             message,
                         style =
@@ -424,6 +493,9 @@ private fun ConnectionStateRow(
         }
 
     Text(
+        modifier = Modifier.semantics {
+            liveRegion = LiveRegionMode.Polite
+        },
         text = label,
         style =
             MaterialTheme
@@ -432,7 +504,38 @@ private fun ConnectionStateRow(
     )
 }
 @Composable
-private fun EmptyIncidentsState() {
+private fun LoadingIncidentsState() {
+    OutlinedCard(
+        modifier =
+            Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            verticalArrangement =
+                Arrangement.spacedBy(12.dp)
+        ) {
+            CircularProgressIndicator()
+
+            Text(
+                text = "Loading incidents...",
+                modifier =
+                    Modifier.semantics {
+                        liveRegion = LiveRegionMode.Polite
+                    },
+                style =
+                    MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyIncidentsState(
+    onCreateIncidentClick: () -> Unit
+) {
     OutlinedCard(
         modifier =
             Modifier.fillMaxWidth()
@@ -452,6 +555,10 @@ private fun EmptyIncidentsState() {
         ) {
 
             Text(
+            modifier =
+                Modifier.semantics {
+                    heading()
+                },
                 text =
                     "No incidents yet",
                 style =
@@ -470,7 +577,17 @@ private fun EmptyIncidentsState() {
                         .typography
                         .bodyMedium
             )
+
+
+        Button(
+            onClick = onCreateIncidentClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                "Create incident"
+            )
         }
+}
     }
 }
 
@@ -522,7 +639,11 @@ private fun IncidentCard(
                     text =
                         incident.title,
                     modifier =
-                        Modifier.weight(1f),
+                        Modifier
+                            .weight(1f)
+                            .semantics {
+                                heading()
+                            },
                     style =
                         MaterialTheme
                             .typography
@@ -546,7 +667,7 @@ private fun IncidentCard(
 
                 Text(
                     text =
-                        incident.id,
+                        "ID: ${incident.id}",
                     style =
                         MaterialTheme
                             .typography
@@ -556,6 +677,10 @@ private fun IncidentCard(
                 Text(
                     text =
                         "Status: ${incident.status}",
+                    modifier =
+                        Modifier.semantics {
+                            contentDescription = "Incident status ${incident.status}"
+                        },
                     style =
                         MaterialTheme
                             .typography
@@ -570,6 +695,10 @@ private fun IncidentCard(
             Text(
                 text =
                     "Latest update",
+                modifier =
+                    Modifier.semantics {
+                        heading()
+                    },
                 style =
                     MaterialTheme
                         .typography
@@ -674,10 +803,14 @@ private fun SeverityBadge(
             text =
                 severity.name,
             modifier =
-                Modifier.padding(
-                    horizontal = 8.dp,
-                    vertical = 4.dp
-                ),
+                Modifier
+                    .padding(
+                        horizontal = 8.dp,
+                        vertical = 4.dp
+                    )
+                    .semantics {
+                        contentDescription = "Incident severity ${severity.name}"
+                    },
             style =
                 MaterialTheme
                     .typography

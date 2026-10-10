@@ -3,13 +3,30 @@ package com.signaldesk.relay.data.local
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
+import androidx.room.Index
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Entity(
-    tableName =
-        "pending_status_commands"
+    tableName = "pending_status_commands",
+    indices = [
+        Index(
+            value = [
+                "ownerPrincipal",
+                "createdAt",
+                "commandId"
+            ]
+        ),
+        Index(
+            value = [
+                "incidentId",
+                "ownerPrincipal",
+                "createdAt",
+                "commandId"
+            ]
+        )
+    ]
 )
 data class PendingStatusCommand(
     @androidx.room.PrimaryKey

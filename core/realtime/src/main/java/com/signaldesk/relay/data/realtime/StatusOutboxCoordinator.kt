@@ -1,7 +1,6 @@
 package com.signaldesk.relay.data.realtime
 
 import android.app.Application
-import android.util.Log
 import com.signaldesk.relay.data.local.PendingStatusCommand
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.local.RoomPendingStatusCommandStore
@@ -17,10 +16,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 object StatusOutboxCoordinator {
-
-    private const val TAG =
-        "RelayStatusOutbox"
-
     private enum class DeliveryOutcome {
         COMPLETE,
         RETRY_TRANSPORT,
@@ -102,10 +97,9 @@ object StatusOutboxCoordinator {
                     }
                 )
 
-            Log.i(
-                TAG,
-                "STATUS_OUTBOX_STARTUP|resetInFlight=$resetCount"
-            )
+            reportOutboxEvent(
+"STATUS_OUTBOX_STARTUP|resetInFlight=$resetCount"
+)
 
             ready.set(
                 true
@@ -332,10 +326,9 @@ object StatusOutboxCoordinator {
                         error: Throwable
                     ) {
 
-                        Log.i(
-                            TAG,
-                            "STATUS_OUTBOX_EXCEPTION|${command.commandId}|${error::class.simpleName}"
-                        )
+                        reportOutboxEvent(
+"STATUS_OUTBOX_EXCEPTION|${command.commandId}|${error::class.simpleName}"
+)
 
                         DeliveryOutcome
                             .RETRY_TRANSPORT
@@ -632,10 +625,9 @@ object StatusOutboxCoordinator {
                         .TRANSPORT_FAILURE
                 }
 
-        Log.i(
-            TAG,
-            "STATUS_OUTBOX_RESULT|${pending.commandId}|result=${result.name}"
-        )
+        reportOutboxEvent(
+"STATUS_OUTBOX_RESULT|${pending.commandId}|result=${result.name}"
+)
 
         if (
             result ==

@@ -1,7 +1,7 @@
 package com.signaldesk.relay.data.realtime
 
+import com.signaldesk.relay.diagnostics.RelayDiagnostics
 import android.app.Application
-import android.util.Log
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.local.TimelineEntryDao
 import com.signaldesk.relay.data.local.TimelineEntryEntity
@@ -40,7 +40,23 @@ internal suspend fun runTimelineOutboxDrainSafely(
             return
         } catch (error: CancellationException) {
             throw error
-        } catch (error: Throwable) {
+        } catch (
+            error:
+                Throwable
+        ) {
+
+            RelayDiagnostics.warning(
+                name =
+                    "outbox.wrapper.failure",
+                attributes =
+                    mapOf(
+                        "boundary" to
+                            "runTimelineOutboxDrainSafely",
+                        "errorType" to
+                            error.javaClass
+                                .simpleName
+                    )
+            )
             failedAttempts += 1
 
             if (!isActive()) {
@@ -105,6 +121,19 @@ internal suspend fun runTimelineOutboxPostDrainCheckSafely(
                 Throwable
         ) {
 
+            RelayDiagnostics.warning(
+                name =
+                    "outbox.wrapper.failure",
+                attributes =
+                    mapOf(
+                        "boundary" to
+                            "runTimelineOutboxPostDrainCheckSafely",
+                        "errorType" to
+                            error.javaClass
+                                .simpleName
+                    )
+            )
+
             failedAttempts +=
                 1
 
@@ -124,10 +153,6 @@ internal suspend fun runTimelineOutboxPostDrainCheckSafely(
 }
 
 object TimelineOutboxCoordinator {
-
-    private const val TAG =
-        "RelayTimelineOutbox"
-
     private data class RetryState(
         val attempt: Int,
         val notBeforeMillis: Long
@@ -274,10 +299,9 @@ object TimelineOutboxCoordinator {
 
                     retryStates.clear()
 
-                    Log.i(
-                        TAG,
-                        "TIMELINE_OUTBOX_RETRY_STATE_CLEARED|reason=session_changed"
-                    )
+                    reportOutboxEvent(
+"TIMELINE_OUTBOX_RETRY_STATE_CLEARED|reason=session_changed"
+)
                 }
 
                 draining.set(
@@ -542,10 +566,9 @@ object TimelineOutboxCoordinator {
                             entity.entryId
                         )
 
-                        Log.i(
-                            TAG,
-                            "TIMELINE_OUTBOX_RETRY|entryId=${entity.entryId}|reason=timeout"
-                        )
+                        reportOutboxEvent(
+"TIMELINE_OUTBOX_RETRY|entryId=${entity.entryId}|reason=timeout"
+)
 
                         continue
 
@@ -584,10 +607,9 @@ object TimelineOutboxCoordinator {
                                 entity.entryId
                             )
 
-                            Log.i(
-                                TAG,
-                                "TIMELINE_OUTBOX_FAILED|entryId=${entity.entryId}|reason=permanent_rejection"
-                            )
+                            reportOutboxEvent(
+"TIMELINE_OUTBOX_FAILED|entryId=${entity.entryId}|reason=permanent_rejection"
+)
 
                             continue
                         }
@@ -596,10 +618,9 @@ object TimelineOutboxCoordinator {
                             entity.entryId
                         )
 
-                        Log.i(
-                            TAG,
-                            "TIMELINE_OUTBOX_RETRY|entryId=${entity.entryId}"
-                        )
+                        reportOutboxEvent(
+"TIMELINE_OUTBOX_RETRY|entryId=${entity.entryId}"
+)
 
                         continue
                     }
@@ -624,10 +645,9 @@ object TimelineOutboxCoordinator {
                         return
                     }
 
-                    Log.i(
-                        TAG,
-                        "TIMELINE_OUTBOX_SEND_SKIPPED|entryId=${entity.entryId}|reason=state_changed"
-                    )
+                    reportOutboxEvent(
+"TIMELINE_OUTBOX_SEND_SKIPPED|entryId=${entity.entryId}|reason=state_changed"
+)
 
                     continue
                 }
@@ -661,10 +681,9 @@ object TimelineOutboxCoordinator {
                     acknowledged == 0
                 ) {
 
-                    Log.i(
-                        TAG,
-                        "TIMELINE_OUTBOX_ACK_IGNORED|entryId=${entity.entryId}|reason=state_changed"
-                    )
+                    reportOutboxEvent(
+"TIMELINE_OUTBOX_ACK_IGNORED|entryId=${entity.entryId}|reason=state_changed"
+)
                 }
 
                 retryStates.remove(

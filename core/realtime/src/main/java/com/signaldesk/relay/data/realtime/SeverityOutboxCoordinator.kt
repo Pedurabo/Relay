@@ -1,7 +1,7 @@
 package com.signaldesk.relay.data.realtime
 
+import com.signaldesk.relay.diagnostics.RelayDiagnostics
 import android.app.Application
-import android.util.Log
 import com.signaldesk.relay.data.local.PendingSeverityCommand
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.local.RoomPendingSeverityCommandStore
@@ -40,8 +40,22 @@ internal suspend fun runOutboxStartupResetSafely(
             throw error
 
         } catch (
-            error: Throwable
+            error:
+                Throwable
         ) {
+
+            RelayDiagnostics.warning(
+                name =
+                    "outbox.wrapper.failure",
+                attributes =
+                    mapOf(
+                        "boundary" to
+                            "runOutboxStartupResetSafely",
+                        "errorType" to
+                            error.javaClass
+                                .simpleName
+                    )
+            )
 
             failedAttempts +=
                 1
@@ -80,8 +94,22 @@ internal suspend fun runOutboxDrainSafely(
             throw error
 
         } catch (
-            error: Throwable
+            error:
+                Throwable
         ) {
+
+            RelayDiagnostics.warning(
+                name =
+                    "outbox.wrapper.failure",
+                attributes =
+                    mapOf(
+                        "boundary" to
+                            "runOutboxDrainSafely",
+                        "errorType" to
+                            error.javaClass
+                                .simpleName
+                    )
+            )
 
             failedAttempts +=
                 1
@@ -124,8 +152,22 @@ internal suspend fun runOutboxPostDrainCheckSafely(
             throw error
 
         } catch (
-            error: Throwable
+            error:
+                Throwable
         ) {
+
+            RelayDiagnostics.warning(
+                name =
+                    "outbox.wrapper.failure",
+                attributes =
+                    mapOf(
+                        "boundary" to
+                            "runOutboxPostDrainCheckSafely",
+                        "errorType" to
+                            error.javaClass
+                                .simpleName
+                    )
+            )
 
             failedAttempts +=
                 1
@@ -146,10 +188,6 @@ internal suspend fun runOutboxPostDrainCheckSafely(
 }
 
 object SeverityOutboxCoordinator {
-
-    private const val TAG =
-        "RelayOutbox"
-
     private enum class DeliveryOutcome {
         COMPLETE,
         RETRY_TRANSPORT,
@@ -235,10 +273,9 @@ object SeverityOutboxCoordinator {
                     }
                 )
 
-            Log.i(
-                TAG,
-                "OUTBOX_STARTUP|resetInFlight=$resetCount"
-            )
+            reportOutboxEvent(
+"OUTBOX_STARTUP|resetInFlight=$resetCount"
+)
 
             ready.set(
                 true
@@ -264,18 +301,16 @@ object SeverityOutboxCoordinator {
             )
         ) {
 
-            Log.i(
-                TAG,
-                "OUTBOX_KICK_SKIPPED|reason=already_draining"
-            )
+            reportOutboxEvent(
+"OUTBOX_KICK_SKIPPED|reason=already_draining"
+)
 
             return
         }
 
-        Log.i(
-            TAG,
-            "OUTBOX_DRAIN_START"
-        )
+        reportOutboxEvent(
+"OUTBOX_DRAIN_START"
+)
 
         scope.launch {
 
@@ -313,10 +348,9 @@ object SeverityOutboxCoordinator {
                     false
                 )
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_DRAIN_STOP"
-                )
+                reportOutboxEvent(
+"OUTBOX_DRAIN_STOP"
+)
 
                 val hasPendingWork =
                     runOutboxPostDrainCheckSafely(
@@ -378,10 +412,9 @@ object SeverityOutboxCoordinator {
                 SessionState.SignedIn
             ) {
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_DRAIN_EXIT|reason=signed_out"
-                )
+                reportOutboxEvent(
+"OUTBOX_DRAIN_EXIT|reason=signed_out"
+)
 
                 return
             }
@@ -398,10 +431,9 @@ object SeverityOutboxCoordinator {
                 pending.isEmpty()
             ) {
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_DRAIN_EXIT|reason=no_rows_for_owner|owner=$ownerPrincipal"
-                )
+                reportOutboxEvent(
+"OUTBOX_DRAIN_EXIT|reason=no_rows_for_owner|owner=$ownerPrincipal"
+)
 
                 return
             }
@@ -462,10 +494,9 @@ object SeverityOutboxCoordinator {
                         retryState != null
                     ) {
 
-                        Log.i(
-                            TAG,
-                            "OUTBOX_COOLDOWN|${command.commandId}|remainingMs=${retryState.notBeforeMillis - now}|attempt=${retryState.attempt}"
-                        )
+                        reportOutboxEvent(
+"OUTBOX_COOLDOWN|${command.commandId}|remainingMs=${retryState.notBeforeMillis - now}|attempt=${retryState.attempt}"
+)
                     }
 
                     continue
@@ -477,10 +508,9 @@ object SeverityOutboxCoordinator {
                     )
                 ) {
 
-                    Log.i(
-                        TAG,
-                        "OUTBOX_OWNER_BLOCK|${command.commandId}|owner=${command.ownerPrincipal}"
-                    )
+                    reportOutboxEvent(
+"OUTBOX_OWNER_BLOCK|${command.commandId}|owner=${command.ownerPrincipal}"
+)
 
                     return
                 }
@@ -496,10 +526,9 @@ object SeverityOutboxCoordinator {
                     !claimed
                 ) {
 
-                    Log.i(
-                        TAG,
-                        "OUTBOX_CLAIM_SKIPPED|${command.commandId}"
-                    )
+                    reportOutboxEvent(
+"OUTBOX_CLAIM_SKIPPED|${command.commandId}"
+)
 
                     continue
                 }
@@ -515,10 +544,9 @@ object SeverityOutboxCoordinator {
                         command.ownerPrincipal
                     )
 
-                    Log.i(
-                        TAG,
-                        "OUTBOX_RELEASE|${command.commandId}|reason=session_changed_before_delivery"
-                    )
+                    reportOutboxEvent(
+"OUTBOX_RELEASE|${command.commandId}|reason=session_changed_before_delivery"
+)
 
                     return
                 }
@@ -535,10 +563,9 @@ object SeverityOutboxCoordinator {
                             ?: 0
                     ) + 1
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_ATTEMPT|${command.commandId}|incident=${command.incidentId}|severity=${command.severity}|owner=${command.ownerPrincipal}|attempt=$attemptNumber"
-                )
+                reportOutboxEvent(
+"OUTBOX_ATTEMPT|${command.commandId}|incident=${command.incidentId}|severity=${command.severity}|owner=${command.ownerPrincipal}|attempt=$attemptNumber"
+)
 
                 val outcome =
                     try {
@@ -551,10 +578,9 @@ object SeverityOutboxCoordinator {
                         error: Throwable
                     ) {
 
-                        Log.i(
-                            TAG,
-                            "OUTBOX_EXCEPTION|${command.commandId}|${error::class.simpleName}"
-                        )
+                        reportOutboxEvent(
+"OUTBOX_EXCEPTION|${command.commandId}|${error::class.simpleName}"
+)
 
                         DeliveryOutcome
                             .RETRY_TRANSPORT
@@ -575,10 +601,9 @@ object SeverityOutboxCoordinator {
                             command.ownerPrincipal
                         )
 
-                        Log.i(
-                            TAG,
-                            "OUTBOX_COMPLETE|${command.commandId}"
-                        )
+                        reportOutboxEvent(
+"OUTBOX_COMPLETE|${command.commandId}"
+)
                     }
 
                     DeliveryOutcome.RETRY_TRANSPORT -> {
@@ -588,10 +613,9 @@ object SeverityOutboxCoordinator {
                             command.ownerPrincipal
                         )
 
-                        Log.i(
-                            TAG,
-                            "OUTBOX_RELEASE|${command.commandId}|reason=transport"
-                        )
+                        reportOutboxEvent(
+"OUTBOX_RELEASE|${command.commandId}|reason=transport"
+)
 
                         scheduleTransportRetry(
                             command.commandId
@@ -605,10 +629,9 @@ object SeverityOutboxCoordinator {
                             command.ownerPrincipal
                         )
 
-                        Log.i(
-                            TAG,
-                            "OUTBOX_RELEASE|${command.commandId}|reason=confirmation"
-                        )
+                        reportOutboxEvent(
+"OUTBOX_RELEASE|${command.commandId}|reason=confirmation"
+)
 
                         scheduleConfirmationRetry(
                             command.commandId
@@ -622,10 +645,9 @@ object SeverityOutboxCoordinator {
                             command.ownerPrincipal
                         )
 
-                        Log.i(
-                            TAG,
-                            "OUTBOX_RELEASE|${command.commandId}|reason=session_changed"
-                        )
+                        reportOutboxEvent(
+"OUTBOX_RELEASE|${command.commandId}|reason=session_changed"
+)
 
                         return
                     }
@@ -644,10 +666,9 @@ object SeverityOutboxCoordinator {
                 ownerPrincipal
             ) {
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_DRAIN_EXIT|reason=session_changed"
-                )
+                reportOutboxEvent(
+"OUTBOX_DRAIN_EXIT|reason=session_changed"
+)
 
                 return
             }
@@ -661,10 +682,9 @@ object SeverityOutboxCoordinator {
                 remaining.isEmpty()
             ) {
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_DRAIN_EXIT|reason=empty"
-                )
+                reportOutboxEvent(
+"OUTBOX_DRAIN_EXIT|reason=empty"
+)
 
                 return
             }
@@ -720,10 +740,9 @@ object SeverityOutboxCoordinator {
                             30_000L
                         )
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_IDLE_SLEEP|delayMs=$sleepMillis"
-                )
+                reportOutboxEvent(
+"OUTBOX_IDLE_SLEEP|delayMs=$sleepMillis"
+)
 
                 delay(
                     sleepMillis
@@ -800,10 +819,9 @@ object SeverityOutboxCoordinator {
                     pending.ownerPrincipal
                 )
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_RESOLVED|${pending.commandId}|reason=already_converged"
-                )
+                reportOutboxEvent(
+"OUTBOX_RESOLVED|${pending.commandId}|reason=already_converged"
+)
 
                 return DeliveryOutcome.COMPLETE
             }
@@ -826,10 +844,9 @@ object SeverityOutboxCoordinator {
                     pending.ownerPrincipal
                 )
 
-                Log.i(
-                    TAG,
-                    "OUTBOX_RESOLVED|${pending.commandId}|reason=superseded|current=${currentSeverity.name}"
-                )
+                reportOutboxEvent(
+"OUTBOX_RESOLVED|${pending.commandId}|reason=superseded|current=${currentSeverity.name}"
+)
 
                 return DeliveryOutcome.COMPLETE
             }
@@ -921,10 +938,9 @@ object SeverityOutboxCoordinator {
                         .TRANSPORT_FAILURE
                 }
 
-        Log.i(
-            TAG,
-            "OUTBOX_RESULT|${pending.commandId}|result=${result.name}"
-        )
+        reportOutboxEvent(
+"OUTBOX_RESULT|${pending.commandId}|result=${result.name}"
+)
 
         if (
             result ==
@@ -936,10 +952,9 @@ object SeverityOutboxCoordinator {
                 pending.ownerPrincipal
             )
 
-            Log.i(
-                TAG,
-                "OUTBOX_RESOLVED|${pending.commandId}|reason=rejected"
-            )
+            reportOutboxEvent(
+"OUTBOX_RESOLVED|${pending.commandId}|reason=rejected"
+)
 
             return DeliveryOutcome.COMPLETE
         }
@@ -985,10 +1000,9 @@ object SeverityOutboxCoordinator {
                         pending.ownerPrincipal
                     )
 
-                    Log.i(
-                        TAG,
-                        "OUTBOX_RESOLVED|${pending.commandId}|reason=converged_after_transport_failure"
-                    )
+                    reportOutboxEvent(
+"OUTBOX_RESOLVED|${pending.commandId}|reason=converged_after_transport_failure"
+)
 
                     return DeliveryOutcome.COMPLETE
                 }
@@ -1011,10 +1025,9 @@ object SeverityOutboxCoordinator {
                         pending.ownerPrincipal
                     )
 
-                    Log.i(
-                        TAG,
-                        "OUTBOX_RESOLVED|${pending.commandId}|reason=superseded_after_transport_failure"
-                    )
+                    reportOutboxEvent(
+"OUTBOX_RESOLVED|${pending.commandId}|reason=superseded_after_transport_failure"
+)
 
                     return DeliveryOutcome.COMPLETE
                 }
@@ -1061,10 +1074,9 @@ object SeverityOutboxCoordinator {
                         pending.ownerPrincipal
                     )
 
-                    Log.i(
-                        TAG,
-                        "OUTBOX_RESOLVED|${pending.commandId}|reason=authoritative_convergence"
-                    )
+                    reportOutboxEvent(
+"OUTBOX_RESOLVED|${pending.commandId}|reason=authoritative_convergence"
+)
 
                     return DeliveryOutcome.COMPLETE
                 }
@@ -1087,10 +1099,9 @@ object SeverityOutboxCoordinator {
                         pending.ownerPrincipal
                     )
 
-                    Log.i(
-                        TAG,
-                        "OUTBOX_RESOLVED|${pending.commandId}|reason=superseded_after_accept"
-                    )
+                    reportOutboxEvent(
+"OUTBOX_RESOLVED|${pending.commandId}|reason=superseded_after_accept"
+)
 
                     return DeliveryOutcome.COMPLETE
                 }
@@ -1163,10 +1174,9 @@ object SeverityOutboxCoordinator {
                         delayMillis
             )
 
-        Log.i(
-            TAG,
-            "OUTBOX_BACKOFF|$commandId|attempt=$nextAttempt|delayMs=$delayMillis"
-        )
+        reportOutboxEvent(
+"OUTBOX_BACKOFF|$commandId|attempt=$nextAttempt|delayMs=$delayMillis"
+)
     }
 
     private fun scheduleConfirmationRetry(
@@ -1192,10 +1202,9 @@ object SeverityOutboxCoordinator {
                         1_000L
             )
 
-        Log.i(
-            TAG,
-            "OUTBOX_BACKOFF|$commandId|attempt=$previousAttempt|delayMs=1000|reason=confirmation"
-        )
+        reportOutboxEvent(
+"OUTBOX_BACKOFF|$commandId|attempt=$previousAttempt|delayMs=1000|reason=confirmation"
+)
     }
 
     private fun transportBackoffMillis(

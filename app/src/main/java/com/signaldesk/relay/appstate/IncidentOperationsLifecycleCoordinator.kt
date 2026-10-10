@@ -9,6 +9,7 @@ import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.notifications.PushRegistrationCoordinator
+import com.signaldesk.relay.ui.incidents.IncidentOperationsLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -25,10 +26,8 @@ internal fun shouldRunRealtimeForLifecycle(
 }
 
 class IncidentOperationsLifecycleCoordinator(
-    context: Context,
-    private val realtimeCoordinator:
-        RealtimeIncidentCoordinator
-) {
+    context: Context
+) : IncidentOperationsLifecycle {
 
     private val appContext =
         context.applicationContext
@@ -37,8 +36,10 @@ class IncidentOperationsLifecycleCoordinator(
         Job? =
         null
 
-    fun start(
-        scope: CoroutineScope
+    override fun start(
+        scope: CoroutineScope,
+        realtimeCoordinator:
+            RealtimeIncidentCoordinator
     ) {
 
         if (
@@ -113,7 +114,10 @@ class IncidentOperationsLifecycleCoordinator(
             }
     }
 
-    fun stop() {
+    override fun stop(
+        realtimeCoordinator:
+            RealtimeIncidentCoordinator
+    ) {
 
         lifecycleJob
             ?.cancel()

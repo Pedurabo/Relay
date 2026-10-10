@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TimelineEntryEntity::class,
         IncidentSequenceGapEntity::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = true
 )
 abstract class RelayDatabase :
@@ -235,7 +235,8 @@ companion object {
                                 MIGRATION_10_11,
                                 MIGRATION_11_12,
                                 MIGRATION_12_13,
-                                  MIGRATION_13_14
+                                  MIGRATION_13_14,
+                                MIGRATION_14_15
                               )
                             .build()
                             .also {
@@ -448,6 +449,185 @@ companion object {
                         CREATE INDEX IF NOT EXISTS
                         index_deferred_incident_updates_incidentId
                         ON deferred_incident_updates(incidentId)
+                        """.trimIndent()
+                    )
+                }
+            }
+        val MIGRATION_14_15 =
+            object : Migration(
+                14,
+                15
+            ) {
+
+                override fun migrate(
+                    db:
+                        SupportSQLiteDatabase
+                ) {
+
+                    db.execSQL(
+                        """
+                        DROP INDEX IF EXISTS
+                        index_timeline_entries_incidentId
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_timeline_entries_incidentId_occurredAt_entryId
+                        ON timeline_entries(
+                            incidentId,
+                            occurredAt,
+                            entryId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_timeline_entries_ownerPrincipal_deliveryState_occurredAt_entryId
+                        ON timeline_entries(
+                            ownerPrincipal,
+                            deliveryState,
+                            occurredAt,
+                            entryId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        DROP INDEX IF EXISTS
+                        index_deferred_realtime_events_incidentId
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_deferred_realtime_events_incidentId_deferredAt
+                        ON deferred_realtime_events(
+                            incidentId,
+                            deferredAt
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_deferred_realtime_events_deferredAt_eventId
+                        ON deferred_realtime_events(
+                            deferredAt,
+                            eventId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        DROP INDEX IF EXISTS
+                        index_deferred_incident_updates_incidentId
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_deferred_incident_updates_incidentId_sequence_deferredAt_eventId
+                        ON deferred_incident_updates(
+                            incidentId,
+                            sequence,
+                            deferredAt,
+                            eventId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_deferred_incident_updates_deferredAt_eventId
+                        ON deferred_incident_updates(
+                            deferredAt,
+                            eventId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_pending_severity_commands_ownerPrincipal_createdAt_commandId
+                        ON pending_severity_commands(
+                            ownerPrincipal,
+                            createdAt,
+                            commandId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_pending_severity_commands_incidentId_ownerPrincipal_createdAt_commandId
+                        ON pending_severity_commands(
+                            incidentId,
+                            ownerPrincipal,
+                            createdAt,
+                            commandId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_pending_status_commands_ownerPrincipal_createdAt_commandId
+                        ON pending_status_commands(
+                            ownerPrincipal,
+                            createdAt,
+                            commandId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_pending_status_commands_incidentId_ownerPrincipal_createdAt_commandId
+                        ON pending_status_commands(
+                            incidentId,
+                            ownerPrincipal,
+                            createdAt,
+                            commandId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_pending_create_incident_commands_ownerPrincipal_createdAt_commandId
+                        ON pending_create_incident_commands(
+                            ownerPrincipal,
+                            createdAt,
+                            commandId
+                        )
+                        """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS
+                        index_pending_create_incident_commands_incidentId_ownerPrincipal_createdAt_commandId
+                        ON pending_create_incident_commands(
+                            incidentId,
+                            ownerPrincipal,
+                            createdAt,
+                            commandId
+                        )
                         """.trimIndent()
                     )
                 }

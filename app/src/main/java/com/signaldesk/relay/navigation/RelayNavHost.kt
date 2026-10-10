@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import android.app.Application
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -68,11 +70,25 @@ fun RelayNavHost(
         composable(
             route = Routes.INCIDENTS
         ) { backStackEntry ->
+            val application =
+                LocalContext
+                    .current
+                    .applicationContext as Application
+
             val viewModel:
-                IncidentsViewModel = viewModel()
+                IncidentsViewModel =
+                viewModel(
+                    factory =
+                        IncidentsViewModelFactory(
+                            application
+                        )
+                )
 
             val incidents by
                 viewModel.incidents.collectAsState()
+
+            val incidentsLoaded by
+                viewModel.incidentsLoaded.collectAsState()
 
             val connectionState by
                 viewModel.connectionState.collectAsState()
@@ -111,6 +127,7 @@ fun RelayNavHost(
 
             IncidentsScreen(
                 incidents = incidents,
+                incidentsLoaded = incidentsLoaded,
                 connectionState = connectionState,
                 sessionState = sessionState,
                 signInInProgress =

@@ -8,6 +8,84 @@ android {
     namespace = "com.signaldesk.relay"
     compileSdk = 37
 
+    val releaseKeystorePath =
+        System.getenv(
+            "RELAY_RELEASE_KEYSTORE_PATH"
+        )
+
+    val releaseKeystorePassword =
+        System.getenv(
+            "RELAY_RELEASE_KEYSTORE_PASSWORD"
+        )
+
+    val releaseKeyAlias =
+        System.getenv(
+            "RELAY_RELEASE_KEY_ALIAS"
+        )
+
+    val releaseKeyPassword =
+        System.getenv(
+            "RELAY_RELEASE_KEY_PASSWORD"
+        )
+
+    val releaseSigningValues =
+        listOf(
+            releaseKeystorePath,
+            releaseKeystorePassword,
+            releaseKeyAlias,
+            releaseKeyPassword
+        )
+
+    val releaseSigningConfigured =
+        releaseSigningValues
+            .all {
+                !it.isNullOrBlank()
+            }
+
+    val releaseSigningPartiallyConfigured =
+        releaseSigningValues
+            .any {
+                !it.isNullOrBlank()
+            } &&
+            !releaseSigningConfigured
+
+    require(
+        !releaseSigningPartiallyConfigured
+    ) {
+        "Release signing requires RELAY_RELEASE_KEYSTORE_PATH, " +
+            "RELAY_RELEASE_KEYSTORE_PASSWORD, " +
+            "RELAY_RELEASE_KEY_ALIAS, and " +
+            "RELAY_RELEASE_KEY_PASSWORD together."
+    }
+
+    signingConfigs {
+
+        if (
+            releaseSigningConfigured
+        ) {
+
+            create(
+                "release"
+            ) {
+
+                storeFile =
+                    file(
+                        checkNotNull(
+                            releaseKeystorePath
+                        )
+                    )
+
+                storePassword =
+                    releaseKeystorePassword
+
+                keyAlias =
+                    releaseKeyAlias
+
+                keyPassword =
+                    releaseKeyPassword
+            }
+        }
+    }
     defaultConfig {
         applicationId = "com.signaldesk.relay"
 
@@ -80,6 +158,18 @@ android {
         }
 
         release {
+
+            if (
+                releaseSigningConfigured
+            ) {
+
+                signingConfig =
+                    signingConfigs
+                        .getByName(
+                            "release"
+                        )
+            }
+
             val relayHttpBaseUrl =
                 providers.gradleProperty("relayHttpBaseUrl")
                     .orElse(
@@ -156,7 +246,9 @@ android {
                 "\"${relayWebSocketUrl.orEmpty()}\""
             )
 
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+
+            isShrinkResources = true
 
             proguardFiles(
                 getDefaultProguardFile(

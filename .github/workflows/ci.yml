@@ -11,8 +11,12 @@ permissions:
 
 jobs:
   android:
-    name: Android build, unit tests, lint
+    name: Android build, tests, lint, release verification
     runs-on: ubuntu-latest
+
+    env:
+      RELAY_HTTP_BASE_URL: https://relay.invalid
+      RELAY_WEBSOCKET_URL: wss://relay.invalid
 
     steps:
       - name: Checkout
@@ -37,12 +41,20 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: Run Android lint
+      - name: Run debug lint
         run: ./gradlew lintDebug --stacktrace
 
       - name: Assemble debug APK
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Compile release variant
+        run: ./gradlew :app:compileReleaseKotlin --stacktrace
+
+      - name: Run release lint
+        run: ./gradlew :app:lintRelease --stacktrace
+
+      - name: Verify R8 and resource shrinking
+        run: ./gradlew :app:assembleRelease --stacktrace
   backend:
     name: Backend dependency and syntax validation
     runs-on: ubuntu-latest

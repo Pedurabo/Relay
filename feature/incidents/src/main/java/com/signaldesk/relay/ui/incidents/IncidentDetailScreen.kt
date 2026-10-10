@@ -32,6 +32,11 @@ import com.signaldesk.relay.model.TimelineEntry
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
 
 @Composable
 fun IncidentDetailScreen(
@@ -173,7 +178,12 @@ fun IncidentDetailScreen(
         if (timeline.isEmpty()) {
             item {
                 Text(
-                    "No timeline updates yet."
+                text =
+                    "No timeline updates yet.",
+                modifier =
+                    Modifier.semantics {
+                        heading()
+                    }
                 )
             }
         }
@@ -243,22 +253,32 @@ private fun UpdateComposer(
             OutlinedTextField(
                 value =
                     message,
+                keyboardOptions =
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences
+                    ),
                 onValueChange =
                     onMessageChange,
                 modifier =
-                    Modifier.fillMaxWidth(),
+                    Modifier.fillMaxWidth()
+                    .semantics {
+                        contentDescription = "Timeline update message"
+                    },
                 label = {
                     Text(
                         "What changed?"
                     )
                 },
-                enabled =
-                    !posting
+                enabled = !posting && message.isNotBlank()
             )
 
             error
                 ?.let { errorMessage ->
                     Text(
+                    modifier =
+                        Modifier.semantics {
+                            liveRegion = LiveRegionMode.Assertive
+                        },
                         text =
                             errorMessage,
                         style =
@@ -278,11 +298,16 @@ private fun UpdateComposer(
                     Modifier.fillMaxWidth()
             ) {
                 Text(
-                    if (posting) {
-                        "Saving..."
-                    } else {
-                        "Post update"
-                    }
+                    text =
+                        if (posting) {
+                            "Saving..."
+                        } else {
+                            "Post update"
+                        },
+                    modifier =
+                        Modifier.semantics {
+                            liveRegion = LiveRegionMode.Polite
+                        }
                 )
             }
         }
@@ -540,7 +565,7 @@ private fun SeveritySelector(
                 if (
                     syncing
                 ) {
-                    "Syncing ${severity.name}Ã¢â‚¬Â¦"
+                    "Syncing ${severity.name}..."
                 } else {
                     "Current severity: ${severity.name}"
                 },

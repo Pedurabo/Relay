@@ -1,5 +1,6 @@
 package com.signaldesk.relay.data.realtime
 
+import com.signaldesk.relay.diagnostics.RelayDiagnostics
 import android.util.Log
 import com.signaldesk.relay.data.local.IncidentSequenceGapDao
 import com.signaldesk.relay.data.remote.model.IncidentEvent
@@ -110,6 +111,11 @@ internal suspend fun runRealtimeReplayJobSafely(
     isConnected: () -> Boolean,
     delayAfterFailure:
         suspend (Int) -> Unit,
+    onFailure:
+        (Throwable, Int) -> Unit = {
+            _,
+            _ ->
+        },
     block: suspend () -> Unit
 ) {
     var failedAttempts =
@@ -136,6 +142,12 @@ internal suspend fun runRealtimeReplayJobSafely(
             failedAttempts +=
                 1
 
+
+            onFailure(
+                error,
+                failedAttempts
+            )
+
             if (
                 !isConnected()
             ) {
@@ -153,6 +165,11 @@ internal suspend fun runRealtimeGapRecoverySafely(
     isActive: () -> Boolean,
     delayAfterFailure:
         suspend (Int) -> Unit,
+    onFailure:
+        (Throwable, Int) -> Unit = {
+            _,
+            _ ->
+        },
     block: suspend () -> Unit
 ) {
     var failedAttempts =
@@ -178,6 +195,12 @@ internal suspend fun runRealtimeGapRecoverySafely(
 
             failedAttempts +=
                 1
+
+
+            onFailure(
+                error,
+                failedAttempts
+            )
 
             if (
                 !isActive()
@@ -294,7 +317,25 @@ class RealtimeIncidentCoordinator(
                             delay(
                                 delayMillis
                             )
+                        },
+                        onFailure = {
+                            error,
+                            attempt ->
+
+                            RelayDiagnostics.warning(
+                                name =
+                                    "realtime.gap_recovery.failure",
+                                attributes =
+                                    mapOf(
+                                        "attempt" to
+                                            attempt.toString(),
+                                        "errorType" to
+                                            error.javaClass
+                                                .simpleName
+                                    )
+                            )
                         }
+
                     ) {
 
                         recoverSequenceGaps()
@@ -375,8 +416,19 @@ class RealtimeIncidentCoordinator(
                     } catch (
                         error: Throwable
                     ) {
-                        // Reconnect below.
 
+                        RelayDiagnostics.warning(
+                            name =
+                                "realtime.collector.failure",
+                            attributes =
+                                mapOf(
+                                    "errorType" to
+                                        error.javaClass
+                                            .simpleName
+                                )
+                        )
+
+                        // Reconnect below.
                     } finally {
                         stopRealtimeStateCollector(
                             stateJob
@@ -540,7 +592,27 @@ launchRegisteredRealtimeReplayJob(
                                         delay(
                                             delayMillis
                                         )
+                                    },
+                                    onFailure = {
+                                        error,
+                                        attempt ->
+
+                                        RelayDiagnostics.warning(
+                                            name =
+                                                "realtime.replay.failure",
+                                            attributes =
+                                                mapOf(
+                                                    "incidentId" to
+                                                        gap.incidentId,
+                                                    "attempt" to
+                                                        attempt.toString(),
+                                                    "errorType" to
+                                                        error.javaClass
+                                                            .simpleName
+                                                )
+                                        )
                                     }
+
                                 ) {
 
                                     SequenceGapReplayWorker

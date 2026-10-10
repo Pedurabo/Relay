@@ -3,12 +3,29 @@ package com.signaldesk.relay.data.local
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
+import androidx.room.Index
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 @Entity(
-    tableName =
-        "pending_create_incident_commands"
+    tableName = "pending_create_incident_commands",
+    indices = [
+        Index(
+            value = [
+                "ownerPrincipal",
+                "createdAt",
+                "commandId"
+            ]
+        ),
+        Index(
+            value = [
+                "incidentId",
+                "ownerPrincipal",
+                "createdAt",
+                "commandId"
+            ]
+        )
+    ]
 )
 data class PendingCreateIncidentCommand(
     @androidx.room.PrimaryKey

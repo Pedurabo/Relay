@@ -1,13 +1,12 @@
 package com.signaldesk.relay.ui.incidents
 
-import com.signaldesk.relay.BuildConfig
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.signaldesk.relay.appstate.IncidentOperationsLifecycleCoordinator
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
+import com.signaldesk.relay.data.remote.model.IncidentEvent
 import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
 import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
 import com.signaldesk.relay.data.repository.IncidentRepository
@@ -19,17 +18,23 @@ import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.data.session.SessionTerminationReason
 import com.signaldesk.relay.model.Incident
-import com.signaldesk.relay.notifications.IncidentNotificationManager
 import com.signaldesk.relay.notifications.PushRegistrationCoordinator
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class IncidentsViewModel(
-    application: Application
+    application: Application,
+    private val httpBaseUrl: String,
+    private val webSocketUrl: String,
+    private val operationsLifecycle:
+        IncidentOperationsLifecycle,
+    private val onAppliedEvent:
+        (IncidentEvent) -> Unit
 ) : AndroidViewModel(application) {
 
     private val database =
@@ -45,10 +50,13 @@ class IncidentsViewModel(
                 database.timelineEntryDao()
         )
 
-    private val notificationManager =
-        IncidentNotificationManager(
-            application
-        )
+
+    private val _incidentsLoaded =
+        MutableStateFlow(false)
+
+    val incidentsLoaded:
+        StateFlow<Boolean> =
+        _incidentsLoaded
 
     val incidents:
         StateFlow<List<Incident>> =
@@ -81,6 +89,9 @@ class IncidentsViewModel(
                 )
             }
         }
+            .onEach {
+                _incidentsLoaded.value = true
+            }
             .stateIn(
                 scope =
                     viewModelScope,
@@ -96,7 +107,7 @@ class IncidentsViewModel(
     private val authSessionClient =
         AuthSessionClient(
             baseUrl =
-                BuildConfig.RELAY_HTTP_BASE_URL
+                httpBaseUrl
         )
 
     val sessionState =
@@ -112,7 +123,7 @@ class IncidentsViewModel(
     private val realtimeSource =
         WebSocketRealtimeIncidentSource(
             url =
-                BuildConfig.RELAY_WEBSOCKET_URL,
+                webSocketUrl,
             tokenProvider = {
 
                 when (
@@ -153,22 +164,10 @@ class IncidentsViewModel(
             gapDao =
                 database
                     .incidentSequenceGapDao(),
-            onAppliedEvent = { event ->
-
-                notificationManager
-                    .notifyAppliedEvent(
-                        event
-                    )
-            }
+            onAppliedEvent =
+                onAppliedEvent
         )
 
-    private val operationsLifecycleCoordinator =
-        IncidentOperationsLifecycleCoordinator(
-            context =
-                application,
-            realtimeCoordinator =
-                realtimeCoordinator
-        )
 
     val connectionState =
         realtimeCoordinator
@@ -199,9 +198,12 @@ class IncidentsViewModel(
                 }
         }
 
-        operationsLifecycleCoordinator
+        operationsLifecycle
             .start(
-                viewModelScope
+                scope =
+                    viewModelScope,
+                realtimeCoordinator =
+                    realtimeCoordinator
             )
     }
 
@@ -327,8 +329,10 @@ class IncidentsViewModel(
 
     override fun onCleared() {
 
-        operationsLifecycleCoordinator
-            .stop()
+        operationsLifecycle
+            .stop(
+                realtimeCoordinator
+            )
 
         super.onCleared()
     }
