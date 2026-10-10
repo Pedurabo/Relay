@@ -758,7 +758,7 @@ class IncidentDetailViewModel(
         ) {
 
             statusUpdateError.value =
-                "Status update ended without the requested authoritative state."
+                "Status update was not applied. Try again if you still have access."
         } else {
 
             statusUpdateError.value =
@@ -884,7 +884,7 @@ class IncidentDetailViewModel(
         ) {
 
             severityUpdateError.value =
-                "Severity update ended without the requested authoritative state."
+                "Severity update was not applied. Try again if you still have access."
         } else {
 
             severityUpdateError.value =
