@@ -30,6 +30,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 internal fun <T> Flow<T>.markIncidentsLoaded(
@@ -194,7 +197,7 @@ class IncidentsViewModel(
 
             SessionManager
                 .sessionState
-                .collect {
+                .collectLatest {
                     state ->
 
                     if (
@@ -241,6 +244,9 @@ class IncidentsViewModel(
     private suspend fun bootstrapAuthoritativeIncidents(
         session: SessionState.SignedIn
     ) {
+
+        val originatingGeneration =
+            SessionManager.sessionGeneration
 
         val snapshots =
             try {
@@ -295,11 +301,42 @@ class IncidentsViewModel(
                 return
             }
 
+        currentCoroutineContext().ensureActive()
+
+        if (
+            SessionManager.sessionGeneration !=
+                originatingGeneration ||
+            SessionManager.sessionState.value !=
+                session
+        ) {
+            Log.i(
+                TAG,
+                "INCIDENT_BOOTSTRAP_SUPERSEDED"
+            )
+            return
+        }
+
         val applied =
-            repository
-                .reconcileAuthoritativeSnapshot(
-                    snapshots
-                )
+            SessionManager
+                .withAuthorizedSnapshot(
+                    expectedGeneration =
+                        originatingGeneration
+                ) {
+                    currentCoroutineContext().ensureActive()
+
+                    repository
+                        .reconcileAuthoritativeSnapshot(
+                            snapshots
+                        )
+                }
+
+        if (applied == null) {
+            Log.i(
+                TAG,
+                "INCIDENT_BOOTSTRAP_SUPERSEDED|phase=commit"
+            )
+            return
+        }
 
         Log.i(
             TAG,
@@ -313,85 +350,94 @@ class IncidentsViewModel(
         password: String
     ) {
 
-        if (
-            signInInProgress.value
-        ) {
+        if (signInInProgress.value) {
             return
         }
 
-        if (
-            username.isBlank() ||
-            password.isBlank()
-        ) {
-
+        if (username.isBlank() || password.isBlank()) {
             signInError.value =
                 "Username and password are required."
-
             return
         }
 
-        signInInProgress.value =
-            true
+        signInInProgress.value = true
+        signInError.value = null
 
-        signInError.value =
-            null
+        val signInOriginGeneration =
+            SessionManager.sessionGeneration
+
+        val signInOriginRevision =
+            SessionManager.captureLoginAttemptRevision()
 
         viewModelScope.launch {
 
-            runCatching {
-
-                authSessionClient
-                    .login(
-                        username =
-                            username.trim(),
-                        password =
-                            password
+            try {
+                val session =
+                    authSessionClient.login(
+                        username = username.trim(),
+                        password = password
                     )
 
-            }
-                .onSuccess { session ->
-
+                val published =
                     SessionManager
-                        .establishSession(
-                            session
+                        .establishSessionIfSignedOutCoordinated(
+                            expectedGeneration =
+                                signInOriginGeneration,
+                            expectedLoginRevision =
+                                signInOriginRevision,
+                            session = session
                         )
 
-                    signInError.value =
-                        null
-                }
-                .onFailure { error ->
-
-                    SessionManager
-                        .signOut()
-
-                    signInError.value =
-                        when (
-                            classifyAuthLoginFailure(
-                                error
-                            )
-                        ) {
-                            AuthLoginFailure.INVALID_CREDENTIALS ->
-                                "Incorrect username or password."
-
-                            AuthLoginFailure.RATE_LIMITED ->
-                                "Too many sign-in attempts. Try again later."
-
-                            AuthLoginFailure.NETWORK_UNAVAILABLE ->
-                                "Unable to reach Relay. Check your connection."
-
-                            AuthLoginFailure.SERVER_ERROR ->
-                                "Relay is temporarily unavailable. Try again later."
-
-                            AuthLoginFailure.UNEXPECTED ->
-                                "Sign-in failed. Try again."
-                        }
+                if (published) {
+                    signInError.value = null
+                } else {
+                    Log.i(
+                        TAG,
+                        "SIGN_IN_SUPERSEDED"
+                    )
                 }
 
-            signInInProgress.value =
-                false
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+
+            } catch (error: Throwable) {
+
+                if (
+                    SessionManager.sessionGeneration !=
+                        signInOriginGeneration ||
+                    SessionManager.sessionState.value !=
+                        SessionState.SignedOut
+                ) {
+                    Log.i(
+                        TAG,
+                        "SIGN_IN_FAILURE_SUPERSEDED"
+                    )
+                    return@launch
+                }
+
+                signInError.value =
+                    when (classifyAuthLoginFailure(error)) {
+                        AuthLoginFailure.INVALID_CREDENTIALS ->
+                            "Incorrect username or password."
+
+                        AuthLoginFailure.RATE_LIMITED ->
+                            "Too many sign-in attempts. Try again later."
+
+                        AuthLoginFailure.NETWORK_UNAVAILABLE ->
+                            "Unable to reach Relay. Check your connection."
+
+                        AuthLoginFailure.SERVER_ERROR ->
+                            "Relay is temporarily unavailable. Try again later."
+
+                        AuthLoginFailure.UNEXPECTED ->
+                            "Sign-in failed. Try again."
+                    }
+
+            } finally {
+                signInInProgress.value = false
+            }
         }
     }
-
     fun signOut() {
 
         val current =
@@ -399,33 +445,63 @@ class IncidentsViewModel(
                 .sessionState
                 .value
 
+        val originatingGeneration =
+            SessionManager.sessionGeneration
+
+        val application = getApplication<Application>()
+        val client = authSessionClient
+
         SessionManager
-            .signOut()
+            .requestSignOutIfUnchanged(
+                expectedGeneration =
+                    originatingGeneration,
+                expectedSession =
+                    current
+            ) { signedOut ->
 
-        if (
-            current is
-            SessionState.SignedIn
-        ) {
+                if (!signedOut) {
+                    Log.i(
+                        TAG,
+                        "SIGN_OUT_SUPERSEDED"
+                    )
+                    return@requestSignOutIfUnchanged
+                }
 
-            PushRegistrationCoordinator
-                .unregister(
-                    context =
-                        getApplication(),
-                    accessToken =
-                        current.accessToken
-                )
+                if (
+                    current is
+                    SessionState.SignedIn
+                ) {
+                    try {
+                        PushRegistrationCoordinator
+                            .unregister(
+                                context = application,
+                                accessToken = current.accessToken
+                            )
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (error: Exception) {
+                        Log.w(
+                            TAG,
+                            "SIGN_OUT_PUSH_UNREGISTER_FAILED",
+                            error
+                        )
+                    }
 
-            viewModelScope.launch {
-
-                runCatching {
-
-                    authSessionClient
-                        .revokeSession(
+                    try {
+                        client.revokeSession(
                             current.refreshToken
                         )
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (error: Exception) {
+                        Log.w(
+                            TAG,
+                            "SIGN_OUT_REVOCATION_FAILED",
+                            error
+                        )
+                    }
                 }
             }
-        }
     }
 
     companion object {

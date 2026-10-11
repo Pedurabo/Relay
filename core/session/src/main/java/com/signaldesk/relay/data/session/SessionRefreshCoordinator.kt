@@ -33,6 +33,15 @@ internal fun shouldSignOutAfterRefreshFailure(
         SessionRefreshFailureDisposition
             .SIGN_OUT_INVALID_REFRESH
 
+internal fun isRefreshOriginCurrent(
+    originatingGeneration: Long,
+    currentGeneration: Long,
+    originatingSession: SessionState.SignedIn,
+    activeSession: SessionState
+): Boolean =
+    originatingGeneration == currentGeneration &&
+        originatingSession == activeSession
+
 object SessionRefreshCoordinator {
 
     private var client:
@@ -95,6 +104,9 @@ object SessionRefreshCoordinator {
                     return@run false
                 }
 
+                val refreshOriginGeneration =
+                    SessionManager.sessionGeneration
+
                 Log.i(
                     TAG,
                     "SESSION_REFRESH_ATTEMPT"
@@ -119,6 +131,25 @@ object SessionRefreshCoordinator {
                         error: Throwable
                     ) {
 
+                        if (
+                            isRefreshOriginCurrent(
+                                originatingGeneration =
+                                    refreshOriginGeneration,
+                                currentGeneration =
+                                    SessionManager.sessionGeneration,
+                                originatingSession =
+                                    current,
+                                activeSession =
+                                    SessionManager.sessionState.value
+                            ) == false
+                        ) {
+                            Log.i(
+                                TAG,
+                                "SESSION_REFRESH_SUPERSEDED|phase=failure"
+                            )
+                            return@run false
+                        }
+
                         when (
                             classifySessionRefreshFailure(
                                 error
@@ -134,8 +165,13 @@ object SessionRefreshCoordinator {
                                 )
 
                                 SessionManager
-                                    .signOut(
-                                        SessionTerminationReason.EXPIRED
+                                    .signOutIfCurrentCoordinated(
+                                        expectedGeneration =
+                                            refreshOriginGeneration,
+                                        expectedSession =
+                                            current,
+                                        reason =
+                                            SessionTerminationReason.EXPIRED
                                     )
                             }
 
@@ -153,6 +189,25 @@ object SessionRefreshCoordinator {
                     }
 
                 if (
+                    isRefreshOriginCurrent(
+                                originatingGeneration =
+                                    refreshOriginGeneration,
+                                currentGeneration =
+                                    SessionManager.sessionGeneration,
+                                originatingSession =
+                                    current,
+                                activeSession =
+                                    SessionManager.sessionState.value
+                            ) == false
+                ) {
+                    Log.i(
+                        TAG,
+                        "SESSION_REFRESH_SUPERSEDED|phase=success"
+                    )
+                    return@run false
+                }
+
+                if (
                     refreshed.userId !=
                     current.userId
                 ) {
@@ -163,17 +218,36 @@ object SessionRefreshCoordinator {
                     )
 
                     SessionManager
-                        .signOut(
-                            SessionTerminationReason.PRINCIPAL_CHANGED
+                        .signOutIfCurrentCoordinated(
+                            expectedGeneration =
+                                refreshOriginGeneration,
+                            expectedSession =
+                                current,
+                            reason =
+                                SessionTerminationReason.PRINCIPAL_CHANGED
                         )
 
                     return@run false
                 }
 
-                SessionManager
-                    .establishSession(
-                        refreshed
+                val published =
+                    SessionManager
+                        .establishSessionIfCurrentCoordinated(
+                            expectedGeneration =
+                                refreshOriginGeneration,
+                            expectedSession =
+                                current,
+                            session =
+                                refreshed
+                        )
+
+                if (!published) {
+                    Log.i(
+                        TAG,
+                        "SESSION_REFRESH_SUPERSEDED|phase=publication"
                     )
+                    return@run false
+                }
 
                 Log.i(
                     TAG,

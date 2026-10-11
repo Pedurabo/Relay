@@ -31,6 +31,25 @@ internal fun shouldApplyAuthoritativeIncidentSnapshot(
         currentLatestSequence
 }
 
+
+internal fun reconcileSnapshotSequenceGap(
+    gap: IncidentSequenceGapEntity,
+    snapshotSequence: Long
+): IncidentSequenceGapEntity? {
+
+    if (snapshotSequence >= gap.receivedSequence) {
+        return null
+    }
+
+    if (snapshotSequence < gap.expectedSequence) {
+        return gap
+    }
+
+    return gap.copy(
+        expectedSequence =
+            snapshotSequence + 1L
+    )
+}
 @Dao
 interface IncidentDao {
 
@@ -49,6 +68,32 @@ interface IncidentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(incidents: List<IncidentEntity>)
 
+    @Query(
+        """
+        SELECT *
+        FROM incident_sequence_gaps
+        WHERE incidentId = :incidentId
+        LIMIT 1
+        """
+    )
+    suspend fun getSnapshotSequenceGap(
+        incidentId: String
+    ): IncidentSequenceGapEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertSnapshotSequenceGap(
+        gap: IncidentSequenceGapEntity
+    )
+
+    @Query(
+        """
+        DELETE FROM incident_sequence_gaps
+        WHERE incidentId = :incidentId
+        """
+    )
+    suspend fun deleteSnapshotSequenceGap(
+        incidentId: String
+    )
     @Transaction
     suspend fun reconcileAuthoritativeSnapshot(
         incidents: List<IncidentEntity>
@@ -79,6 +124,34 @@ interface IncidentDao {
                 insert(
                     incoming
                 )
+
+                if (incoming.latestSequence > 0L) {
+
+                    val gap =
+                        getSnapshotSequenceGap(
+                            incoming.id
+                        )
+
+                    if (gap != null) {
+
+                        val reconciled =
+                            reconcileSnapshotSequenceGap(
+                                gap = gap,
+                                snapshotSequence =
+                                    incoming.latestSequence
+                            )
+
+                        if (reconciled == null) {
+                            deleteSnapshotSequenceGap(
+                                incoming.id
+                            )
+                        } else {
+                            upsertSnapshotSequenceGap(
+                                reconciled
+                            )
+                        }
+                    }
+                }
 
                 applied +=
                     1
