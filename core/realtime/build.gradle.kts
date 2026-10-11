@@ -30,4 +30,5 @@ dependencies {
     implementation(libs.androidx.room.ktx)
 
     testImplementation(libs.junit)
+    testImplementation("org.json:json:20240303")
 }

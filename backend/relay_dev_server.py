@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+
 import asyncio
 import secrets
 import time
@@ -7,12 +9,15 @@ import uuid
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Response, WebSocket, WebSocketDisconnect
+from fastapi import Request
 from pydantic import BaseModel
+from relay_settings import settings
+from relay_store import RelayStore
 
 
 app = FastAPI(
-    title="Relay Development Backend",
-    version="0.1.0",
+    title="Relay Backend",
+    version="0.2.0",
 )
 
 
@@ -23,13 +28,27 @@ app = FastAPI(
 access_tokens: dict[str, dict[str, Any]] = {}
 refresh_tokens: dict[str, dict[str, Any]] = {}
 
-incidents: dict[str, dict[str, Any]] = {}
+store = RelayStore(
+    settings.database_path
+)
 
-incident_event_history: dict[str, list[dict[str, Any]]] = {}
+refresh_tokens = store.load_refresh_sessions()
 
-processed_commands: dict[str, dict[str, Any]] = {}
+incidents: dict[str, dict[str, Any]] = (
+    store.load_incidents()
+)
 
-timeline_events: dict[str, dict[str, Any]] = {}
+incident_event_history: dict[str, list[dict[str, Any]]] = (
+    store.load_incident_event_history()
+)
+
+processed_commands: dict[str, dict[str, Any]] = (
+    store.load_processed_commands()
+)
+
+timeline_events: dict[str, dict[str, Any]] = (
+    store.load_timeline_events()
+)
 
 connected_sockets: list[WebSocket] = []
 
@@ -65,9 +84,55 @@ def new_event_id() -> str:
     return f"EVT-{uuid.uuid4().hex[:12].upper()}"
 
 
+def refresh_session_expiry_ms() -> int:
+
+    return (
+        now_ms()
+        + (
+            settings.refresh_token_ttl_seconds
+            * 1000
+        )
+    )
+
+
+def refresh_session_is_expired(
+    principal: dict[str, Any],
+) -> bool:
+
+    expires_at = principal.get(
+        "expiresAt"
+    )
+
+    if expires_at is None:
+        return True
+
+    try:
+        return int(
+            expires_at
+        ) <= now_ms()
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+        return True
+
+
+def refresh_token_hash(
+    refresh_token: str,
+) -> str:
+
+    return hashlib.sha256(
+        refresh_token.encode(
+            "utf-8"
+        )
+    ).hexdigest()
+
+
 def issue_session(
     username: str,
     user_id: str | None = None,
+    replace_refresh_hash: str | None = None,
 ) -> dict[str, Any]:
 
     resolved_user_id = (
@@ -79,7 +144,13 @@ def issue_session(
     access_token = secrets.token_urlsafe(32)
     refresh_token = secrets.token_urlsafe(40)
 
-    expires_at = now_ms() + (60 * 60 * 1000)
+    expires_at = (
+        now_ms()
+        + (
+            settings.access_token_ttl_seconds
+            * 1000
+        )
+    )
 
     principal = {
         "userId": resolved_user_id,
@@ -91,7 +162,41 @@ def issue_session(
         "expiresAt": expires_at,
     }
 
-    refresh_tokens[refresh_token] = principal
+    refresh_principal = dict(
+        principal
+    )
+
+    refresh_principal[
+        "expiresAt"
+    ] = refresh_session_expiry_ms()
+
+    token_hash = refresh_token_hash(
+        refresh_token
+    )
+
+    if replace_refresh_hash is None:
+
+        store.put_refresh_session(
+            token_hash,
+            refresh_principal,
+        )
+
+    else:
+
+        store.rotate_refresh_session(
+            old_token_hash=replace_refresh_hash,
+            new_token_hash=token_hash,
+            principal=refresh_principal,
+        )
+
+        refresh_tokens.pop(
+            replace_refresh_hash,
+            None,
+        )
+
+    refresh_tokens[
+        token_hash
+    ] = refresh_principal
 
     return {
         "userId": resolved_user_id,
@@ -219,8 +324,9 @@ def remember_incident_event(
         [],
     )
 
-    history.append(event)
-
+    history.append(
+        event
+    )
 
 def accepted_ack(
     command: str,
@@ -252,6 +358,47 @@ def rejected_ack(
     }
 
 
+def require_http_principal(
+    request: Request,
+) -> dict[str, Any]:
+
+    authorization = (
+        request.headers.get(
+            "authorization",
+            "",
+        )
+    )
+
+    prefix = "Bearer "
+
+    if not authorization.startswith(
+        prefix
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="invalid_access_token",
+        )
+
+    token = (
+        authorization[
+            len(prefix):
+        ]
+        .strip()
+    )
+
+    principal = authenticated_principal(
+        token
+    )
+
+    if principal is None:
+        raise HTTPException(
+            status_code=401,
+            detail="invalid_access_token",
+        )
+
+    return principal
+
+
 # ----------------------------------------------------------------------
 # HTTP
 # ----------------------------------------------------------------------
@@ -260,8 +407,9 @@ def rejected_ack(
 async def root() -> dict[str, Any]:
 
     return {
-        "service": "relay-dev-backend",
+        "service": "relay-backend",
         "status": "ok",
+        "environment": settings.environment,
         "incidents": len(incidents),
         "webSockets": len(connected_sockets),
     }
@@ -272,6 +420,25 @@ async def health() -> dict[str, str]:
 
     return {
         "status": "ok",
+    }
+
+
+@app.get(
+    "/ready"
+)
+async def ready() -> dict[str, str]:
+
+    try:
+        store.check_ready()
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail="backend_not_ready",
+        ) from error
+
+    return {
+        "status": "ready"
     }
 
 
@@ -308,10 +475,31 @@ async def refresh(
     request: RefreshRequest,
 ) -> dict[str, Any]:
 
-    principal = refresh_tokens.pop(
-        request.refreshToken,
-        None,
+    token_hash = refresh_token_hash(
+        request.refreshToken
     )
+
+    principal = refresh_tokens.get(
+        token_hash
+    )
+
+
+    if (
+        principal is not None
+        and refresh_session_is_expired(
+            principal
+        )
+    ):
+        refresh_tokens.pop(
+            token_hash,
+            None,
+        )
+
+        store.delete_refresh_session(
+            token_hash
+        )
+
+        principal = None
 
     if principal is None:
         raise HTTPException(
@@ -322,6 +510,7 @@ async def refresh(
     session = issue_session(
         username=principal["userName"],
         user_id=principal["userId"],
+        replace_refresh_hash=token_hash,
     )
 
     print(
@@ -340,12 +529,20 @@ async def revoke(
     request: RevokeRequest,
 ) -> Response:
 
+    token_hash = refresh_token_hash(
+        request.refreshToken
+    )
+
     principal = refresh_tokens.pop(
-        request.refreshToken,
+        token_hash,
         None,
     )
 
     if principal is not None:
+
+        store.delete_refresh_session(
+            token_hash
+        )
 
         user_id = principal["userId"]
 
@@ -459,6 +656,11 @@ async def handle_incident_create(
                 command_id
             ] = ack
 
+            store.put_processed_command(
+                command_id,
+                ack,
+            )
+
             await websocket.send_json(
                 ack
             )
@@ -476,10 +678,6 @@ async def handle_incident_create(
             "sequence": sequence,
         }
 
-        incidents[
-            incident_id
-        ] = incident
-
         event = {
             "type": "incident.created",
             "eventId": new_event_id(),
@@ -491,15 +689,26 @@ async def handle_incident_create(
             "sequence": sequence,
         }
 
-        remember_incident_event(
-            incident_id,
-            event,
-        )
-
         ack = accepted_ack(
             command=command,
             command_id=command_id,
             incident_id=incident_id,
+        )
+
+        store.persist_accepted_incident_command(
+            incident=incident,
+            event=event,
+            command_id=command_id,
+            ack=ack,
+        )
+
+        incidents[
+            incident_id
+        ] = incident
+
+        remember_incident_event(
+            incident_id,
+            event,
         )
 
         processed_commands[
@@ -579,6 +788,11 @@ async def handle_status_update(
                 command_id
             ] = ack
 
+            store.put_processed_command(
+                command_id,
+                ack,
+            )
+
             await websocket.send_json(
                 ack
             )
@@ -589,8 +803,12 @@ async def handle_status_update(
             incident_id
         )
 
-        incident["status"] = status
-        incident["sequence"] = sequence
+        updated_incident = dict(
+            incident
+        )
+
+        updated_incident["status"] = status
+        updated_incident["sequence"] = sequence
 
         event = {
             "type": "incident.updated",
@@ -601,15 +819,26 @@ async def handle_status_update(
             "sequence": sequence,
         }
 
-        remember_incident_event(
-            incident_id,
-            event,
-        )
-
         ack = accepted_ack(
             command=command,
             command_id=command_id,
             incident_id=incident_id,
+        )
+
+        store.persist_accepted_incident_command(
+            incident=updated_incident,
+            event=event,
+            command_id=command_id,
+            ack=ack,
+        )
+
+        incidents[
+            incident_id
+        ] = updated_incident
+
+        remember_incident_event(
+            incident_id,
+            event,
         )
 
         processed_commands[
@@ -689,6 +918,11 @@ async def handle_severity_update(
                 command_id
             ] = ack
 
+            store.put_processed_command(
+                command_id,
+                ack,
+            )
+
             await websocket.send_json(
                 ack
             )
@@ -699,8 +933,12 @@ async def handle_severity_update(
             incident_id
         )
 
-        incident["severity"] = severity
-        incident["sequence"] = sequence
+        updated_incident = dict(
+            incident
+        )
+
+        updated_incident["severity"] = severity
+        updated_incident["sequence"] = sequence
 
         event = {
             "type": "incident.updated",
@@ -711,15 +949,26 @@ async def handle_severity_update(
             "sequence": sequence,
         }
 
-        remember_incident_event(
-            incident_id,
-            event,
-        )
-
         ack = accepted_ack(
             command=command,
             command_id=command_id,
             incident_id=incident_id,
+        )
+
+        store.persist_accepted_incident_command(
+            incident=updated_incident,
+            event=event,
+            command_id=command_id,
+            ack=ack,
+        )
+
+        incidents[
+            incident_id
+        ] = updated_incident
+
+        remember_incident_event(
+            incident_id,
+            event,
         )
 
         processed_commands[
@@ -815,6 +1064,11 @@ async def handle_timeline_create(
         entry_id
     ] = event
 
+    store.put_timeline_event(
+        entry_id,
+        event,
+    )
+
     # This event is the acknowledgement expected by
     # WebSocketTimelineSender.
     await websocket.send_json(
@@ -907,6 +1161,44 @@ async def handle_replay_request(
 #
 # ws://127.0.0.1:9000
 # ----------------------------------------------------------------------
+
+@app.get("/incidents")
+async def list_incidents(
+    request: Request,
+) -> dict[str, Any]:
+
+    require_http_principal(
+        request
+    )
+
+    async with state_lock:
+
+        snapshots = [
+            dict(
+                incident
+            )
+            for incident
+            in incidents.values()
+        ]
+
+    snapshots.sort(
+        key=lambda incident: str(
+            incident.get(
+                "id",
+                "",
+            )
+        )
+    )
+
+    return {
+        "incidents":
+            snapshots,
+        "count":
+            len(
+                snapshots
+            ),
+    }
+
 
 @app.websocket("/")
 async def relay_socket(
@@ -1069,6 +1361,13 @@ async def relay_socket(
 
 @app.post("/dev/invalidate-access")
 async def dev_invalidate_access() -> dict[str, Any]:
+
+    if not settings.development_routes_enabled:
+        raise HTTPException(
+            status_code=404,
+            detail="Not found",
+        )
+
     invalidated_access_tokens = len(access_tokens)
 
     access_tokens.clear()
@@ -1109,8 +1408,8 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "relay_dev_server:app",
-        host="127.0.0.1",
-        port=9000,
+        host=settings.host,
+        port=settings.port,
         reload=False,
         log_level="info",
     )

@@ -5,6 +5,7 @@ import com.signaldesk.relay.data.local.IncidentEntity
 import com.signaldesk.relay.data.local.TimelineEntryDao
 import com.signaldesk.relay.data.local.TimelineEntryEntity
 import com.signaldesk.relay.data.mapper.toDomain
+import com.signaldesk.relay.data.remote.IncidentSnapshot
 import com.signaldesk.relay.data.remote.model.TimelineEntryAddedEvent
 import com.signaldesk.relay.model.DeliveryState
 import com.signaldesk.relay.model.Incident
@@ -17,6 +18,34 @@ class IncidentRepository(
     private val incidentDao: IncidentDao,
     private val timelineEntryDao: TimelineEntryDao? = null
 ) {
+
+    suspend fun reconcileAuthoritativeSnapshot(
+        snapshots: List<IncidentSnapshot>
+    ): Int {
+
+        return incidentDao
+            .reconcileAuthoritativeSnapshot(
+                snapshots.map {
+                    snapshot ->
+
+                    IncidentEntity(
+                        id =
+                            snapshot.id,
+                        title =
+                            snapshot.title,
+                        status =
+                            snapshot.status,
+                        severity =
+                            snapshot
+                                .severity
+                                .uppercase(),
+                        latestSequence =
+                            snapshot.sequence
+                    )
+                }
+            )
+    }
+
 
     fun observeIncidents(): Flow<List<Incident>> {
         return incidentDao
@@ -168,4 +197,3 @@ class IncidentRepository(
         }
     }
 }
-

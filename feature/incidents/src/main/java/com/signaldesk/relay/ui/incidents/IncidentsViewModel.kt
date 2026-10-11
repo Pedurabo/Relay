@@ -2,11 +2,14 @@ package com.signaldesk.relay.ui.incidents
 
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
 import com.signaldesk.relay.data.remote.model.IncidentEvent
+import com.signaldesk.relay.data.remote.IncidentSnapshotHttpException
+import com.signaldesk.relay.data.remote.IncidentSnapshotClient
 import com.signaldesk.relay.data.realtime.RealtimeIncidentCoordinator
 import com.signaldesk.relay.data.realtime.WebSocketRealtimeIncidentSource
 import com.signaldesk.relay.data.repository.IncidentRepository
@@ -19,6 +22,7 @@ import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.data.session.SessionTerminationReason
 import com.signaldesk.relay.model.Incident
 import com.signaldesk.relay.notifications.PushRegistrationCoordinator
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -116,6 +120,12 @@ class IncidentsViewModel(
                 httpBaseUrl
         )
 
+    private val incidentSnapshotClient =
+        IncidentSnapshotClient(
+            baseUrl =
+                httpBaseUrl
+        )
+
     val sessionState =
         SessionManager.sessionState
 
@@ -181,6 +191,25 @@ class IncidentsViewModel(
 
     init {
         viewModelScope.launch {
+
+            SessionManager
+                .sessionState
+                .collect {
+                    state ->
+
+                    if (
+                        state is
+                        SessionState.SignedIn
+                    ) {
+
+                        bootstrapAuthoritativeIncidents(
+                            state
+                        )
+                    }
+                }
+        }
+
+        viewModelScope.launch {
             SessionManager
                 .sessionTerminationReason
                 .collect { reason ->
@@ -208,6 +237,76 @@ class IncidentsViewModel(
                     realtimeCoordinator
             )
     }
+
+    private suspend fun bootstrapAuthoritativeIncidents(
+        session: SessionState.SignedIn
+    ) {
+
+        val snapshots =
+            try {
+
+                incidentSnapshotClient
+                    .load(
+                        session.accessToken
+                    )
+
+            } catch (
+                error:
+                    IncidentSnapshotHttpException
+            ) {
+
+                if (
+                    error.statusCode ==
+                    401
+                ) {
+
+                    Log.i(
+                        TAG,
+                        "INCIDENT_BOOTSTRAP_AUTH_REJECTED"
+                    )
+
+                    SessionRefreshCoordinator
+                        .refreshOrSignOut(
+                            session.accessToken
+                        )
+
+                } else {
+
+                    Log.i(
+                        TAG,
+                        "INCIDENT_BOOTSTRAP_FAILED|http=${error.statusCode}"
+                    )
+                }
+
+                return
+
+            } catch (cancelled: CancellationException) {
+     throw cancelled
+ }
+ catch (
+                error: Throwable
+            ) {
+
+                Log.i(
+                    TAG,
+                    "INCIDENT_BOOTSTRAP_FAILED|error=${error.javaClass.simpleName}"
+                )
+
+                return
+            }
+
+        val applied =
+            repository
+                .reconcileAuthoritativeSnapshot(
+                    snapshots
+                )
+
+        Log.i(
+            TAG,
+            "INCIDENT_BOOTSTRAP_APPLIED|received=${snapshots.size}|applied=$applied"
+        )
+    }
+
 
     fun signIn(
         username: String,
@@ -328,6 +427,13 @@ class IncidentsViewModel(
             }
         }
     }
+
+    companion object {
+
+        private const val TAG =
+            "RelayIncidentsViewModel"
+    }
+
 
     override fun onCleared() {
 

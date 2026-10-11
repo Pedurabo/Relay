@@ -1,0 +1,16 @@
+# Relay Docker build context
+
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-wal
+*.db-shm
+*.log
+test_*.py
+relay-firebase-service-account.json
+firebase-service-account*.json
