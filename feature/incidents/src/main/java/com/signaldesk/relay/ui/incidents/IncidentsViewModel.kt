@@ -16,6 +16,7 @@ import com.signaldesk.relay.data.repository.IncidentRepository
 import com.signaldesk.relay.data.session.AuthLoginFailure
 import com.signaldesk.relay.data.session.AuthSessionClient
 import com.signaldesk.relay.data.session.classifyAuthLoginFailure
+import com.signaldesk.relay.data.session.AuthenticatedOwnershipContext
 import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.data.session.SessionState
@@ -27,6 +28,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.Flow
@@ -73,48 +76,57 @@ class IncidentsViewModel(
         StateFlow<Boolean> =
         _incidentsLoaded
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val incidents:
         StateFlow<List<Incident>> =
-        combine(
-            repository.observeIncidents(),
-            database
-                .timelineEntryDao()
-                .observeLatestForAllIncidents()
-        ) { incidents, latestEntries ->
-
-            val latestByIncident =
-                latestEntries.associateBy {
-                    it.incidentId
-                }
-
-            incidents.map { incident ->
-
-                val latest =
-                    latestByIncident[
-                        incident.id
-                    ]
-
-                incident.copy(
-                    latestMessage =
-                        latest?.message,
-                    latestAuthor =
-                        latest?.author,
-                    latestUpdateAt =
-                        latest?.occurredAt
-                )
+        SessionManager.sessionState
+            .onEach { state ->
+                _incidentsLoaded.value =
+                    state is SessionState.SignedOut
             }
-        }
+            .flatMapLatest { state ->
+                when (state) {
+                    SessionState.SignedOut ->
+                        flowOf(emptyList())
+
+                    is SessionState.SignedIn -> {
+                        require(state.userId.isNotBlank())
+
+                        combine(
+                            repository.observeIncidents(
+                                ownerPrincipal = state.userId
+                            ),
+                            database
+                                .timelineEntryDao()
+                                .observeLatestForAllIncidents(
+                                    ownerPrincipal = state.userId
+                                )
+                        ) { incidents, latestEntries ->
+
+                            val latestByIncident =
+                                latestEntries.associateBy {
+                                    it.incidentId
+                                }
+
+                            incidents.map { incident ->
+                                val latest =
+                                    latestByIncident[incident.id]
+
+                                incident.copy(
+                                    latestMessage = latest?.message,
+                                    latestAuthor = latest?.author,
+                                    latestUpdateAt = latest?.occurredAt
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             .markIncidentsLoaded(_incidentsLoaded)
             .stateIn(
-                scope =
-                    viewModelScope,
-                started =
-                    SharingStarted
-                        .WhileSubscribed(
-                            5_000
-                        ),
-                initialValue =
-                    emptyList()
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = emptyList()
             )
 
     private val authSessionClient =
@@ -248,6 +260,12 @@ class IncidentsViewModel(
         val originatingGeneration =
             SessionManager.sessionGeneration
 
+        val snapshotOwnership =
+            AuthenticatedOwnershipContext.capture(
+                sessionState = session,
+                generation = originatingGeneration
+            ) ?: return
+
         val snapshots =
             try {
 
@@ -318,15 +336,15 @@ class IncidentsViewModel(
 
         val applied =
             SessionManager
-                .withAuthorizedSnapshot(
-                    expectedGeneration =
-                        originatingGeneration
+                .withAuthorizedOwnership(
+                    context = snapshotOwnership
                 ) {
                     currentCoroutineContext().ensureActive()
 
                     repository
-                        .reconcileAuthoritativeSnapshot(
-                            snapshots
+                        .reconcileAuthoritativeSnapshotForOwner(
+                            snapshots = snapshots,
+                            ownership = snapshotOwnership
                         )
                 }
 

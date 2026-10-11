@@ -10,6 +10,7 @@ class AuthoritativeSnapshotGapTest {
         expected: Long = 8L,
         received: Long = 12L
     ) = IncidentSequenceGapEntity(
+        ownerPrincipal = "test-owner",
         incidentId = "INC-001",
         expectedSequence = expected,
         receivedSequence = received,

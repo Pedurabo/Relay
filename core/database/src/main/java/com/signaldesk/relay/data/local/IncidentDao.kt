@@ -53,14 +53,45 @@ internal fun reconcileSnapshotSequenceGap(
 @Dao
 interface IncidentDao {
 
-    @Query("SELECT * FROM incidents ORDER BY id ASC")
-    fun observeAll(): Flow<List<IncidentEntity>>
+    @Query(
+        """
+        SELECT *
+        FROM incidents
+        WHERE ownerPrincipal = :ownerPrincipal
+        ORDER BY id ASC
+        """
+    )
+    fun observeAll(
+        ownerPrincipal: String
+    ): Flow<List<IncidentEntity>>
 
-    @Query("SELECT * FROM incidents WHERE id = :incidentId LIMIT 1")
-    fun observeById(incidentId: String): Flow<IncidentEntity?>
+    @Query(
+        """
+        SELECT *
+        FROM incidents
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND id = :incidentId
+        LIMIT 1
+        """
+    )
+    fun observeById(
+        ownerPrincipal: String,
+        incidentId: String
+    ): Flow<IncidentEntity?>
 
-    @Query("SELECT * FROM incidents WHERE id = :incidentId LIMIT 1")
-    suspend fun getById(incidentId: String): IncidentEntity?
+    @Query(
+        """
+        SELECT *
+        FROM incidents
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND id = :incidentId
+        LIMIT 1
+        """
+    )
+    suspend fun getById(
+        ownerPrincipal: String,
+        incidentId: String
+    ): IncidentEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(incident: IncidentEntity)
@@ -72,11 +103,13 @@ interface IncidentDao {
         """
         SELECT *
         FROM incident_sequence_gaps
-        WHERE incidentId = :incidentId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND incidentId = :incidentId
         LIMIT 1
         """
     )
     suspend fun getSnapshotSequenceGap(
+        ownerPrincipal: String,
         incidentId: String
     ): IncidentSequenceGapEntity?
 
@@ -88,80 +121,102 @@ interface IncidentDao {
     @Query(
         """
         DELETE FROM incident_sequence_gaps
-        WHERE incidentId = :incidentId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND incidentId = :incidentId
         """
     )
     suspend fun deleteSnapshotSequenceGap(
+        ownerPrincipal: String,
         incidentId: String
-    )
+    ): Int
+
     @Transaction
     suspend fun reconcileAuthoritativeSnapshot(
+        ownerPrincipal: String,
         incidents: List<IncidentEntity>
     ): Int {
+        require(ownerPrincipal.isNotBlank()) {
+            "Authenticated owner is required."
+        }
 
-        var applied =
-            0
+        require(incidents.all {
+            it.ownerPrincipal == ownerPrincipal
+        }) {
+            "Snapshot batch contains another account's incident."
+        }
 
-        incidents.forEach {
-            incoming ->
+        var applied = 0
 
-            val current =
-                getById(
+        for (incoming in incidents) {
+            val key = AccountScopedIncidentId(
+                ownerPrincipal = ownerPrincipal,
+                incidentId = incoming.id
+            )
+
+            val current = getById(
+                ownerPrincipal,
+                incoming.id
+            )
+
+            val gap = getSnapshotSequenceGap(
+                ownerPrincipal,
+                incoming.id
+            )
+
+            val decision = OwnerScopedSnapshotPolicy.decide(
+                key = key,
+                currentIncidentKey =
+                    if (current == null) null else key,
+                currentLatestSequence = current?.latestSequence,
+                incomingLatestSequence = incoming.latestSequence,
+                currentGap = gap?.let {
+                    OwnerScopedGapState(
+                        key = key,
+                        expectedSequence = it.expectedSequence,
+                        receivedSequence = it.receivedSequence
+                    )
+                }
+            )
+
+            if (!decision.applyIncident) {
+                continue
+            }
+
+            insert(incoming)
+
+            if (decision.deleteExistingGap) {
+                deleteSnapshotSequenceGap(
+                    ownerPrincipal,
                     incoming.id
                 )
+            } else {
+                val replacement = decision.replacementGap
 
-            if (
-                shouldApplyAuthoritativeIncidentSnapshot(
-                    currentLatestSequence =
-                        current
-                            ?.latestSequence,
-                    incomingLatestSequence =
-                        incoming
-                            .latestSequence
-                )
-            ) {
-
-                insert(
-                    incoming
-                )
-
-                if (incoming.latestSequence > 0L) {
-
-                    val gap =
-                        getSnapshotSequenceGap(
-                            incoming.id
+                if (
+                    gap != null &&
+                    replacement != null &&
+                    replacement.expectedSequence != gap.expectedSequence
+                ) {
+                    upsertSnapshotSequenceGap(
+                        gap.copy(
+                            expectedSequence = replacement.expectedSequence
                         )
-
-                    if (gap != null) {
-
-                        val reconciled =
-                            reconcileSnapshotSequenceGap(
-                                gap = gap,
-                                snapshotSequence =
-                                    incoming.latestSequence
-                            )
-
-                        if (reconciled == null) {
-                            deleteSnapshotSequenceGap(
-                                incoming.id
-                            )
-                        } else {
-                            upsertSnapshotSequenceGap(
-                                reconciled
-                            )
-                        }
-                    }
+                    )
                 }
-
-                applied +=
-                    1
             }
+
+            applied++
         }
 
         return applied
     }
 
-
-    @Query("SELECT COUNT(*) FROM incidents")
-    suspend fun count(): Int
+    @Query(
+        """
+        SELECT COUNT(*)
+        FROM incidents
+        WHERE ownerPrincipal = :ownerPrincipal
+        """
+    )
+    suspend fun count(ownerPrincipal: String): Int
 }

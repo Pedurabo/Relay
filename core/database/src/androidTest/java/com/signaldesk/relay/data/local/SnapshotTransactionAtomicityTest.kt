@@ -41,6 +41,7 @@ class SnapshotTransactionAtomicityTest {
 
     private fun incident(sequence: Long) =
         IncidentEntity(
+            ownerPrincipal = "operator-a",
             id = "INC-245",
             title = "Transaction test",
             status = "Active",
@@ -50,6 +51,7 @@ class SnapshotTransactionAtomicityTest {
 
     private fun gap() =
         IncidentSequenceGapEntity(
+            ownerPrincipal = "operator-a",
             incidentId = "INC-245",
             expectedSequence = 8L,
             receivedSequence = 12L,
@@ -75,21 +77,22 @@ class SnapshotTransactionAtomicityTest {
             val applied =
                 database.incidentDao()
                     .reconcileAuthoritativeSnapshot(
-                        listOf(incident(12L))
-                    )
+                            "operator-a",
+                            listOf(incident(12L))
+                        )
 
             assertEquals(1, applied)
 
             assertEquals(
                 12L,
                 database.incidentDao()
-                    .getById("INC-245")
+                    .getById("operator-a", "INC-245")
                     ?.latestSequence
             )
 
             assertNull(
                 database.incidentSequenceGapDao()
-                    .getByIncidentId("INC-245")
+                    .getByIncidentId("operator-a", "INC-245")
             )
         }
 
@@ -104,6 +107,7 @@ class SnapshotTransactionAtomicityTest {
 
                     database.incidentDao()
                         .reconcileAuthoritativeSnapshot(
+                            "operator-a",
                             listOf(incident(12L))
                         )
 
@@ -122,13 +126,13 @@ class SnapshotTransactionAtomicityTest {
             assertEquals(
                 7L,
                 database.incidentDao()
-                    .getById("INC-245")
+                    .getById("operator-a", "INC-245")
                     ?.latestSequence
             )
 
             val remainingGap =
                 database.incidentSequenceGapDao()
-                    .getByIncidentId("INC-245")
+                    .getByIncidentId("operator-a", "INC-245")
 
             assertNotNull(remainingGap)
             assertEquals(
@@ -159,6 +163,7 @@ class SnapshotTransactionAtomicityTest {
 
                     database.incidentDao()
                         .reconcileAuthoritativeSnapshot(
+                            "operator-a",
                             listOf(incident(12L))
                         )
 
@@ -181,13 +186,13 @@ class SnapshotTransactionAtomicityTest {
             assertEquals(
                 7L,
                 database.incidentDao()
-                    .getById("INC-245")
+                    .getById("operator-a", "INC-245")
                     ?.latestSequence
             )
 
             val remainingGap =
                 database.incidentSequenceGapDao()
-                    .getByIncidentId("INC-245")
+                    .getByIncidentId("operator-a", "INC-245")
 
             assertNotNull(remainingGap)
 

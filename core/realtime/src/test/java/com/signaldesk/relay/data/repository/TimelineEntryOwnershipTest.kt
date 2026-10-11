@@ -7,10 +7,11 @@ import org.junit.Test
 class TimelineEntryOwnershipTest {
 
     @Test
-    fun legacyTimelineEntityDefaultsToUnknownOwner() {
+    fun timelineEntityRequiresExplicitOwner() {
 
         val entry =
             TimelineEntryEntity(
+                ownerPrincipal = "operator-a",
                 entryId =
                     "ENTRY-OLD",
                 incidentId =
@@ -25,10 +26,7 @@ class TimelineEntryOwnershipTest {
                     "SENT"
             )
 
-        assertEquals(
-            "",
-            entry.ownerPrincipal
-        )
+        assertEquals("operator-a", entry.ownerPrincipal)
     }
 
 

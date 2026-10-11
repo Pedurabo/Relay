@@ -114,9 +114,7 @@ class TimelineRetryTransitionTest {
 
             assertEquals(
                 "PENDING",
-                dao.getById(
-                    "ENTRY-FAILED"
-                )?.deliveryState
+                dao.getById("operator-a", "ENTRY-FAILED")?.deliveryState
             )
 
             assertEquals(
@@ -126,9 +124,7 @@ class TimelineRetryTransitionTest {
 
             assertEquals(
                 "PENDING",
-                dao.getById(
-                    "ENTRY-PENDING"
-                )?.deliveryState
+                dao.getById("operator-a", "ENTRY-PENDING")?.deliveryState
             )
 
             assertEquals(
@@ -138,9 +134,7 @@ class TimelineRetryTransitionTest {
 
             assertEquals(
                 "SENT",
-                dao.getById(
-                    "ENTRY-SENT"
-                )?.deliveryState
+                dao.getById("operator-a", "ENTRY-SENT")?.deliveryState
             )
 
             assertEquals(
@@ -150,9 +144,7 @@ class TimelineRetryTransitionTest {
 
             assertEquals(
                 "FAILED",
-                dao.getById(
-                    "ENTRY-WRONG-OWNER"
-                )?.deliveryState
+                dao.getById("operator-a", "ENTRY-WRONG-OWNER")?.deliveryState
             )
         }
 
@@ -223,9 +215,7 @@ class TimelineRetryTransitionTest {
 
             assertEquals(
                 "FAILED",
-                dao.getById(
-                    "FAIL-PENDING"
-                )?.deliveryState
+                dao.getById("operator-a", "FAIL-PENDING")?.deliveryState
             )
 
             assertEquals(
@@ -235,9 +225,7 @@ class TimelineRetryTransitionTest {
 
             assertEquals(
                 "FAILED",
-                dao.getById(
-                    "FAIL-FAILED"
-                )?.deliveryState
+                dao.getById("operator-a", "FAIL-FAILED")?.deliveryState
             )
 
             assertEquals(
@@ -247,9 +235,7 @@ class TimelineRetryTransitionTest {
 
             assertEquals(
                 "SENT",
-                dao.getById(
-                    "FAIL-SENT"
-                )?.deliveryState
+                dao.getById("operator-a", "FAIL-SENT")?.deliveryState
             )
 
             assertEquals(
@@ -259,9 +245,7 @@ class TimelineRetryTransitionTest {
 
             assertEquals(
                 "PENDING",
-                dao.getById(
-                    "FAIL-WRONG-OWNER"
-                )?.deliveryState
+                dao.getById("operator-a", "FAIL-WRONG-OWNER")?.deliveryState
             )
         }
     private fun entry(

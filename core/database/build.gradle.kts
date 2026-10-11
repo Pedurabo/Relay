@@ -32,6 +32,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     ksp(libs.androidx.room.compiler)
+    kspAndroidTest(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
 

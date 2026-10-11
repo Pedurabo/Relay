@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.local
+package com.signaldesk.relay.data.local
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -8,9 +8,7 @@ import androidx.room.Query
 @Dao
 interface DeferredIncidentUpdateDao {
 
-    @Insert(
-        onConflict = OnConflictStrategy.IGNORE
-    )
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(
         event: DeferredIncidentUpdateEntity
     ): Long
@@ -19,11 +17,13 @@ interface DeferredIncidentUpdateDao {
         """
         SELECT *
         FROM deferred_incident_updates
-        WHERE incidentId = :incidentId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND incidentId = :incidentId
         ORDER BY sequence ASC, deferredAt ASC, eventId ASC
         """
     )
     suspend fun loadForIncident(
+        ownerPrincipal: String,
         incidentId: String
     ): List<DeferredIncidentUpdateEntity>
 
@@ -31,35 +31,43 @@ interface DeferredIncidentUpdateDao {
         """
         SELECT *
         FROM deferred_incident_updates
+        WHERE ownerPrincipal = :ownerPrincipal
         ORDER BY deferredAt ASC, eventId ASC
         """
     )
-    suspend fun loadAll():
-        List<DeferredIncidentUpdateEntity>
+    suspend fun loadAll(
+        ownerPrincipal: String
+    ): List<DeferredIncidentUpdateEntity>
 
     @Query(
         """
         DELETE FROM deferred_incident_updates
-        WHERE eventId = :eventId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND eventId = :eventId
         """
     )
     suspend fun deleteByEventId(
+        ownerPrincipal: String,
         eventId: String
     ): Int
 
     @Query(
         """
         DELETE FROM deferred_incident_updates
-        WHERE deferredAt < :cutoffMillis
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND deferredAt < :cutoffMillis
           AND NOT EXISTS (
               SELECT 1
               FROM incidents
-              WHERE incidents.id =
+              WHERE incidents.ownerPrincipal =
+                    deferred_incident_updates.ownerPrincipal
+                AND incidents.id =
                     deferred_incident_updates.incidentId
           )
         """
     )
     suspend fun deleteOrphansBefore(
+        ownerPrincipal: String,
         cutoffMillis: Long
     ): Int
 }

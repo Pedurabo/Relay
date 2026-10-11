@@ -13,11 +13,15 @@ interface ProcessedEventDao {
         SELECT EXISTS(
             SELECT 1
             FROM processed_events
-            WHERE eventId = :eventId
+            WHERE ownerPrincipal = :ownerPrincipal
+              AND eventId = :eventId
         )
         """
     )
-    suspend fun exists(eventId: String): Boolean
+    suspend fun exists(
+        ownerPrincipal: String,
+        eventId: String
+    ): Boolean
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(

@@ -223,7 +223,9 @@ function main() {
                     severity:
                         "critical"
                 },
-                "CRITICAL: incident updated"
+                "CRITICAL: incident updated",
+                {},
+                "test-recipient-a"
             );
 
         assert(
@@ -238,6 +240,55 @@ function main() {
             "Push data payload was incorrect."
         );
 
+        // FCM_OWNER_CONTRACT_TEST_246
+        assert(
+            payload.ownerPrincipal === "test-recipient-a",
+            "Push payload has the wrong recipient owner."
+        );
+
+        const secondRecipientPayload =
+            buildIncidentPushPayload(
+                {
+                    eventId: "EVT-PUSH-1",
+                    incidentId: "INC-PUSH",
+                    severity: "critical"
+                },
+                "CRITICAL: incident updated",
+                {},
+                "test-recipient-b"
+            );
+
+        assert(
+            secondRecipientPayload.ownerPrincipal ===
+                "test-recipient-b",
+            "Second recipient owner was not isolated."
+        );
+
+        assert(
+            secondRecipientPayload.ownerPrincipal !==
+                payload.ownerPrincipal,
+            "Different recipients shared the same owner."
+        );
+
+        let rejectedMissingOwner = false;
+
+        try {
+            buildIncidentPushPayload(
+                {
+                    eventId: "EVT-PUSH-1",
+                    incidentId: "INC-PUSH"
+                },
+                "Missing owner",
+                {}
+            );
+        } catch (error) {
+            rejectedMissingOwner = true;
+        }
+
+        assert(
+            rejectedMissingOwner,
+            "Payload without a trusted owner was accepted."
+        );
         assert(
             Object
                 .values(

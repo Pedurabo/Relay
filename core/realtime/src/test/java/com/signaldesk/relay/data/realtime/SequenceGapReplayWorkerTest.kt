@@ -15,6 +15,7 @@ class SequenceGapReplayWorkerTest {
             var gap:
                 IncidentSequenceGapEntity? =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-1",
                     expectedSequence =
@@ -76,7 +77,8 @@ class SequenceGapReplayWorkerTest {
 
                             gap =
                                 IncidentSequenceGapEntity(
-                                    incidentId =
+                    ownerPrincipal = "test-owner",
+                    incidentId =
                                         "INC-1",
                                     expectedSequence =
                                         13L,
@@ -128,6 +130,7 @@ class SequenceGapReplayWorkerTest {
             var gap:
                 IncidentSequenceGapEntity? =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-PARTIAL-REPLAY",
                     expectedSequence =
@@ -187,7 +190,8 @@ class SequenceGapReplayWorkerTest {
                              */
                             gap =
                                 IncidentSequenceGapEntity(
-                                    incidentId =
+                    ownerPrincipal = "test-owner",
+                    incidentId =
                                         "INC-PARTIAL-REPLAY",
                                     expectedSequence =
                                         15L,
@@ -229,6 +233,7 @@ class SequenceGapReplayWorkerTest {
             var gap:
                 IncidentSequenceGapEntity? =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-CLOSE-DURING-BACKOFF",
                     expectedSequence =
@@ -321,6 +326,7 @@ class SequenceGapReplayWorkerTest {
             var gap:
                 IncidentSequenceGapEntity? =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-DISCONNECT-BACKOFF",
                     expectedSequence =
@@ -405,6 +411,7 @@ class SequenceGapReplayWorkerTest {
 
             assertEquals(
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-DISCONNECT-BACKOFF",
                     expectedSequence =
@@ -426,6 +433,7 @@ class SequenceGapReplayWorkerTest {
 
             val gap =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-2",
                     expectedSequence =
@@ -503,7 +511,8 @@ class SequenceGapReplayWorkerTest {
 
                     if (epoch1LoadCount == 1) {
                         IncidentSequenceGapEntity(
-                            incidentId =
+                    ownerPrincipal = "test-owner",
+                    incidentId =
                                 incidentId,
                             expectedSequence =
                                 10L,
@@ -561,7 +570,8 @@ class SequenceGapReplayWorkerTest {
 
                     if (epoch2LoadCount == 1) {
                         IncidentSequenceGapEntity(
-                            incidentId =
+                    ownerPrincipal = "test-owner",
+                    incidentId =
                                 incidentId,
                             expectedSequence =
                                 12L,
@@ -622,7 +632,8 @@ class SequenceGapReplayWorkerTest {
 
                     if (epoch3LoadCount == 1) {
                         IncidentSequenceGapEntity(
-                            incidentId =
+                    ownerPrincipal = "test-owner",
+                    incidentId =
                                 incidentId,
                             expectedSequence =
                                 17L,

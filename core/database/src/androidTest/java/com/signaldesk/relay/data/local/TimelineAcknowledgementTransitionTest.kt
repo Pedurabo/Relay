@@ -83,9 +83,7 @@ class TimelineAcknowledgementTransitionTest {
 
             val acknowledged =
                 requireNotNull(
-                    dao.getById(
-                        "ENTRY-ACK"
-                    )
+                    dao.getById("operator-a", "ENTRY-ACK")
                 )
 
             assertEquals(
@@ -189,9 +187,7 @@ class TimelineAcknowledgementTransitionTest {
 
             val stored =
                 requireNotNull(
-                    dao.getById(
-                        "ENTRY-AUTH-FIRST"
-                    )
+                    dao.getById("operator-a", "ENTRY-AUTH-FIRST")
                 )
 
             assertEquals(

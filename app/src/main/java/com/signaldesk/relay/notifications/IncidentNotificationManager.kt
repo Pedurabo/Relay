@@ -15,6 +15,7 @@ import com.signaldesk.relay.MainActivity
 import com.signaldesk.relay.R
 import com.signaldesk.relay.appstate.AppVisibilityTracker
 import com.signaldesk.relay.data.local.RelayDatabase
+import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.remote.model.IncidentCreatedEvent
 import com.signaldesk.relay.data.remote.model.IncidentEvent
 import com.signaldesk.relay.data.remote.model.IncidentUpdatedEvent
@@ -52,6 +53,7 @@ class IncidentNotificationManager(
         event: IncidentEvent
     ) {
 
+        val ownership = SessionManager.captureAuthenticatedOwnership() ?: return
         if (
             AppVisibilityTracker.isForeground
         ) {
@@ -63,38 +65,36 @@ class IncidentNotificationManager(
         }
 
         notificationScope.launch {
-
-            val severity =
-                resolveSeverity(
-                    event
-                )
-
-            if (
-                severity !=
-                IncidentSeverity.HIGH &&
-                severity !=
-                IncidentSeverity.CRITICAL
+            // NOTIFICATION_OWNER_GATE_246
+            SessionManager.withAuthorizedOwnership(
+                ownership
             ) {
-                return@launch
-            }
+                val severity =
+                    resolveSeverity(
+                        event,
+                        ownership.ownerPrincipal
+                    )
 
-            val content =
-                buildContent(
-                    event,
-                    severity
+                if (
+                    severity != IncidentSeverity.HIGH &&
+                    severity != IncidentSeverity.CRITICAL
+                ) {
+                    return@withAuthorizedOwnership
+                }
+
+                val content =
+                    buildContent(
+                        event,
+                        severity
+                    ) ?: return@withAuthorizedOwnership
+
+                postNotification(
+                    eventId = event.eventId,
+                    incidentId = event.incidentId,
+                    severity = severity,
+                    content = content
                 )
-                    ?: return@launch
-
-            postNotification(
-                eventId =
-                    event.eventId,
-                incidentId =
-                    event.incidentId,
-                severity =
-                    severity,
-                content =
-                    content
-            )
+            }
         }
     }
 
@@ -141,7 +141,7 @@ class IncidentNotificationManager(
 
     private suspend fun resolveSeverity(
         event: IncidentEvent
-    ): IncidentSeverity {
+    , ownerPrincipal: String): IncidentSeverity {
 
         return when (event) {
 
@@ -163,8 +163,7 @@ class IncidentNotificationManager(
                     ?: database
                         .incidentDao()
                         .getById(
-                            event.incidentId
-                        )
+                            ownerPrincipal, event.incidentId)
                         ?.severity
                         ?.let {
                             IncidentSeverity
@@ -180,8 +179,7 @@ class IncidentNotificationManager(
                 database
                     .incidentDao()
                     .getById(
-                        event.incidentId
-                    )
+                        ownerPrincipal, event.incidentId)
                     ?.severity
                     ?.let {
                         IncidentSeverity

@@ -24,6 +24,12 @@ import com.signaldesk.relay.model.TimelineEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CancellationException
@@ -96,27 +102,85 @@ class IncidentDetailViewModel(
             application
         )
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val incident: StateFlow<Incident?> =
-        repository
-            .observeIncident(incidentId)
+        SessionManager.sessionState
+            .flatMapLatest { state ->
+                when (state) {
+                    SessionState.SignedOut ->
+                        flowOf(null)
+
+                    is SessionState.SignedIn -> {
+                        require(state.userId.isNotBlank())
+                        repository.observeIncident(
+                            ownerPrincipal = state.userId,
+                            incidentId = incidentId
+                        )
+                    }
+                }
+            }
             .stateIn(
                 scope = viewModelScope,
-                started =
-                    SharingStarted
-                        .WhileSubscribed(5_000),
+                started = SharingStarted.Eagerly,
                 initialValue = null
             )
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val timeline: StateFlow<List<TimelineEntry>> =
-        repository
-            .observeTimeline(incidentId)
+        SessionManager.sessionState
+            .flatMapLatest { state ->
+                when (state) {
+                    SessionState.SignedOut ->
+                        flowOf(emptyList())
+
+                    is SessionState.SignedIn -> {
+                        require(state.userId.isNotBlank())
+                        repository.observeTimeline(
+                            ownerPrincipal = state.userId,
+                            incidentId = incidentId
+                        )
+                    }
+                }
+            }
             .stateIn(
                 scope = viewModelScope,
-                started =
-                    SharingStarted
-                        .WhileSubscribed(5_000),
+                started = SharingStarted.Eagerly,
                 initialValue = emptyList()
             )
+
+    // SESSION_TRANSITION_UI_RESET_246
+    init {
+        viewModelScope.launch {
+            SessionManager.sessionState
+                .map { state ->
+                    when (state) {
+                        SessionState.SignedOut -> null
+                        is SessionState.SignedIn -> state.userId
+                    }
+                }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect {
+                    timelineRetryInProgressEntryId.value = null
+                    timelineRetryErrorEntryId.value = null
+                    timelineRetryError.value = null
+
+                    timelinePostInProgress.value = false
+                    timelinePostError.value = null
+                    timelinePostSaved.value = false
+
+                    statusUpdateInProgress.value = false
+                    statusUpdateMessage.value = null
+                    statusUpdateError.value = null
+                    optimisticStatus.value = null
+
+                    severityUpdateInProgress.value = false
+                    severityUpdateMessage.value = null
+                    severityUpdateError.value = null
+                    optimisticSeverity.value = null
+                }
+        }
+    }
 
     fun postUpdate(
         message: String
@@ -218,10 +282,19 @@ class IncidentDetailViewModel(
 
         viewModelScope.launch {
 
+            val activeSession =
+                SessionManager.sessionState.value as?
+                    SessionState.SignedIn
+                    ?: run {
+                        timelineRetryInProgressEntryId.value = null
+                        return@launch
+                    }
+
             val ownerPrincipal =
                 repository
                     .getTimelineEntryOwnerPrincipal(
-                        entry.id
+                        ownerPrincipal = activeSession.userId,
+                        entryId = entry.id
                     )
                     ?: run {
                         timelineRetryInProgressEntryId.value =

@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TimelineEntryEntity::class,
         IncidentSequenceGapEntity::class
     ],
-    version = 15,
+    version = 16,
     exportSchema = true
 )
 abstract class RelayDatabase :
@@ -236,7 +236,8 @@ companion object {
                                 MIGRATION_11_12,
                                 MIGRATION_12_13,
                                   MIGRATION_13_14,
-                                MIGRATION_14_15
+                                MIGRATION_14_15,
+                                RELAY_MIGRATION_15_16
                               )
                             .build()
                             .also {

@@ -757,6 +757,7 @@ object SeverityOutboxCoordinator {
         }
     }
 
+    // SEVERITY_OUTBOX_OWNER_LOOKUPS_246
     private suspend fun deliverOneTurn(
         pending:
             PendingSeverityCommand
@@ -788,8 +789,9 @@ object SeverityOutboxCoordinator {
             database
                 .incidentDao()
                 .getById(
-                    pending.incidentId
-                )
+                    ownerPrincipal = pending.ownerPrincipal,
+                        incidentId = pending.incidentId
+                    )
 
         if (
             beforeSend != null
@@ -969,7 +971,8 @@ object SeverityOutboxCoordinator {
                 database
                     .incidentDao()
                     .getById(
-                        pending.incidentId
+                        ownerPrincipal = pending.ownerPrincipal,
+                        incidentId = pending.incidentId
                     )
 
             if (
@@ -1043,7 +1046,8 @@ object SeverityOutboxCoordinator {
                 database
                     .incidentDao()
                     .getById(
-                        pending.incidentId
+                        ownerPrincipal = pending.ownerPrincipal,
+                        incidentId = pending.incidentId
                     )
 
             if (

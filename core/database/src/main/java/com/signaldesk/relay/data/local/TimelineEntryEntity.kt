@@ -2,13 +2,14 @@ package com.signaldesk.relay.data.local
 
 import androidx.room.Entity
 import androidx.room.Index
-import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "timeline_entries",
+    primaryKeys = ["ownerPrincipal", "entryId"],
     indices = [
         Index(
             value = [
+                "ownerPrincipal",
                 "incidentId",
                 "occurredAt",
                 "entryId"
@@ -25,14 +26,11 @@ import androidx.room.PrimaryKey
     ]
 )
 data class TimelineEntryEntity(
-    @PrimaryKey
     val entryId: String,
     val incidentId: String,
     val message: String,
     val author: String,
     val occurredAt: Long,
     val deliveryState: String,
-
-    val ownerPrincipal: String =
-        ""
+    val ownerPrincipal: String
 )

@@ -2,13 +2,14 @@ package com.signaldesk.relay.data.local
 
 import androidx.room.Entity
 import androidx.room.Index
-import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "deferred_incident_updates",
+    primaryKeys = ["ownerPrincipal", "eventId"],
     indices = [
         Index(
             value = [
+                "ownerPrincipal",
                 "incidentId",
                 "sequence",
                 "deferredAt",
@@ -17,6 +18,7 @@ import androidx.room.PrimaryKey
         ),
         Index(
             value = [
+                "ownerPrincipal",
                 "deferredAt",
                 "eventId"
             ]
@@ -24,7 +26,6 @@ import androidx.room.PrimaryKey
     ]
 )
 data class DeferredIncidentUpdateEntity(
-    @PrimaryKey
     val eventId: String,
     val incidentId: String,
     val occurredAt: Long,
@@ -32,5 +33,6 @@ data class DeferredIncidentUpdateEntity(
     val title: String?,
     val status: String?,
     val severity: String?,
-    val deferredAt: Long
+    val deferredAt: Long,
+    val ownerPrincipal: String
 )

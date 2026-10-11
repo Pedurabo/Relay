@@ -474,6 +474,7 @@ object CreateIncidentOutboxCoordinator {
         }
     }
 
+    // CREATE_OUTBOX_OWNER_LOOKUPS_246
     private suspend fun deliverOneTurn(
         pending:
             PendingCreateIncidentCommand
@@ -492,8 +493,9 @@ object CreateIncidentOutboxCoordinator {
             database
                 .incidentDao()
                 .getById(
-                    pending.incidentId
-                )
+                    ownerPrincipal = pending.ownerPrincipal,
+                        incidentId = pending.incidentId
+                    )
 
         if (
             beforeSend != null
@@ -688,7 +690,8 @@ when (
                 database
                     .incidentDao()
                     .getById(
-                        pending.incidentId
+                        ownerPrincipal = pending.ownerPrincipal,
+                        incidentId = pending.incidentId
                     )
 
             if (
@@ -749,7 +752,8 @@ when (
                 database
                     .incidentDao()
                     .getById(
-                        pending.incidentId
+                        ownerPrincipal = pending.ownerPrincipal,
+                        incidentId = pending.incidentId
                     )
 
             if (

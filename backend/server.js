@@ -679,22 +679,40 @@ function sendPushForIncidentEvent(
         return;
     }
 
-    pushSender
-        .sendToTokens(
-            targets.map(
-                target =>
-                    target.token
-            ),
-            buildIncidentPushPayload(
-                event,
-                content,
-                storage
-                    .getIncident(
-                        event.incidentId
-                    ) ||
-                    {}
-            )
-        )
+        // FCM_PER_RECIPIENT_DISPATCH_246
+    // Recipient ownership comes from the server-side access query.
+    const incident =
+        storage.getIncident(event.incidentId) || {};
+
+    const deliveries =
+        targets.map(target => {
+            const ownerPrincipal =
+                String(target.userId || "").trim();
+
+            if (
+                !ownerPrincipal ||
+                typeof target.token !== "string" ||
+                !target.token.trim()
+            ) {
+                return Promise.reject(
+                    new Error(
+                        "Invalid authorized push recipient."
+                    )
+                );
+            }
+
+            return pushSender.sendToTokens(
+                [target.token],
+                buildIncidentPushPayload(
+                    event,
+                    content,
+                    incident,
+                    ownerPrincipal
+                )
+            );
+        });
+
+    Promise.all(deliveries)
         .then(
             () => {
 

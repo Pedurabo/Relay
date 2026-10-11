@@ -23,7 +23,7 @@ The project focuses on a difficult mobile-systems problem: keeping durable local
 - Cross-incident queue fairness
 - Session-bound command ownership
 - Cross-account isolation
-- Room database version 15 with exported schema history and composite indexes for hot recovery/outbox paths
+- Room database version 16 with exported schema history and composite indexes for hot recovery/outbox paths
 - Unit, migration, instrumentation, and physical-device reliability validation
 - Authenticated FastAPI backend with durable SQLite state, access/refresh session lifecycle, revocation, and WebSocket command handling
 - Process-scoped realtime ownership with shared connection state and stale-socket cleanup
@@ -257,7 +257,7 @@ When User A returns, the original command can resume with the same stable ID.
 
 ## Room database evolution
 
-Relay currently uses **Room database version 15** with schema export enabled.
+Relay currently uses **Room database version 16** with schema export enabled.
 
 The project includes migration coverage for durable deferred realtime state.
 
@@ -456,6 +456,42 @@ Instrumentation tests are intentionally kept separate from manual physical-devic
 
 Connected instrumentation runs can replace or remove the installed debug application, so manual product testing uses `installDebug` separately.
 
+
+## Milestone 246 — Account-Isolated Local Data
+
+Relay's Room v16 work extends account isolation to durable local incident state.
+
+### Implemented
+
+- Room v15 to v16 migration with owner-scoped composite primary keys.
+- Owner-scoped incidents, timelines, sequence gaps, processed events, and deferred realtime state.
+- Owner-aware DAO and repository operations.
+- Preservation of existing owner-known pending commands.
+- Quarantine of historical data whose account ownership cannot be proven.
+- Session-generation ownership checks for realtime connections.
+- Rejection of stale realtime events after account switches.
+- Recipient-bound backend push delivery.
+
+### Migration validation
+
+The Room 15 to 16 migration was exercised through:
+
+- SQLite migration rehearsal using a disposable copy of an actual Samsung database.
+- Row-count and SQLite integrity verification.
+- Android Room migration and schema-validation instrumentation.
+- Android Room opening and migration of a disposable real-device database snapshot.
+
+The original installed application's Room database was not upgraded during these tests.
+
+### Remaining work
+
+- Complete Account A to B to A isolation acceptance testing.
+- Verify owner-scoped incident lists, timelines, deferred events, pending commands, and realtime callbacks.
+- Perform a controlled application upgrade only after final acceptance testing.
+
+Relay remains an active engineering project, not a publicly production-hosted or Play Store-released application.
+
+---
 ## Current status
 
 Relay is an active engineering portfolio project focused on resilient realtime Android architecture.

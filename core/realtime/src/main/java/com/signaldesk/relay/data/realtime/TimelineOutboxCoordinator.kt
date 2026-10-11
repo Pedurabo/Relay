@@ -498,11 +498,13 @@ object TimelineOutboxCoordinator {
                             entryId =
                                 entity.entryId,
 
+                            // TIMELINE_OUTBOX_OWNER_LOOKUP_246
                             loadCurrent = {
 
                                 timelineDao
                                     .getById(
-                                        entity.entryId
+                                        ownerPrincipal = credential.ownerPrincipal,
+                                        entryId = entity.entryId
                                     )
                             },
 

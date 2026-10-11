@@ -17,6 +17,7 @@ class RealtimeReplayInputCollectorTest {
 
             val gap =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-INPUT-GAP",
                     expectedSequence =
@@ -129,6 +130,7 @@ class RealtimeReplayInputCollectorTest {
 
             val gap =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-INPUT-STATE",
                     expectedSequence =
@@ -238,6 +240,7 @@ class RealtimeReplayInputCollectorTest {
 
             val firstGap =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-INPUT-LATEST",
                     expectedSequence =
@@ -250,6 +253,7 @@ class RealtimeReplayInputCollectorTest {
 
             val updatedGap =
                 IncidentSequenceGapEntity(
+                    ownerPrincipal = "test-owner",
                     incidentId =
                         "INC-INPUT-LATEST",
                     expectedSequence =

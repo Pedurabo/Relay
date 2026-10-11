@@ -65,7 +65,9 @@ async function main() {
                     severity:
                         "HIGH"
                 },
-                "HIGH: Relay FCM transport smoke test"
+                "HIGH: Relay FCM transport smoke test",
+                {},
+                required("RELAY_FIREBASE_TEST_OWNER_PRINCIPAL")
             )
         );
 

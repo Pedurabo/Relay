@@ -13,11 +13,13 @@ interface IncidentSequenceGapDao {
         """
         SELECT *
         FROM incident_sequence_gaps
-        WHERE incidentId = :incidentId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND incidentId = :incidentId
         LIMIT 1
         """
     )
     suspend fun getByIncidentId(
+        ownerPrincipal: String,
         incidentId: String
     ): IncidentSequenceGapEntity?
 
@@ -25,11 +27,13 @@ interface IncidentSequenceGapDao {
         """
         SELECT *
         FROM incident_sequence_gaps
-        WHERE incidentId = :incidentId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND incidentId = :incidentId
         LIMIT 1
         """
     )
     fun observeByIncidentId(
+        ownerPrincipal: String,
         incidentId: String
     ): Flow<IncidentSequenceGapEntity?>
 
@@ -37,15 +41,16 @@ interface IncidentSequenceGapDao {
         """
         SELECT *
         FROM incident_sequence_gaps
+        WHERE ownerPrincipal = :ownerPrincipal
         ORDER BY detectedAt ASC
         """
     )
-    fun observeAll():
-        Flow<List<IncidentSequenceGapEntity>>
+    fun observeAll(
+        ownerPrincipal: String
+    ): Flow<List<IncidentSequenceGapEntity>>
 
     @Insert(
-        onConflict =
-            OnConflictStrategy.REPLACE
+        onConflict = OnConflictStrategy.REPLACE
     )
     suspend fun upsert(
         gap: IncidentSequenceGapEntity
@@ -54,10 +59,12 @@ interface IncidentSequenceGapDao {
     @Query(
         """
         DELETE FROM incident_sequence_gaps
-        WHERE incidentId = :incidentId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND incidentId = :incidentId
         """
     )
     suspend fun delete(
+        ownerPrincipal: String,
         incidentId: String
-    )
+    ): Int
 }

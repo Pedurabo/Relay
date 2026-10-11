@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.local
+package com.signaldesk.relay.data.local
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -73,6 +73,7 @@ class DeferredIncidentUpdateRoomOpenMigrationTest {
                 .incidentDao()
                 .insert(
                     IncidentEntity(
+                        ownerPrincipal = "operator-a",
                         id =
                             "INC-ROOM-MIGRATION",
                         title =
@@ -111,6 +112,7 @@ class DeferredIncidentUpdateRoomOpenMigrationTest {
                 .deferredRealtimeEventDao()
                 .insert(
                     DeferredRealtimeEventEntity(
+                        ownerPrincipal = "operator-a",
                         eventId =
                             "EVENT-DEFERRED-TIMELINE",
                         incidentId =
@@ -194,9 +196,7 @@ class DeferredIncidentUpdateRoomOpenMigrationTest {
                 requireNotNull(
                     migratedDatabase
                         .incidentDao()
-                        .getById(
-                            "INC-ROOM-MIGRATION"
-                        )
+                        .getById("operator-a", "INC-ROOM-MIGRATION")
                 )
 
             assertEquals(
@@ -223,9 +223,7 @@ class DeferredIncidentUpdateRoomOpenMigrationTest {
                 requireNotNull(
                     migratedDatabase
                         .timelineEntryDao()
-                        .getById(
-                            "ENTRY-ROOM-MIGRATION"
-                        )
+                        .getById("operator-a", "ENTRY-ROOM-MIGRATION")
                 )
 
             assertEquals(
@@ -246,9 +244,7 @@ class DeferredIncidentUpdateRoomOpenMigrationTest {
             val deferredTimeline =
                 migratedDatabase
                     .deferredRealtimeEventDao()
-                    .loadForIncident(
-                        "INC-MISSING"
-                    )
+                    .loadForIncident("operator-a", "INC-MISSING")
 
             assertEquals(
                 1,
@@ -272,7 +268,8 @@ class DeferredIncidentUpdateRoomOpenMigrationTest {
                     .deferredIncidentUpdateDao()
                     .insert(
                         DeferredIncidentUpdateEntity(
-                            eventId =
+                            ownerPrincipal = "operator-a",
+                        eventId =
                                 "EVENT-UPDATE-ROOM",
                             incidentId =
                                 "INC-ROOM-MIGRATION",
@@ -298,9 +295,7 @@ class DeferredIncidentUpdateRoomOpenMigrationTest {
             val deferredUpdates =
                 migratedDatabase
                     .deferredIncidentUpdateDao()
-                    .loadForIncident(
-                        "INC-ROOM-MIGRATION"
-                    )
+                    .loadForIncident("operator-a", "INC-ROOM-MIGRATION")
 
             assertEquals(
                 1,

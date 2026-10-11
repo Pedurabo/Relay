@@ -1,5 +1,6 @@
 package com.signaldesk.relay.data.repository
 
+import com.signaldesk.relay.data.session.AuthenticatedOwnershipContext
 import com.signaldesk.relay.data.local.IncidentDao
 import com.signaldesk.relay.data.local.IncidentEntity
 import com.signaldesk.relay.data.local.TimelineEntryDao
@@ -19,58 +20,89 @@ class IncidentRepository(
     private val timelineEntryDao: TimelineEntryDao? = null
 ) {
 
-    suspend fun reconcileAuthoritativeSnapshot(
-        snapshots: List<IncidentSnapshot>
+    /**
+     * Carries the authenticated origin into snapshot reconciliation.
+     *
+     * Caller must hold SessionManager.withAuthorizedOwnership.
+     * This is NOT storage isolation while Room remains at v15.
+     *
+     * The captured owner will become the persisted owner when
+     * the coordinated v16 entity and DAO conversion lands.
+     */
+    /**
+     * The caller must execute this operation under
+     * SessionManager.withAuthorizedOwnership.
+     */
+    suspend fun reconcileAuthoritativeSnapshotForOwner(
+        snapshots: List<IncidentSnapshot>,
+        ownership: AuthenticatedOwnershipContext
     ): Int {
-
-        return incidentDao
-            .reconcileAuthoritativeSnapshot(
-                snapshots.map {
-                    snapshot ->
-
-                    IncidentEntity(
-                        id =
-                            snapshot.id,
-                        title =
-                            snapshot.title,
-                        status =
-                            snapshot.status,
-                        severity =
-                            snapshot
-                                .severity
-                                .uppercase(),
-                        latestSequence =
-                            snapshot.sequence
-                    )
-                }
-            )
+        return reconcileAuthoritativeSnapshot(
+            ownerPrincipal = ownership.ownerPrincipal,
+            snapshots = snapshots
+        )
     }
 
+    /**
+     * Converts authoritative snapshots into owner-keyed entities.
+     *
+     * Authentication and session-generation authorization
+     * remain the responsibility of the caller.
+     */
+    suspend fun reconcileAuthoritativeSnapshot(
+        ownerPrincipal: String,
+        snapshots: List<IncidentSnapshot>
+    ): Int {
+        require(ownerPrincipal.isNotBlank())
 
-    fun observeIncidents(): Flow<List<Incident>> {
+        return incidentDao.reconcileAuthoritativeSnapshot(
+            ownerPrincipal = ownerPrincipal,
+            incidents = snapshots.map { snapshot ->
+                IncidentEntity(
+                    id = snapshot.id,
+                    title = snapshot.title,
+                    status = snapshot.status,
+                    severity = snapshot.severity.uppercase(),
+                    latestSequence = snapshot.sequence,
+                    ownerPrincipal = ownerPrincipal
+                )
+            }
+        )
+    }
+
+    fun observeIncidents(
+        ownerPrincipal: String
+    ): Flow<List<Incident>> {
+        require(ownerPrincipal.isNotBlank())
+
         return incidentDao
-            .observeAll()
+            .observeAll(ownerPrincipal)
             .map { entities ->
                 entities.map { it.toDomain() }
             }
     }
 
     fun observeIncident(
+        ownerPrincipal: String,
         incidentId: String
     ): Flow<Incident?> {
+        require(ownerPrincipal.isNotBlank())
+
         return incidentDao
-            .observeById(incidentId)
+            .observeById(ownerPrincipal, incidentId)
             .map { it?.toDomain() }
     }
 
     fun observeTimeline(
+        ownerPrincipal: String,
         incidentId: String
     ): Flow<List<TimelineEntry>> {
+        require(ownerPrincipal.isNotBlank())
         val dao =
             requireTimelineDao()
 
         return dao
-            .observeForIncident(incidentId)
+            .observeForIncident(ownerPrincipal, incidentId)
             .map { entities ->
                 entities.map {
                     it.toDomain()
@@ -84,6 +116,8 @@ class IncidentRepository(
         author: String,
         ownerPrincipal: String
     ): TimelineEntry {
+        require(ownerPrincipal.isNotBlank())
+
         val dao =
             requireTimelineDao()
 
@@ -112,11 +146,15 @@ class IncidentRepository(
     }
 
     suspend fun getTimelineEntryOwnerPrincipal(
+        ownerPrincipal: String,
         entryId: String
     ): String? {
+        require(ownerPrincipal.isNotBlank())
+
         return requireTimelineDao()
             .getById(
-                entryId
+                ownerPrincipal = ownerPrincipal,
+                entryId = entryId
             )
             ?.ownerPrincipal
     }
@@ -163,8 +201,12 @@ class IncidentRepository(
     }
 
 
-    suspend fun seedIfEmpty() {
-        if (incidentDao.count() != 0) {
+    suspend fun seedIfEmpty(
+        ownerPrincipal: String
+    ) {
+        require(ownerPrincipal.isNotBlank())
+
+        if (incidentDao.count(ownerPrincipal) != 0) {
             return
         }
 
@@ -173,22 +215,24 @@ class IncidentRepository(
                 IncidentEntity(
                     id = "INC-001",
                     title = "API outage",
-                    status = "Active"
+                    status = "Active",
+                    ownerPrincipal = ownerPrincipal
                 ),
                 IncidentEntity(
                     id = "INC-002",
                     title = "Payment delays",
-                    status = "Investigating"
+                    status = "Investigating",
+                    ownerPrincipal = ownerPrincipal
                 ),
                 IncidentEntity(
                     id = "INC-003",
                     title = "Login degradation",
-                    status = "Monitoring"
+                    status = "Monitoring",
+                    ownerPrincipal = ownerPrincipal
                 )
             )
         )
     }
-
     private fun requireTimelineDao(): TimelineEntryDao {
         return checkNotNull(
             timelineEntryDao

@@ -4,6 +4,8 @@ import com.signaldesk.relay.diagnostics.RelayDiagnostics
 import android.util.Log
 import com.signaldesk.relay.data.local.IncidentSequenceGapDao
 import com.signaldesk.relay.data.remote.model.IncidentEvent
+import com.signaldesk.relay.data.session.SessionManager
+import com.signaldesk.relay.data.session.SessionState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -456,22 +458,47 @@ class RealtimeIncidentCoordinator(
 
                     try {
 
-                        source.events.collect { event ->
+                        // Ownership belongs to this connection attempt,
+                    // not to whichever account receives a later event.
+                    val connectionOwnership =
+                        SessionManager.captureAuthenticatedOwnership()
 
-                            val result =
-                                processor.process(
-                                    event
-                                )
+                    source.events.collect { event ->
 
+                            // REALTIME_EVENT_OWNER_GATE_246
+                            // REALTIME_CONNECTION_OWNER_BOUND_246
+                            val ownership = connectionOwnership
+                                ?: return@collect
 
-                            if (
-                                result ==
-                                EventProcessingResult.APPLIED
-                            ) {
-                                onAppliedEvent(
-                                    event
-                                )
+                            val currentOwnership =
+                                SessionManager.captureAuthenticatedOwnership()
+                                    ?: return@collect
+
+                            if (!isRealtimeConnectionOwnershipCurrent(
+                                    connectionOwnership,
+                                    currentOwnership
+                                )) {
+                                return@collect
                             }
+
+                            SessionManager
+                                .withAuthorizedOwnership(
+                                    ownership
+                                ) {
+                                    val result =
+                                        processor.process(
+                                            event = event,
+                                            ownerPrincipal =
+                                                ownership.ownerPrincipal
+                                        )
+
+                                    if (
+                                        result ==
+                                        EventProcessingResult.APPLIED
+                                    ) {
+                                        onAppliedEvent(event)
+                                    }
+                                }
                         }
 
                     } catch (
@@ -575,6 +602,25 @@ class RealtimeIncidentCoordinator(
     private suspend fun recoverSequenceGaps() =
         kotlinx.coroutines.coroutineScope {
 
+            // REALTIME_GAP_OWNER_READS_246
+            val ownership =
+                SessionManager.captureAuthenticatedOwnership()
+                    ?: return@coroutineScope
+
+            val ownerPrincipal = ownership.ownerPrincipal
+
+            // REALTIME_GAP_SESSION_BOUNDARY_246
+            fun ownershipIsCurrent(): Boolean {
+                val active =
+                    SessionManager.sessionState.value as?
+                        SessionState.SignedIn
+                        ?: return false
+
+                return active.userId == ownerPrincipal &&
+                    SessionManager.sessionGeneration ==
+                        ownership.sessionGeneration
+            }
+
             val replayJobs =
                 ConcurrentHashMap<
                     String,
@@ -584,7 +630,16 @@ class RealtimeIncidentCoordinator(
 
             collectRealtimeReplayInputs(
                 gaps =
-                    gapDao.observeAll(),
+                    combine(
+                        gapDao.observeAll(ownerPrincipal),
+                        SessionManager.sessionState
+                    ) { gaps, _ ->
+                        if (ownershipIsCurrent()) {
+                            gaps
+                        } else {
+                            emptyList()
+                        }
+                    },
                 connectionState =
                     source.connectionState
             ) { gaps, state ->
@@ -669,7 +724,7 @@ launchRegisteredRealtimeReplayJob(
 
                         runRealtimeReplayJobSafely(
                                     isConnected = {
-                                        source
+                                        ownershipIsCurrent() && source
                                             .connectionState
                                             .value ==
                                         RealtimeConnectionState
@@ -720,7 +775,7 @@ launchRegisteredRealtimeReplayJob(
                                             gap.incidentId,
 
                                         isConnected = {
-                                            source
+                                            ownershipIsCurrent() && source
                                                 .connectionState
                                                 .value ==
                                             RealtimeConnectionState
@@ -732,8 +787,7 @@ launchRegisteredRealtimeReplayJob(
 
                                             gapDao
                                                 .getByIncidentId(
-                                                    incidentId
-                                                )
+                                                    ownerPrincipal, incidentId)
                                         },
 
                                         requestReplay = {
@@ -741,7 +795,10 @@ launchRegisteredRealtimeReplayJob(
                                             fromSequence,
                                             throughSequence ->
 
-                                            source
+                                            if (!ownershipIsCurrent()) {
+                                                false
+                                            } else {
+                                                source
                                                 .requestReplay(
                                                     incidentId =
                                                         incidentId,
@@ -752,6 +809,7 @@ launchRegisteredRealtimeReplayJob(
                                                     throughSequence =
                                                         throughSequence
                                                 )
+                                            }
                                         },
 
                                         delayForAttempt = {
@@ -859,3 +917,13 @@ private val ownershipGate =
             10_000L
     }
 }
+
+// REALTIME_SESSION_BOUNDARY_POLICY_246
+internal fun isRealtimeConnectionOwnershipCurrent(
+    connectionOwnership:
+        com.signaldesk.relay.data.session.AuthenticatedOwnershipContext?,
+    currentOwnership:
+        com.signaldesk.relay.data.session.AuthenticatedOwnershipContext?
+): Boolean =
+    connectionOwnership != null &&
+        connectionOwnership == currentOwnership

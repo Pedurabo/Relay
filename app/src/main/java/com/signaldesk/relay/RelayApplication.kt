@@ -10,6 +10,8 @@ import com.signaldesk.relay.data.realtime.SeverityOutboxCoordinator
 import com.signaldesk.relay.data.realtime.StatusOutboxCoordinator
 import com.signaldesk.relay.data.realtime.TimelineOutboxCoordinator
 import com.signaldesk.relay.data.session.SessionManager
+import kotlinx.coroutines.flow.collectLatest
+import com.signaldesk.relay.data.session.SessionState
 import com.signaldesk.relay.data.session.SessionRefreshCoordinator
 import com.signaldesk.relay.notifications.FirebasePushInitializer
 import com.signaldesk.relay.notifications.PushRegistrationCoordinator
@@ -41,21 +43,41 @@ class RelayApplication :
                 this
             )
 
+        // APP_AUTHORIZED_RECOVERY_246
         applicationScope.launch {
-
             val processor =
                 IncidentEventProcessor(
-                    RelayDatabase
-                        .getInstance(
-                            this@RelayApplication
-                        )
+                    RelayDatabase.getInstance(
+                        this@RelayApplication
+                    )
                 )
 
-            processor
-                .recoverDeferredTimelineEvents()
+            SessionManager.sessionState
+                .collectLatest { state ->
+                    if (state !is SessionState.SignedIn) {
+                        return@collectLatest
+                    }
 
-            processor
-                .recoverDeferredIncidentUpdates()
+                    val ownership =
+                        SessionManager.captureAuthenticatedOwnership()
+                            ?: return@collectLatest
+
+                    if (ownership.ownerPrincipal != state.userId) {
+                        return@collectLatest
+                    }
+
+                    SessionManager.withAuthorizedOwnership(
+                        ownership
+                    ) {
+                        processor.recoverDeferredTimelineEvents(
+                            ownership.ownerPrincipal
+                        )
+
+                        processor.recoverDeferredIncidentUpdates(
+                            ownership.ownerPrincipal
+                        )
+                    }
+                }
         }
 
         SessionRefreshCoordinator

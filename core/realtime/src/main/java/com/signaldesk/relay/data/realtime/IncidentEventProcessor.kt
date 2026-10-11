@@ -39,6 +39,9 @@ class IncidentEventProcessor(
     private val database: RelayDatabase
 ) {
 
+    // PROCESSOR_INTERNAL_OWNER_246
+    // PROCESSOR_TRANSACTION_OWNER_246
+    // PROCESSOR_RECOVERY_OWNER_246
     private val incidentDao =
         database.incidentDao()
 
@@ -58,8 +61,11 @@ class IncidentEventProcessor(
         database.incidentSequenceGapDao()
 
     suspend fun process(
-        event: IncidentEvent
+        event: IncidentEvent,
+        ownerPrincipal: String
     ): EventProcessingResult {
+        // PROCESSOR_OWNER_CONTEXT_246
+        require(ownerPrincipal.isNotBlank())
 
         val result =
             if (
@@ -71,16 +77,12 @@ class IncidentEventProcessor(
                         event.entryId
                     ) {
 
-                        processInTransaction(
-                            event
-                        )
+                        processInTransaction(event, ownerPrincipal)
                     }
 
             } else {
 
-                processInTransaction(
-                    event
-                )
+                processInTransaction(event, ownerPrincipal)
             }
 
         if (
@@ -92,13 +94,9 @@ class IncidentEventProcessor(
             )
         ) {
 
-            recoverDeferredIncidentUpdatesForIncident(
-                event.incidentId
-            )
+            recoverDeferredIncidentUpdatesForIncident(event.incidentId, ownerPrincipal)
 
-            recoverDeferredTimelineEventsForIncident(
-                event.incidentId
-            )
+            recoverDeferredTimelineEventsForIncident(event.incidentId, ownerPrincipal)
         }
 
         if (
@@ -108,35 +106,31 @@ class IncidentEventProcessor(
             )
         ) {
 
-            recoverDeferredIncidentUpdatesForIncident(
-                event.incidentId
-            )
+            recoverDeferredIncidentUpdatesForIncident(event.incidentId, ownerPrincipal)
         }
         return result
     }
 
 
     private suspend fun processInTransaction(
-        event: IncidentEvent
+        event: IncidentEvent,
+        ownerPrincipal: String
     ): EventProcessingResult {
+        require(ownerPrincipal.isNotBlank())
 
         return database.withTransaction {
 
             if (
-                processedEventDao.exists(
-                    event.eventId
-                )
+                processedEventDao.exists(ownerPrincipal, event.eventId)
             ) {
 
                 deferredRealtimeEventDao
                     .deleteByEventId(
-                        event.eventId
-                    )
+                        ownerPrincipal, event.eventId)
 
                 deferredIncidentUpdateDao
                     .deleteByEventId(
-                        event.eventId
-                    )
+                        ownerPrincipal, event.eventId)
 
                 return@withTransaction EventProcessingResult.DUPLICATE
             }
@@ -145,13 +139,13 @@ class IncidentEventProcessor(
                 when (event) {
 
                     is IncidentCreatedEvent ->
-                        processCreated(event)
+                        processCreated(event, ownerPrincipal)
 
                     is IncidentUpdatedEvent ->
-                        processUpdated(event)
+                        processUpdated(event, ownerPrincipal)
 
                     is TimelineEntryAddedEvent ->
-                        processTimeline(event)
+                        processTimeline(event, ownerPrincipal)
                 }
 
             when (result) {
@@ -162,7 +156,7 @@ class IncidentEventProcessor(
                     processedEventDao.insert(
                         ProcessedEventEntity(
                             eventId =
-                                event.eventId,
+                                event.eventId,ownerPrincipal = ownerPrincipal,
                             processedAt =
                                 System.currentTimeMillis()
                         )
@@ -170,12 +164,10 @@ class IncidentEventProcessor(
 
                     deferredRealtimeEventDao
                         .deleteByEventId(
-                            event.eventId
-                        )
+                            ownerPrincipal, event.eventId)
                     deferredIncidentUpdateDao
                         .deleteByEventId(
-                            event.eventId
-                        )
+                            ownerPrincipal, event.eventId)
                 }
 
                 EventProcessingResult.DEFERRED -> {
@@ -188,7 +180,7 @@ class IncidentEventProcessor(
                             .insert(
                                 DeferredRealtimeEventEntity(
                                     eventId =
-                                        event.eventId,
+                                        event.eventId,ownerPrincipal = ownerPrincipal,
                                     incidentId =
                                         event.incidentId,
                                     entryId =
@@ -216,7 +208,7 @@ class IncidentEventProcessor(
                             .insert(
                                 DeferredIncidentUpdateEntity(
                                     eventId =
-                                        event.eventId,
+                                        event.eventId,ownerPrincipal = ownerPrincipal,
                                     incidentId =
                                         event.incidentId,
                                     occurredAt =
@@ -236,12 +228,12 @@ class IncidentEventProcessor(
 
                         deferredIncidentUpdateDao
                             .deleteOrphansBefore(
-                                now -
+                                ownerPrincipal, now -
                                     DEFERRED_INCIDENT_UPDATE_ORPHAN_RETENTION_MILLIS
                             )
                     }
 
-                    pruneDeferredTimelineOrphans()
+                    pruneDeferredTimelineOrphans(ownerPrincipal)
                 }
 
                 EventProcessingResult.GAP_DETECTED -> {
@@ -262,7 +254,7 @@ class IncidentEventProcessor(
                             .insert(
                                 DeferredIncidentUpdateEntity(
                                     eventId =
-                                        event.eventId,
+                                        event.eventId,ownerPrincipal = ownerPrincipal,
                                     incidentId =
                                         event.incidentId,
                                     occurredAt =
@@ -290,13 +282,12 @@ class IncidentEventProcessor(
     }
 
     private suspend fun processCreated(
-        event: IncidentCreatedEvent
+        event: IncidentCreatedEvent,
+        ownerPrincipal: String
     ): EventProcessingResult {
 
         val current =
-            incidentDao.getById(
-                event.incidentId
-            )
+            incidentDao.getById(ownerPrincipal, event.incidentId)
 
         /*
          * Creation establishes incident identity exactly once.
@@ -342,8 +333,9 @@ class IncidentEventProcessor(
                         latestSequence =
                             current.latestSequence,
                         incomingSequence =
-                            event.sequence
-                    )
+                            event.sequence,
+                            ownerPrincipal = ownerPrincipal
+        )
 
                     return EventProcessingResult
                         .GAP_DETECTED
@@ -357,7 +349,7 @@ class IncidentEventProcessor(
 
         incidentDao.insert(
             IncidentEntity(
-                id = event.incidentId,
+                id = event.incidentId,ownerPrincipal = ownerPrincipal,
                 title = event.title,
                 status = event.status,
                 severity =
@@ -379,20 +371,20 @@ class IncidentEventProcessor(
             incidentId =
                 event.incidentId,
             appliedSequence =
-                event.sequence
+                event.sequence,
+                ownerPrincipal = ownerPrincipal
         )
 
         return EventProcessingResult.APPLIED
     }
 
     private suspend fun processUpdated(
-        event: IncidentUpdatedEvent
+        event: IncidentUpdatedEvent,
+        ownerPrincipal: String
     ): EventProcessingResult {
 
         val current =
-            incidentDao.getById(
-                event.incidentId
-            )
+            incidentDao.getById(ownerPrincipal, event.incidentId)
                 ?: return EventProcessingResult.DEFERRED
 
         when (
@@ -416,8 +408,9 @@ class IncidentEventProcessor(
                     latestSequence =
                         current.latestSequence,
                     incomingSequence =
-                        event.sequence
-                )
+                        event.sequence,
+                        ownerPrincipal = ownerPrincipal
+        )
 
                 return EventProcessingResult
                     .GAP_DETECTED
@@ -455,19 +448,19 @@ class IncidentEventProcessor(
             incidentId =
                 event.incidentId,
             appliedSequence =
-                event.sequence
+                event.sequence,
+                ownerPrincipal = ownerPrincipal
         )
 
         return EventProcessingResult.APPLIED
     }
 
     private suspend fun processTimeline(
-        event: TimelineEntryAddedEvent
+        event: TimelineEntryAddedEvent,
+        ownerPrincipal: String
     ): EventProcessingResult {
 
-        incidentDao.getById(
-            event.incidentId
-        )
+        incidentDao.getById(ownerPrincipal, event.incidentId)
             ?: return EventProcessingResult.DEFERRED
 
         /*
@@ -480,8 +473,7 @@ class IncidentEventProcessor(
         val existingTimelineEntry =
             timelineEntryDao
                 .getById(
-                    event.entryId
-                )
+                    ownerPrincipal, event.entryId)
 
         if (
             existingTimelineEntry != null &&
@@ -514,9 +506,7 @@ class IncidentEventProcessor(
                 deliveryState =
                     DeliveryState.SENT.name,
                 ownerPrincipal =
-                    existingTimelineEntry
-                        ?.ownerPrincipal
-                        ?: ""
+                    existingTimelineEntry?.ownerPrincipal ?: ownerPrincipal
             )
         )
 
@@ -556,12 +546,11 @@ class IncidentEventProcessor(
     private suspend fun recordGap(
         incidentId: String,
         latestSequence: Long,
-        incomingSequence: Long
+        incomingSequence: Long,
+        ownerPrincipal: String
     ) {
         val existing =
-            gapDao.getByIncidentId(
-                incidentId
-            )
+            gapDao.getByIncidentId(ownerPrincipal, incidentId)
 
         val expected =
             latestSequence + 1L
@@ -579,7 +568,7 @@ class IncidentEventProcessor(
         gapDao.upsert(
             IncidentSequenceGapEntity(
                 incidentId =
-                    incidentId,
+                    incidentId,ownerPrincipal = ownerPrincipal,
                 expectedSequence =
                     expected,
                 receivedSequence =
@@ -593,16 +582,15 @@ class IncidentEventProcessor(
 
     private suspend fun updateGapAfterAppliedSequence(
         incidentId: String,
-        appliedSequence: Long
+        appliedSequence: Long,
+        ownerPrincipal: String
     ) {
         if (appliedSequence <= 0L) {
             return
         }
 
         val gap =
-            gapDao.getByIncidentId(
-                incidentId
-            )
+            gapDao.getByIncidentId(ownerPrincipal, incidentId)
                 ?: return
 
         val nextExpected =
@@ -619,9 +607,7 @@ class IncidentEventProcessor(
                 )
             )
         } else {
-            gapDao.delete(
-                incidentId
-            )
+            gapDao.delete(ownerPrincipal, incidentId)
         }
     }
 
@@ -632,20 +618,20 @@ class IncidentEventProcessor(
         GAP
     }
 
-    suspend fun recoverDeferredIncidentUpdates() {
+    suspend fun recoverDeferredIncidentUpdates(ownerPrincipal: String) {
 
         val now =
             System.currentTimeMillis()
 
         deferredIncidentUpdateDao
             .deleteOrphansBefore(
-                now -
+                ownerPrincipal, now -
                     DEFERRED_INCIDENT_UPDATE_ORPHAN_RETENTION_MILLIS
             )
 
         val incidentIds =
             deferredIncidentUpdateDao
-                .loadAll()
+                .loadAll(ownerPrincipal)
                 .map {
                     it.incidentId
                 }
@@ -656,9 +642,7 @@ class IncidentEventProcessor(
         ) {
 
             if (
-                incidentDao.getById(
-                    incidentId
-                ) == null
+                incidentDao.getById(ownerPrincipal, incidentId) == null
             ) {
                 continue
             }
@@ -674,49 +658,44 @@ class IncidentEventProcessor(
              * sequence and lets contiguous durable work converge in
              * one bounded drain without re-entering public process().
              */
-            recoverDeferredIncidentUpdatesForIncident(
-                incidentId
-            )
+            recoverDeferredIncidentUpdatesForIncident(incidentId, ownerPrincipal)
         }
     }
 
     private suspend fun recoverDeferredIncidentUpdatesForIncident(
-        incidentId: String
+        incidentId: String,
+        ownerPrincipal: String
     ) {
 
         val deferred =
             deferredIncidentUpdateDao
                 .loadForIncident(
-                    incidentId
-                )
+                    ownerPrincipal, incidentId)
 
         for (
             stored in deferred
         ) {
 
-            processInTransaction(
-                stored.toIncidentUpdatedEvent()
-            )
+            processInTransaction(stored.toIncidentUpdatedEvent(), ownerPrincipal)
         }
     }
 
 
     private suspend fun recoverDeferredTimelineEventsForIncident(
-        incidentId: String
+        incidentId: String,
+        ownerPrincipal: String
     ) {
 
         val deferred =
             deferredRealtimeEventDao
                 .loadForIncident(
-                    incidentId
-                )
+                    ownerPrincipal, incidentId)
 
         for (
             stored in deferred
         ) {
 
-            process(
-                TimelineEntryAddedEvent(
+            process(TimelineEntryAddedEvent(
                     eventId =
                         stored.eventId,
                     incidentId =
@@ -729,8 +708,7 @@ class IncidentEventProcessor(
                         stored.message,
                     author =
                         stored.author
-                )
-            )
+                ), ownerPrincipal)
         }
     }
 
@@ -755,28 +733,25 @@ class IncidentEventProcessor(
         )
 
 
-    suspend fun recoverDeferredTimelineEvents() {
+    suspend fun recoverDeferredTimelineEvents(ownerPrincipal: String) {
 
-        pruneDeferredTimelineOrphans()
+        pruneDeferredTimelineOrphans(ownerPrincipal)
 
         val deferred =
             deferredRealtimeEventDao
-                .loadAll()
+                .loadAll(ownerPrincipal)
 
         for (
             stored in deferred
         ) {
 
             if (
-                incidentDao.getById(
-                    stored.incidentId
-                ) == null
+                incidentDao.getById(ownerPrincipal, stored.incidentId) == null
             ) {
                 continue
             }
 
-            process(
-                TimelineEntryAddedEvent(
+            process(TimelineEntryAddedEvent(
                     eventId =
                         stored.eventId,
                     incidentId =
@@ -789,17 +764,16 @@ class IncidentEventProcessor(
                         stored.message,
                     author =
                         stored.author
-                )
-            )
+                ), ownerPrincipal)
         }
     }
 
 
-    private suspend fun pruneDeferredTimelineOrphans() {
+    private suspend fun pruneDeferredTimelineOrphans(ownerPrincipal: String) {
 
         deferredRealtimeEventDao
             .deleteOrphansBefore(
-                deferredTimelineRetentionCutoff(
+                ownerPrincipal, deferredTimelineRetentionCutoff(
                     System.currentTimeMillis()
                 )
             )

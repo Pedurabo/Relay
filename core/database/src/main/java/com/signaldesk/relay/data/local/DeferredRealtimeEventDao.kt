@@ -8,9 +8,7 @@ import androidx.room.Query
 @Dao
 interface DeferredRealtimeEventDao {
 
-    @Insert(
-        onConflict = OnConflictStrategy.IGNORE
-    )
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(
         event: DeferredRealtimeEventEntity
     ): Long
@@ -19,11 +17,13 @@ interface DeferredRealtimeEventDao {
         """
         SELECT *
         FROM deferred_realtime_events
-        WHERE incidentId = :incidentId
-        ORDER BY deferredAt ASC
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND incidentId = :incidentId
+        ORDER BY deferredAt ASC, eventId ASC
         """
     )
     suspend fun loadForIncident(
+        ownerPrincipal: String,
         incidentId: String
     ): List<DeferredRealtimeEventEntity>
 
@@ -31,35 +31,43 @@ interface DeferredRealtimeEventDao {
         """
         SELECT *
         FROM deferred_realtime_events
-        ORDER BY deferredAt ASC
+        WHERE ownerPrincipal = :ownerPrincipal
+        ORDER BY deferredAt ASC, eventId ASC
         """
     )
-    suspend fun loadAll():
-        List<DeferredRealtimeEventEntity>
+    suspend fun loadAll(
+        ownerPrincipal: String
+    ): List<DeferredRealtimeEventEntity>
 
     @Query(
         """
         DELETE FROM deferred_realtime_events
-        WHERE deferredAt < :cutoffMillis
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND deferredAt < :cutoffMillis
           AND NOT EXISTS (
               SELECT 1
               FROM incidents
-              WHERE incidents.id =
+              WHERE incidents.ownerPrincipal =
+                    deferred_realtime_events.ownerPrincipal
+                AND incidents.id =
                     deferred_realtime_events.incidentId
           )
         """
     )
     suspend fun deleteOrphansBefore(
+        ownerPrincipal: String,
         cutoffMillis: Long
     ): Int
 
     @Query(
         """
         DELETE FROM deferred_realtime_events
-        WHERE eventId = :eventId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND eventId = :eventId
         """
     )
     suspend fun deleteByEventId(
+        ownerPrincipal: String,
         eventId: String
     ): Int
 }

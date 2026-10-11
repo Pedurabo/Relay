@@ -4,6 +4,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.signaldesk.relay.data.local.RelayDatabase
 import com.signaldesk.relay.data.realtime.IncidentEventProcessor
+import com.signaldesk.relay.data.session.SessionManager
 import com.signaldesk.relay.data.remote.model.IncidentCreatedEvent
 import com.signaldesk.relay.data.remote.model.IncidentEvent
 import com.signaldesk.relay.data.remote.model.IncidentUpdatedEvent
@@ -61,89 +62,79 @@ class RelayFirebaseMessagingService :
             return
         }
 
-        val processor =
-            IncidentEventProcessor(
-                RelayDatabase
-                    .getInstance(
-                        applicationContext
-                    )
-            )
+        // FIREBASE_PUSH_OWNER_GATE_246
+        // Missing or mismatched ownership is rejected.
+        val payloadOwner =
+            data["ownerPrincipal"]
+                ?.trim()
+                .orEmpty()
 
-        runBlocking(
-            Dispatchers.IO
-        ) {
-
-            applySnapshot(
-                processor =
-                    processor,
-                eventId =
-                    eventId,
-                incidentId =
-                    incidentId,
-                occurredAt =
-                    occurredAt,
-                sequence =
-                    sequence,
-                severity =
-                    severity,
-                title =
-                    data["incidentTitle"]
-                        .orEmpty(),
-                status =
-                    data["incidentStatus"]
-                        .orEmpty()
-            )
-
-            buildEvent(
-                eventType =
-                    eventType,
-                eventId =
-                    eventId,
-                incidentId =
-                    incidentId,
-                occurredAt =
-                    occurredAt,
-                sequence =
-                    sequence,
-                severity =
-                    severity,
-                entryId =
-                    data["entryId"]
-                        .orEmpty(),
-                message =
-                    data["message"]
-                        .orEmpty(),
-                author =
-                    data["author"]
-                        .orEmpty()
-            )
-                ?.let {
-                    event ->
-
-                    processor
-                        .process(
-                            event
-                        )
-                }
+        if (payloadOwner.isBlank()) {
+            return
         }
 
-        IncidentNotificationManager(
-            applicationContext
-        )
-            .notifyRemoteEvent(
-                eventId =
-                    eventId,
-                incidentId =
-                    incidentId,
-                severityValue =
-                    severity,
-                content =
-                    content
-            )
-    }
+        val ownership =
+            SessionManager.captureAuthenticatedOwnership()
+                ?: return
 
+        if (ownership.ownerPrincipal != payloadOwner) {
+            return
+        }
+
+        val processor =
+            IncidentEventProcessor(
+                RelayDatabase.getInstance(
+                    applicationContext
+                )
+            )
+
+        runBlocking(Dispatchers.IO) {
+            SessionManager.withAuthorizedOwnership(
+                ownership
+            ) {
+                applySnapshot(
+                    processor = processor,
+                    ownerPrincipal = ownership.ownerPrincipal,
+                    eventId = eventId,
+                    incidentId = incidentId,
+                    occurredAt = occurredAt,
+                    sequence = sequence,
+                    severity = severity,
+                    title = data["incidentTitle"].orEmpty(),
+                    status = data["incidentStatus"].orEmpty()
+                )
+
+                buildEvent(
+                    eventType = eventType,
+                    eventId = eventId,
+                    incidentId = incidentId,
+                    occurredAt = occurredAt,
+                    sequence = sequence,
+                    severity = severity,
+                    entryId = data["entryId"].orEmpty(),
+                    message = data["message"].orEmpty(),
+                    author = data["author"].orEmpty()
+                )?.let { event ->
+                    processor.process(
+                        event = event,
+                        ownerPrincipal = ownership.ownerPrincipal
+                    )
+                }
+
+                IncidentNotificationManager(
+                    applicationContext
+                ).notifyRemoteEvent(
+                    eventId = eventId,
+                    incidentId = incidentId,
+                    severityValue = severity,
+                    content = content
+                )
+            }
+        }
+    }
     private suspend fun applySnapshot(
         processor: IncidentEventProcessor,
+        ownerPrincipal: String,
         eventId: String,
         incidentId: String,
         occurredAt: Long,
@@ -152,35 +143,23 @@ class RelayFirebaseMessagingService :
         title: String,
         status: String
     ) {
-
-        if (
-            title.isBlank() ||
-            status.isBlank()
-        ) {
+        if (title.isBlank() || status.isBlank()) {
             return
         }
 
-        processor
-            .process(
-                IncidentCreatedEvent(
-                    eventId =
-                        "$eventId:push-snapshot",
-                    incidentId =
-                        incidentId,
-                    occurredAt =
-                        occurredAt,
-                    title =
-                        title,
-                    status =
-                        status,
-                    severity =
-                        severity,
-                    sequence =
-                        sequence
-                )
-            )
+        processor.process(
+            event = IncidentCreatedEvent(
+                eventId = "$eventId:push-snapshot",
+                incidentId = incidentId,
+                occurredAt = occurredAt,
+                title = title,
+                status = status,
+                severity = severity,
+                sequence = sequence
+            ),
+            ownerPrincipal = ownerPrincipal
+        )
     }
-
     private fun buildEvent(
         eventType: String,
         eventId: String,

@@ -13,11 +13,13 @@ interface TimelineEntryDao {
         """
         SELECT *
         FROM timeline_entries
-        WHERE incidentId = :incidentId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND incidentId = :incidentId
         ORDER BY occurredAt ASC, entryId ASC
         """
     )
     fun observeForIncident(
+        ownerPrincipal: String,
         incidentId: String
     ): Flow<List<TimelineEntryEntity>>
 
@@ -25,11 +27,13 @@ interface TimelineEntryDao {
         """
         SELECT *
         FROM timeline_entries
-        WHERE entryId = :entryId
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND entryId = :entryId
         LIMIT 1
         """
     )
     suspend fun getById(
+        ownerPrincipal: String,
         entryId: String
     ): TimelineEntryEntity?
 
@@ -45,27 +49,23 @@ interface TimelineEntryDao {
     suspend fun loadPendingForOwner(
         ownerPrincipal: String
     ): List<TimelineEntryEntity>
-    @Insert(
-        onConflict = OnConflictStrategy.IGNORE
-    )
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(
         entry: TimelineEntryEntity
     )
 
-    @Insert(
-        onConflict = OnConflictStrategy.REPLACE
-    )
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(
         entry: TimelineEntryEntity
     )
-
 
     @Query(
         """
         UPDATE timeline_entries
         SET deliveryState = 'PENDING'
-        WHERE entryId = :entryId
-          AND ownerPrincipal = :ownerPrincipal
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND entryId = :entryId
           AND deliveryState = 'FAILED'
         """
     )
@@ -78,8 +78,8 @@ interface TimelineEntryDao {
         """
         UPDATE timeline_entries
         SET deliveryState = 'FAILED'
-        WHERE entryId = :entryId
-          AND ownerPrincipal = :ownerPrincipal
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND entryId = :entryId
           AND deliveryState = 'PENDING'
         """
     )
@@ -92,8 +92,8 @@ interface TimelineEntryDao {
         """
         UPDATE timeline_entries
         SET deliveryState = 'SENT'
-        WHERE entryId = :entryId
-          AND ownerPrincipal = :ownerPrincipal
+        WHERE ownerPrincipal = :ownerPrincipal
+          AND entryId = :entryId
           AND deliveryState = 'PENDING'
         """
     )
@@ -101,26 +101,29 @@ interface TimelineEntryDao {
         entryId: String,
         ownerPrincipal: String
     ): Int
+
     @Query(
         """
         SELECT t.*
         FROM timeline_entries t
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM timeline_entries newer
-            WHERE newer.incidentId = t.incidentId
-              AND (
+        WHERE t.ownerPrincipal = :ownerPrincipal
+          AND NOT EXISTS (
+              SELECT 1
+              FROM timeline_entries newer
+              WHERE newer.ownerPrincipal = t.ownerPrincipal
+                AND newer.incidentId = t.incidentId
+                AND (
                     newer.occurredAt > t.occurredAt
                     OR (
                         newer.occurredAt = t.occurredAt
                         AND newer.entryId > t.entryId
                     )
-              )
-        )
-        ORDER BY t.occurredAt DESC
+                )
+          )
+        ORDER BY t.occurredAt DESC, t.entryId DESC
         """
     )
-    fun observeLatestForAllIncidents():
-        Flow<List<TimelineEntryEntity>>
+    fun observeLatestForAllIncidents(
+        ownerPrincipal: String
+    ): Flow<List<TimelineEntryEntity>>
 }
-

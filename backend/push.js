@@ -79,11 +79,21 @@ function createServiceAccountJwt(
 function buildIncidentPushPayload(
     event,
     content,
-    incident =
-        {}
+    incident = {},
+    ownerPrincipal
 ) {
+    // FCM_RECIPIENT_OWNER_246
+    if (
+        typeof ownerPrincipal !== "string" ||
+        ownerPrincipal.trim().length === 0
+    ) {
+        throw new Error(
+            "A trusted push recipient owner is required."
+        );
+    }
 
     return {
+        ownerPrincipal: ownerPrincipal.trim(),
         eventId:
             String(
                 event.eventId

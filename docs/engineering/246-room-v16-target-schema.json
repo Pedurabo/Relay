@@ -1,0 +1,291 @@
+{
+    "description":  "Relay proposed Room version-16 schema contract",
+    "sourceVersion":  15,
+    "targetVersion":  16,
+    "status":  "proposed-not-activated",
+    "tables":  [
+                   {
+                       "tableName":  "deferred_realtime_events",
+                       "primaryKey":  [
+                                          "ownerPrincipal",
+                                          "eventId"
+                                      ],
+                       "columns":  [
+                                       "ownerPrincipal",
+                                       "eventId",
+                                       "incidentId",
+                                       "entryId",
+                                       "message",
+                                       "author",
+                                       "occurredAt",
+                                       "deferredAt"
+                                   ],
+                       "indexes":  [
+                                       {
+                                           "name":  "index_deferred_realtime_events_ownerPrincipal_incidentId_deferredAt",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "incidentId",
+                                                           "deferredAt"
+                                                       ],
+                                           "unique":  false
+                                       },
+                                       {
+                                           "name":  "index_deferred_realtime_events_ownerPrincipal_deferredAt_eventId",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "deferredAt",
+                                                           "eventId"
+                                                       ],
+                                           "unique":  false
+                                       }
+                                   ],
+                       "legacyOwnerPolicy":  "quarantine"
+                   },
+                   {
+                       "tableName":  "deferred_incident_updates",
+                       "primaryKey":  [
+                                          "ownerPrincipal",
+                                          "eventId"
+                                      ],
+                       "columns":  [
+                                       "ownerPrincipal",
+                                       "eventId",
+                                       "incidentId",
+                                       "occurredAt",
+                                       "sequence",
+                                       "title",
+                                       "status",
+                                       "severity",
+                                       "deferredAt"
+                                   ],
+                       "indexes":  [
+                                       {
+                                           "name":  "index_deferred_incident_updates_ownerPrincipal_incidentId_sequence_deferredAt_eventId",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "incidentId",
+                                                           "sequence",
+                                                           "deferredAt",
+                                                           "eventId"
+                                                       ],
+                                           "unique":  false
+                                       },
+                                       {
+                                           "name":  "index_deferred_incident_updates_ownerPrincipal_deferredAt_eventId",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "deferredAt",
+                                                           "eventId"
+                                                       ],
+                                           "unique":  false
+                                       }
+                                   ],
+                       "legacyOwnerPolicy":  "quarantine"
+                   },
+                   {
+                       "tableName":  "pending_severity_commands",
+                       "primaryKey":  [
+                                          "commandId"
+                                      ],
+                       "columns":  [
+                                       "commandId",
+                                       "incidentId",
+                                       "severity",
+                                       "baseSeverity",
+                                       "ownerPrincipal",
+                                       "createdAt",
+                                       "deliveryState"
+                                   ],
+                       "indexes":  [
+                                       {
+                                           "name":  "index_pending_severity_commands_ownerPrincipal_createdAt_commandId",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "createdAt",
+                                                           "commandId"
+                                                       ],
+                                           "unique":  false
+                                       },
+                                       {
+                                           "name":  "index_pending_severity_commands_incidentId_ownerPrincipal_createdAt_commandId",
+                                           "columns":  [
+                                                           "incidentId",
+                                                           "ownerPrincipal",
+                                                           "createdAt",
+                                                           "commandId"
+                                                       ],
+                                           "unique":  false
+                                       }
+                                   ],
+                       "legacyOwnerPolicy":  "preserve-existing"
+                   },
+                   {
+                       "tableName":  "pending_status_commands",
+                       "primaryKey":  [
+                                          "commandId"
+                                      ],
+                       "columns":  [
+                                       "commandId",
+                                       "incidentId",
+                                       "status",
+                                       "baseStatus",
+                                       "ownerPrincipal",
+                                       "createdAt",
+                                       "deliveryState"
+                                   ],
+                       "indexes":  [
+                                       {
+                                           "name":  "index_pending_status_commands_ownerPrincipal_createdAt_commandId",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "createdAt",
+                                                           "commandId"
+                                                       ],
+                                           "unique":  false
+                                       },
+                                       {
+                                           "name":  "index_pending_status_commands_incidentId_ownerPrincipal_createdAt_commandId",
+                                           "columns":  [
+                                                           "incidentId",
+                                                           "ownerPrincipal",
+                                                           "createdAt",
+                                                           "commandId"
+                                                       ],
+                                           "unique":  false
+                                       }
+                                   ],
+                       "legacyOwnerPolicy":  "preserve-existing"
+                   },
+                   {
+                       "tableName":  "pending_create_incident_commands",
+                       "primaryKey":  [
+                                          "commandId"
+                                      ],
+                       "columns":  [
+                                       "commandId",
+                                       "incidentId",
+                                       "title",
+                                       "status",
+                                       "severity",
+                                       "ownerPrincipal",
+                                       "createdAt",
+                                       "deliveryState"
+                                   ],
+                       "indexes":  [
+                                       {
+                                           "name":  "index_pending_create_incident_commands_ownerPrincipal_createdAt_commandId",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "createdAt",
+                                                           "commandId"
+                                                       ],
+                                           "unique":  false
+                                       },
+                                       {
+                                           "name":  "index_pending_create_incident_commands_incidentId_ownerPrincipal_createdAt_commandId",
+                                           "columns":  [
+                                                           "incidentId",
+                                                           "ownerPrincipal",
+                                                           "createdAt",
+                                                           "commandId"
+                                                       ],
+                                           "unique":  false
+                                       }
+                                   ],
+                       "legacyOwnerPolicy":  "preserve-existing"
+                   },
+                   {
+                       "tableName":  "incidents",
+                       "primaryKey":  [
+                                          "ownerPrincipal",
+                                          "id"
+                                      ],
+                       "columns":  [
+                                       "ownerPrincipal",
+                                       "id",
+                                       "title",
+                                       "status",
+                                       "latestSequence",
+                                       "severity"
+                                   ],
+                       "indexes":  [
+
+                                   ],
+                       "legacyOwnerPolicy":  "quarantine"
+                   },
+                   {
+                       "tableName":  "processed_events",
+                       "primaryKey":  [
+                                          "ownerPrincipal",
+                                          "eventId"
+                                      ],
+                       "columns":  [
+                                       "ownerPrincipal",
+                                       "eventId",
+                                       "processedAt"
+                                   ],
+                       "indexes":  [
+
+                                   ],
+                       "legacyOwnerPolicy":  "quarantine"
+                   },
+                   {
+                       "tableName":  "timeline_entries",
+                       "primaryKey":  [
+                                          "ownerPrincipal",
+                                          "entryId"
+                                      ],
+                       "columns":  [
+                                       "entryId",
+                                       "incidentId",
+                                       "message",
+                                       "author",
+                                       "occurredAt",
+                                       "deliveryState",
+                                       "ownerPrincipal"
+                                   ],
+                       "indexes":  [
+                                       {
+                                           "name":  "index_timeline_entries_ownerPrincipal_incidentId_occurredAt_entryId",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "incidentId",
+                                                           "occurredAt",
+                                                           "entryId"
+                                                       ],
+                                           "unique":  false
+                                       },
+                                       {
+                                           "name":  "index_timeline_entries_ownerPrincipal_deliveryState_occurredAt_entryId",
+                                           "columns":  [
+                                                           "ownerPrincipal",
+                                                           "deliveryState",
+                                                           "occurredAt",
+                                                           "entryId"
+                                                       ],
+                                           "unique":  false
+                                       }
+                                   ],
+                       "legacyOwnerPolicy":  "quarantine"
+                   },
+                   {
+                       "tableName":  "incident_sequence_gaps",
+                       "primaryKey":  [
+                                          "ownerPrincipal",
+                                          "incidentId"
+                                      ],
+                       "columns":  [
+                                       "ownerPrincipal",
+                                       "incidentId",
+                                       "expectedSequence",
+                                       "receivedSequence",
+                                       "detectedAt"
+                                   ],
+                       "indexes":  [
+
+                                   ],
+                       "legacyOwnerPolicy":  "quarantine"
+                   }
+               ]
+}

@@ -204,6 +204,49 @@ object SessionManager {
     private val loginAttemptAuthority =
         LoginAttemptAuthority()
 
+    /**
+     * Captures the authenticated principal and current generation.
+     *
+     * Capture alone does not authorize a database write.
+     * Every protected commit must use withAuthorizedOwnership.
+     */
+    fun captureAuthenticatedOwnership():
+        AuthenticatedOwnershipContext? =
+        AuthenticatedOwnershipContext.capture(
+            sessionState = sessionState.value,
+            generation = sessionGeneration
+        )
+
+    /**
+     * Executes work only while the original authenticated
+     * principal and session generation are still current.
+     *
+     * Shares the ownership gate used by coordinated sign-in,
+     * sign-out and authoritative snapshot operations.
+     *
+     * A null result can mean rejection or an operation that
+     * itself returned null. Callers must account for this.
+     */
+    suspend fun <T> withAuthorizedOwnership(
+        context: AuthenticatedOwnershipContext,
+        operation: suspend () -> T
+    ): T? =
+        ownershipGate.withSnapshotOwnership(
+            expectedGeneration = context.sessionGeneration,
+            currentGeneration = { sessionGeneration }
+        ) {
+            if (
+                !context.matches(
+                    sessionState = sessionState.value,
+                    generation = sessionGeneration
+                )
+            ) {
+                null
+            } else {
+                operation()
+            }
+        }
+
     fun captureLoginAttemptRevision(): Long =
         loginAttemptAuthority.capture()
 
