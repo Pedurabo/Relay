@@ -51,6 +51,28 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
 
+internal enum class IncidentsListContentState {
+    Loading,
+    Empty,
+    Content
+}
+
+internal fun incidentsListContentState(
+    incidentsLoaded: Boolean,
+    incidentCount: Int
+): IncidentsListContentState {
+    return when {
+        !incidentsLoaded ->
+            IncidentsListContentState.Loading
+
+        incidentCount == 0 ->
+            IncidentsListContentState.Empty
+
+        else ->
+            IncidentsListContentState.Content
+    }
+}
+
 @Composable
 fun IncidentsScreen(
     incidents: List<Incident>,
@@ -155,20 +177,28 @@ fun IncidentsScreen(
                     )
                 }
 
-                if (!incidentsLoaded) {
-
-                    item {
-
-                        LoadingIncidentsState()
+                when (
+                    incidentsListContentState(
+                        incidentsLoaded = incidentsLoaded,
+                        incidentCount = incidents.size
+                    )
+                ) {
+                    IncidentsListContentState.Loading -> {
+                        item {
+                            LoadingIncidentsState()
+                        }
                     }
-                } else if (incidents.isEmpty()) {
 
-                    item {
-
-                        EmptyIncidentsState(
-                            onCreateIncidentClick = onCreateIncidentClick
-                        )
+                    IncidentsListContentState.Empty -> {
+                        item {
+                            EmptyIncidentsState(
+                                onCreateIncidentClick = onCreateIncidentClick
+                            )
+                        }
                     }
+
+                    IncidentsListContentState.Content ->
+                        Unit
                 }
 
                 items(

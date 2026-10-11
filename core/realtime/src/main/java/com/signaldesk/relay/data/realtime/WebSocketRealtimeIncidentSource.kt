@@ -68,6 +68,16 @@ internal fun <T : Any> shouldRevokeRealtimeSocketOwnership(
                 callbackAttemptId
         )
 
+internal fun <T : Any> shouldClearRealtimeSocketOnCollectorClose(
+    activeSocket: T?,
+    callbackSocket: T,
+    activeAttemptId: Long,
+    callbackAttemptId: Long
+): Boolean =
+    activeSocket === callbackSocket &&
+        activeAttemptId ==
+            callbackAttemptId
+
 class WebSocketRealtimeIncidentSource(
     private val url: String,
     private val tokenProvider: () -> String? = { null },
@@ -225,6 +235,7 @@ class WebSocketRealtimeIncidentSource(
                             parseEvent(json)
                                 ?: return
 
+
                         trySend(event)
                     }
 
@@ -329,18 +340,31 @@ class WebSocketRealtimeIncidentSource(
                 )
 
             awaitClose {
-                if (
-                    activeAttemptId ==
-                    attemptId
-                ) {
-                    activeAttemptId =
-                        0L
-                }
+
+                val ownsActiveSocket =
+                    shouldClearRealtimeSocketOnCollectorClose(
+                        activeSocket =
+                            activeSocket,
+                        callbackSocket =
+                            socket,
+                        activeAttemptId =
+                            activeAttemptId,
+                        callbackAttemptId =
+                            attemptId
+                    )
 
                 if (
-                    activeSocket === socket
+                    ownsActiveSocket
                 ) {
-                    activeSocket = null
+
+                    activeSocket =
+                        null
+
+                    activeAttemptId =
+                        0L
+
+                    _connectionState.value =
+                        RealtimeConnectionState.Disconnected
                 }
 
                 socket.cancel()

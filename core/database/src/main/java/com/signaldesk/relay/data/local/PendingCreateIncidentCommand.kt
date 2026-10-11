@@ -65,6 +65,7 @@ interface PendingCreateIncidentCommandDao {
         SELECT *
         FROM pending_create_incident_commands
         WHERE ownerPrincipal = :ownerPrincipal
+          AND deliveryState = 'PENDING'
         ORDER BY createdAt ASC
         LIMIT 1
         """
@@ -95,6 +96,7 @@ interface PendingCreateIncidentCommandDao {
         SELECT *
         FROM pending_create_incident_commands
         WHERE ownerPrincipal = :ownerPrincipal
+          AND deliveryState = 'PENDING'
         ORDER BY createdAt ASC
         """
     )
@@ -139,6 +141,20 @@ interface PendingCreateIncidentCommandDao {
         """
     )
     suspend fun releaseDelivery(
+        commandId: String,
+        ownerPrincipal: String
+    ): Int
+
+    @Query(
+        """
+        UPDATE pending_create_incident_commands
+        SET deliveryState = 'FAILED'
+        WHERE commandId = :commandId
+          AND ownerPrincipal = :ownerPrincipal
+          AND deliveryState = 'IN_FLIGHT'
+        """
+    )
+    suspend fun markFailed(
         commandId: String,
         ownerPrincipal: String
     ): Int
@@ -232,6 +248,17 @@ class RoomPendingCreateIncidentCommandStore(
             commandId,
             ownerPrincipal
         )
+    }
+
+    suspend fun markFailed(
+        commandId: String,
+        ownerPrincipal: String
+    ): Boolean {
+
+        return dao.markFailed(
+            commandId,
+            ownerPrincipal
+        ) == 1
     }
 
     suspend fun resetInFlight():

@@ -25,7 +25,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+
+internal fun <T> Flow<T>.markIncidentsLoaded(
+    loadedState: MutableStateFlow<Boolean>
+): Flow<T> =
+    onEach {
+        loadedState.value = true
+    }
 
 class IncidentsViewModel(
     application: Application,
@@ -89,9 +97,7 @@ class IncidentsViewModel(
                 )
             }
         }
-            .onEach {
-                _incidentsLoaded.value = true
-            }
+            .markIncidentsLoaded(_incidentsLoaded)
             .stateIn(
                 scope =
                     viewModelScope,
@@ -170,14 +176,10 @@ class IncidentsViewModel(
 
 
     val connectionState =
-        realtimeCoordinator
-            .connectionState
+        RealtimeIncidentCoordinator
+            .processConnectionState
 
     init {
-        viewModelScope.launch {
-            repository.seedIfEmpty()
-        }
-
         viewModelScope.launch {
             SessionManager
                 .sessionTerminationReason

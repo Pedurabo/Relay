@@ -240,6 +240,56 @@ internal class RealtimeAttemptConnectionTracker {
     }
 }
 
+internal class RealtimeCoordinatorOwnershipGate<T : Any> {
+
+    private val lock =
+        Any()
+
+    private var owner:
+        T? =
+        null
+
+    fun tryAcquire(
+        candidate: T
+    ): Boolean =
+        synchronized(lock) {
+
+            if (
+                owner !=
+                null
+            ) {
+                false
+
+            } else {
+
+                owner =
+                    candidate
+
+                true
+            }
+        }
+
+    fun release(
+        candidate: T
+    ): Boolean =
+        synchronized(lock) {
+
+            if (
+                owner !==
+                candidate
+            ) {
+                false
+
+            } else {
+
+                owner =
+                    null
+
+                true
+            }
+        }
+}
+
 class RealtimeIncidentCoordinator(
     private val source: RealtimeIncidentSource,
     private val processor: IncidentEventProcessor,
@@ -276,6 +326,7 @@ class RealtimeIncidentCoordinator(
         )
     }
 
+    @Synchronized
     fun start(
         scope: CoroutineScope
     ) {
@@ -287,12 +338,26 @@ class RealtimeIncidentCoordinator(
             return
         }
 
+        if (
+            !ownershipGate.tryAcquire(
+                this
+            )
+        ) {
+
+            Log.i(
+                TAG,
+                "REALTIME_COORDINATOR_START_SKIPPED|reason=ownership_held"
+            )
+
+            return
+        }
+
         Log.i(
             TAG,
             "REALTIME_COORDINATOR_START"
         )
 
-        job =
+        val coordinatorJob =
             scope.launch {
 
                 launch {
@@ -398,6 +463,7 @@ class RealtimeIncidentCoordinator(
                                     event
                                 )
 
+
                             if (
                                 result ==
                                 EventProcessingResult.APPLIED
@@ -470,6 +536,39 @@ class RealtimeIncidentCoordinator(
 
                 _connectionState.value =
                     RealtimeConnectionState.Disconnected
+            }
+
+        job =
+            coordinatorJob
+
+                val processConnectionStateJob =
+            scope.launch {
+
+                _connectionState
+                    .collect { state ->
+
+                        _processConnectionState.value =
+                            state
+                    }
+            }
+
+        coordinatorJob.invokeOnCompletion {
+
+            processConnectionStateJob
+                .cancel()
+
+            /*
+             * Publish disconnect BEFORE releasing process ownership.
+             * A replacement coordinator cannot acquire the gate until
+             * this owner has published its terminal state.
+             */
+            _processConnectionState.value =
+                RealtimeConnectionState.Disconnected
+
+                ownershipGate
+                    .release(
+                        this
+                    )
             }
     }
 
@@ -735,6 +834,21 @@ launchRegisteredRealtimeReplayJob(
     }
 
     companion object {
+
+
+        private val _processConnectionState =
+            MutableStateFlow<RealtimeConnectionState>(
+                RealtimeConnectionState.Disconnected
+            )
+
+        val processConnectionState:
+            StateFlow<RealtimeConnectionState> =
+            _processConnectionState
+private val ownershipGate =
+            RealtimeCoordinatorOwnershipGate<
+                RealtimeIncidentCoordinator
+            >()
+
         private const val TAG =
             "RelayRealtimeCoordinator"
 

@@ -603,6 +603,8 @@ when (
                     pending.severity
                 )
 
+        var rejectionReason:
+            String? = null
         val result =
             runCatching {
 
@@ -620,7 +622,12 @@ when (
                         requestedSeverity,
 
                     commandId =
-                        pending.commandId
+                        pending.commandId,
+
+                    onRejected = { reason ->
+                        rejectionReason =
+                            reason
+                    }
                 )
             }
                 .getOrElse {
@@ -638,13 +645,37 @@ when (
             IncidentCommandResult.REJECTED
         ) {
 
-            store.clearIf(
-                pending.commandId,
-                pending.ownerPrincipal
-            )
+            val normalizedReason =
+                normalizeCreateIncidentRejectionReason(
+                    rejectionReason
+                )
 
-            return DeliveryOutcome
-                .COMPLETE
+            when (
+                decideCreateIncidentRejection(
+                    normalizedReason
+                )
+            ) {
+
+                CreateIncidentRejectionDecision.MARK_FAILED -> {
+
+                    val markedFailed =
+                        store.markFailed(
+                            pending.commandId,
+                            pending.ownerPrincipal
+                        )
+
+                    check(markedFailed) {
+                        "Rejected create command was not in-flight."
+                    }
+
+                    reportOutboxEvent(
+                        "CREATE_OUTBOX_FAILED|${pending.commandId}|reason=$normalizedReason"
+                    )
+
+                    return DeliveryOutcome
+                        .COMPLETE
+                }
+            }
         }
 
         if (

@@ -1,6 +1,8 @@
 package com.signaldesk.relay.data.session
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -92,26 +94,34 @@ class AuthSessionClient(
                         .toMediaType()
                 )
 
-        execute(
-            Request.Builder()
-                .url(
-                    "$baseUrl/auth/revoke"
-                )
-                .post(body)
-                .build()
-        ).use { response ->
+        val response =
+            execute(
+                Request.Builder()
+                    .url(
+                        "$baseUrl/auth/revoke"
+                    )
+                    .post(body)
+                    .build()
+            )
 
-            if (
-                response.code !=
-                    204 &&
-                response.code !=
-                    401
-            ) {
+        withContext(
+            Dispatchers.IO
+        ) {
 
-                throw IOException(
-                    "Session revoke failed: HTTP " +
-                        response.code
-                )
+            response.use {
+
+                if (
+                    response.code !=
+                        204 &&
+                    response.code !=
+                        401
+                ) {
+
+                    throw IOException(
+                        "Session revoke failed: HTTP " +
+                            response.code
+                    )
+                }
             }
         }
     }
@@ -142,46 +152,51 @@ class AuthSessionClient(
                     .build()
             )
 
-        response.use {
+        return withContext(
+            Dispatchers.IO
+        ) {
 
-            if (
-                !response.isSuccessful
-            ) {
+            response.use {
 
-                throw AuthHttpException(
-                    response.code
+                if (
+                    !response.isSuccessful
+                ) {
+
+                    throw AuthHttpException(
+                        response.code
+                    )
+                }
+
+                val json =
+                    JSONObject(
+                        response.body
+                            ?.string()
+                            .orEmpty()
+                    )
+
+                AuthenticatedSession(
+                    userId =
+                        json.getString(
+                            "userId"
+                        ),
+                    userName =
+                        json.getString(
+                            "userName"
+                        ),
+                    accessToken =
+                        json.getString(
+                            "accessToken"
+                        ),
+                    refreshToken =
+                        json.getString(
+                            "refreshToken"
+                        ),
+                    accessTokenExpiresAt =
+                        json.getLong(
+                            "accessTokenExpiresAt"
+                        )
                 )
             }
-
-            val json =
-                JSONObject(
-                    response.body
-                        ?.string()
-                        .orEmpty()
-                )
-
-            return AuthenticatedSession(
-                userId =
-                    json.getString(
-                        "userId"
-                    ),
-                userName =
-                    json.getString(
-                        "userName"
-                    ),
-                accessToken =
-                    json.getString(
-                        "accessToken"
-                    ),
-                refreshToken =
-                    json.getString(
-                        "refreshToken"
-                    ),
-                accessTokenExpiresAt =
-                    json.getLong(
-                        "accessTokenExpiresAt"
-                    )
-            )
         }
     }
 
@@ -203,9 +218,11 @@ class AuthSessionClient(
                         call: Call,
                         e: IOException
                     ) {
+
                         if (
                             continuation.isActive
                         ) {
+
                             continuation
                                 .resumeWithException(
                                     e
@@ -217,13 +234,17 @@ class AuthSessionClient(
                         call: Call,
                         response: Response
                     ) {
+
                         if (
                             continuation.isActive
                         ) {
+
                             continuation.resume(
                                 response
                             )
+
                         } else {
+
                             response.close()
                         }
                     }

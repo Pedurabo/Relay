@@ -1,5 +1,6 @@
 package com.signaldesk.relay.data.realtime
 
+
 import com.signaldesk.relay.model.IncidentSeverity
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -310,7 +311,8 @@ class WebSocketIncidentCommandSender(
         title: String,
         status: String,
         severity: IncidentSeverity,
-        commandId: String
+        commandId: String,
+        onRejected: (String) -> Unit = {}
     ): IncidentCommandResult {
 
         return withTimeoutOrNull(
@@ -454,6 +456,19 @@ class WebSocketIncidentCommandSender(
                                         commandId
                                 )
                                     ?: return
+
+                            if (
+                                result ==
+                                IncidentCommandResult.REJECTED
+                            ) {
+                                onRejected(
+                                    normalizeCreateIncidentRejectionReason(
+                                        json.optString(
+                                            "reason"
+                                        )
+                                    )
+                                )
+                            }
 
                             finish(
                                 result

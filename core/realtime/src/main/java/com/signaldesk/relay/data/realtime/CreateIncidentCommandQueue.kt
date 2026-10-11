@@ -1,5 +1,6 @@
 package com.signaldesk.relay.data.realtime
 
+
 import android.content.Context
 import com.signaldesk.relay.data.local.IncidentStoreFactory
 import com.signaldesk.relay.data.local.PendingCreateIncidentCommand
@@ -36,5 +37,6 @@ object CreateIncidentCommandQueue {
                         ownerPrincipal
                 )
             )
+
     }
 }

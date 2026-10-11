@@ -1,5 +1,6 @@
 package com.signaldesk.relay.ui.incidents
 
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -80,6 +81,7 @@ class CreateIncidentViewModel(
         createInProgress.value =
             true
 
+
         viewModelScope.launch {
 
             try {
@@ -102,6 +104,7 @@ class CreateIncidentViewModel(
                     ownerPrincipal =
                         ownerPrincipal
                 )
+
 
             } catch (
                 error: CancellationException
@@ -127,6 +130,7 @@ class CreateIncidentViewModel(
              */
             CreateIncidentOutboxCoordinator
                 .kick()
+
 
             createInProgress.value =
                 false

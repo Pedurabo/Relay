@@ -23,6 +23,8 @@ android {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+    testImplementation(kotlin("test"))
     implementation(project(":core:model"))
     implementation(project(":core:database"))
     implementation(project(":core:session"))
