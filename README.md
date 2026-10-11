@@ -25,7 +25,7 @@ The project focuses on a difficult mobile-systems problem: keeping durable local
 - Cross-account isolation
 - Room database version 15 with exported schema history and composite indexes for hot recovery/outbox paths
 - Unit, migration, instrumentation, and physical-device reliability validation
-- Authenticated FastAPI development backend with access/refresh session lifecycle, revocation, and WebSocket command handling
+- Authenticated FastAPI backend with durable SQLite state, access/refresh session lifecycle, revocation, and WebSocket command handling
 - Process-scoped realtime ownership with shared connection state and stale-socket cleanup
 - Durable create rejection preservation so terminal server rejections do not silently delete operator intent
 
@@ -353,22 +353,28 @@ Instrumentation remains intentionally separate from manual product verification 
 - Material 3
 - Firebase
 
-### Development backend
+### Backend
 
 - Python
 - FastAPI
 - Uvicorn
 - HTTP + WebSocket transport
-- In-memory incident/session state for local development
-- access-token and refresh-token login flow
-- access-token invalidation with refresh-token preservation
+- durable SQLite incident, event, command, timeline, and refresh-session state
+- access-token and hashed durable refresh-token authority
+- configurable access and refresh token lifetimes
+- authenticated incident snapshot bootstrap
 - authenticated incident create/status/severity commands
 - timeline command handling
-- command acknowledgement and deduplication
-- realtime incident/timeline event broadcasting
-- development health and session-invalidation endpoints
+- crash-atomic accepted-command persistence
+- durable command acknowledgement and deduplication
+- realtime incident/timeline event broadcasting and replay
+- liveness (`/health`) and SQLite-backed readiness (`/ready`) endpoints
+- environment-based runtime configuration
+- pinned backend runtime dependencies
+- production Docker image with health checking
+- development-only session invalidation route disabled outside development
 
-The development backend is intentionally local and in-memory. It is used to validate end-to-end Android reliability contracts and is not presented as production hosting.
+The backend now has a proven production-mode runtime path and containerized deployment boundary. Production hosting infrastructure, external secrets management, monitoring/alerting, and managed database operations remain deployment concerns rather than completed hosting work.
 
 ## Project structure
 
@@ -454,7 +460,7 @@ Connected instrumentation runs can replace or remove the installed debug applica
 
 Relay is an active engineering portfolio project focused on resilient realtime Android architecture.
 
-The completed **Server Integration & End-to-End Reliability** milestone has established:
+The completed **Server Integration & End-to-End Reliability** milestone established:
 
 - durable deferred realtime processing,
 - Room v15 migration infrastructure with exported schema history,
@@ -473,17 +479,30 @@ The completed **Server Integration & End-to-End Reliability** milestone has esta
 - accessibility and keyboard-flow hardening across sign-in, incident cards, detail timelines, and update composition,
 - explicit initial-loading versus true-empty incident-list states,
 - physical-device product verification on Android 13,
-- authenticated local backend integration with access/refresh session handling and revocation recovery,
+- authenticated backend integration with access/refresh session handling and revocation recovery,
 - process-scoped realtime ownership with shared connection state and stale-socket cleanup,
 - end-to-end create/status/severity/timeline mutation convergence,
 - durable rejected-create preservation instead of silent intent loss, and
 - broad reliability regression coverage.
 
-The project should not be interpreted as a production-hosted service or Play Store release.
+The completed **Production Backend & Deployment Readiness** milestone adds:
 
-The next milestone is **Production Backend & Deployment Readiness**: durable server persistence, environment-based configuration, deployable startup/runtime boundaries, production-safe endpoint configuration, and operational readiness.
+- environment-driven backend runtime configuration,
+- durable SQLite incident, event, timeline, command-deduplication, and refresh-session authority,
+- crash-atomic persistence for accepted incident commands,
+- hashed refresh-token authority with rotation, revocation, restart durability, configurable expiry, and durable expiry cleanup,
+- authenticated authoritative incident bootstrap for fresh Android clients,
+- sequence-aware Room reconciliation that prevents older snapshots from regressing local authoritative state,
+- cancellation-safe bootstrap error handling,
+- separate liveness and SQLite-backed readiness endpoints,
+- pinned backend runtime dependencies,
+- production-mode process restart validation,
+- a production Docker image with health checking and build-context exclusions, and
+- real process/container proofs showing production-only runtime behavior and development-route isolation.
 
-Production hosting, signing and secrets operations, monitoring, deployment infrastructure, and store publishing are not yet complete.
+The project should not be interpreted as a publicly production-hosted service or Play Store release. The backend now has a deployable production-mode runtime boundary, but production hosting infrastructure, external secrets operations, monitoring/alerting, tenant/principal data scoping, managed database strategy, and store publishing remain future work.
+
+The next engineering work is focused on authoritative bootstrap/realtime handoff, timeline bootstrap for fresh clients, multi-user/tenant data boundaries, and deployment operations beyond the proven local/container runtime.
 
 ## Engineering focus
 
