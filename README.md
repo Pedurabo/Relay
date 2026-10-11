@@ -25,6 +25,9 @@ The project focuses on a difficult mobile-systems problem: keeping durable local
 - Cross-account isolation
 - Room database version 15 with exported schema history and composite indexes for hot recovery/outbox paths
 - Unit, migration, instrumentation, and physical-device reliability validation
+- Authenticated FastAPI development backend with access/refresh session lifecycle, revocation, and WebSocket command handling
+- Process-scoped realtime ownership with shared connection state and stale-socket cleanup
+- Durable create rejection preservation so terminal server rejections do not silently delete operator intent
 
 ## Architecture
 
@@ -352,20 +355,20 @@ Instrumentation remains intentionally separate from manual product verification 
 
 ### Development backend
 
-- Node.js
-- WebSockets
-- SQLite
-- WAL mode
-- foreign-key enforcement
-- schema migration
-- authentication
-- authorization
-- hashed access and refresh session tokens
-- login rate limiting
-- command deduplication
-- event replay
-- push-token registration
-- optional Firebase push delivery
+- Python
+- FastAPI
+- Uvicorn
+- HTTP + WebSocket transport
+- In-memory incident/session state for local development
+- access-token and refresh-token login flow
+- access-token invalidation with refresh-token preservation
+- authenticated incident create/status/severity commands
+- timeline command handling
+- command acknowledgement and deduplication
+- realtime incident/timeline event broadcasting
+- development health and session-invalidation endpoints
+
+The development backend is intentionally local and in-memory. It is used to validate end-to-end Android reliability contracts and is not presented as production hosting.
 
 ## Project structure
 
@@ -395,10 +398,10 @@ The reliability-sensitive Android architecture is split into dedicated database 
 
 ### Start the backend
 
-~~~bash
-npm --prefix backend install
-npm --prefix backend test
-node backend/server.js
+~~~powershell
+python -m venv backend\.venv
+backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+backend\.venv\Scripts\python.exe backend\relay_dev_server.py
 ~~~
 
 The development WebSocket server listens on port `9000`.
@@ -451,7 +454,7 @@ Connected instrumentation runs can replace or remove the installed debug applica
 
 Relay is an active engineering portfolio project focused on resilient realtime Android architecture.
 
-The current hardening phase has established:
+The completed **Server Integration & End-to-End Reliability** milestone has established:
 
 - durable deferred realtime processing,
 - Room v15 migration infrastructure with exported schema history,
@@ -469,12 +472,18 @@ The current hardening phase has established:
 - feature-level incidents ViewModel ownership with app-layer factory/lifecycle seams,
 - accessibility and keyboard-flow hardening across sign-in, incident cards, detail timelines, and update composition,
 - explicit initial-loading versus true-empty incident-list states,
-- physical-device product verification on Android 13, and
+- physical-device product verification on Android 13,
+- authenticated local backend integration with access/refresh session handling and revocation recovery,
+- process-scoped realtime ownership with shared connection state and stale-socket cleanup,
+- end-to-end create/status/severity/timeline mutation convergence,
+- durable rejected-create preservation instead of silent intent loss, and
 - broad reliability regression coverage.
 
 The project should not be interpreted as a production-hosted service or Play Store release.
 
-Production hosting, signing and secrets operations, monitoring, deployment infrastructure, and store publishing remain outside the current repository scope.
+The next milestone is **Production Backend & Deployment Readiness**: durable server persistence, environment-based configuration, deployable startup/runtime boundaries, production-safe endpoint configuration, and operational readiness.
+
+Production hosting, signing and secrets operations, monitoring, deployment infrastructure, and store publishing are not yet complete.
 
 ## Engineering focus
 
