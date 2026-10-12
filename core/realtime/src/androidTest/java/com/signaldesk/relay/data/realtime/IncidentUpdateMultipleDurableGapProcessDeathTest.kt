@@ -90,7 +90,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -115,7 +115,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                             "MEDIUM",
                         sequence =
                             4L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -137,7 +137,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                             "HIGH",
                         sequence =
                             5L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -162,7 +162,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                             "LOW",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -171,7 +171,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                     firstDatabase
                         .incidentDao()
                         .getById(
-                            "INC-MULTI-RESTART"
+                            "operator-a", "INC-MULTI-RESTART"
                         )
                 )
 
@@ -184,7 +184,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                 firstDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-MULTI-RESTART"
+                        "operator-a", "INC-MULTI-RESTART"
                     )
 
             assertEquals(
@@ -207,7 +207,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                     firstDatabase
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-MULTI-RESTART"
+                            "operator-a", "INC-MULTI-RESTART"
                         )
                 )
 
@@ -269,7 +269,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                             "MEDIUM",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -278,7 +278,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-MULTI-RESTART"
+                            "operator-a", "INC-MULTI-RESTART"
                         )
                 )
 
@@ -307,7 +307,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-MULTI-RESTART"
+                        "operator-a", "INC-MULTI-RESTART"
                     )
                     .size
             )
@@ -317,7 +317,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-MULTI-RESTART"
+                        "operator-a", "INC-MULTI-RESTART"
                     )
             )
 
@@ -325,7 +325,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-MULTI-RESTART-4"
+                        "operator-a", "EVENT-MULTI-RESTART-4"
                     )
             )
 
@@ -333,7 +333,7 @@ class IncidentUpdateMultipleDurableGapProcessDeathTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-MULTI-RESTART-5"
+                        "operator-a", "EVENT-MULTI-RESTART-5"
                     )
             )
         }

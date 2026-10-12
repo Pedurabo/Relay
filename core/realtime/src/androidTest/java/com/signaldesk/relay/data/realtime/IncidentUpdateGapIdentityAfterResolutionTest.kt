@@ -74,7 +74,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -116,7 +116,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
             assertEquals(
                 EventProcessingResult.GAP_DETECTED,
                 processor.process(
-                    original
+                    original, "operator-a"
                 )
             )
 
@@ -124,7 +124,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-GAP-FIRST"
+                        "operator-a", "INC-GAP-FIRST"
                     )
 
             assertEquals(
@@ -155,7 +155,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
             assertEquals(
                 EventProcessingResult.GAP_DETECTED,
                 processor.process(
-                    conflicting
+                    conflicting, "operator-a"
                 )
             )
 
@@ -163,7 +163,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-GAP-FIRST"
+                        "operator-a", "INC-GAP-FIRST"
                     )
 
             assertEquals(
@@ -209,7 +209,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
                             "LOW",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -218,7 +218,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-GAP-FIRST"
+                            "operator-a", "INC-GAP-FIRST"
                         )
                 )
 
@@ -247,7 +247,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-GAP-FIRST"
+                        "operator-a", "INC-GAP-FIRST"
                     )
                     .size
             )
@@ -257,7 +257,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-GAP-FIRST"
+                        "operator-a", "INC-GAP-FIRST"
                     )
             )
 
@@ -265,7 +265,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-GAP-FIRST-3"
+                        "operator-a", "EVENT-GAP-FIRST-3"
                     )
             )
 
@@ -276,7 +276,7 @@ class IncidentUpdateGapIdentityAfterResolutionTest {
             assertEquals(
                 EventProcessingResult.DUPLICATE,
                 processor.process(
-                    conflicting
+                    conflicting, "operator-a"
                 )
             )
         }

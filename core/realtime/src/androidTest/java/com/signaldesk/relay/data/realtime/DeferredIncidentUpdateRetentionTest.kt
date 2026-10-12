@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -59,8 +59,7 @@ class DeferredIncidentUpdateRetentionTest {
              * no parent incident exists, so retention may delete it.
              */
             dao.insert(
-                DeferredIncidentUpdateEntity(
-                    eventId =
+                DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                         "EVENT-OLD-ORPHAN",
                     incidentId =
                         "INC-OLD-ORPHAN",
@@ -84,8 +83,7 @@ class DeferredIncidentUpdateRetentionTest {
              * no parent yet, but it is younger than the cutoff.
              */
             dao.insert(
-                DeferredIncidentUpdateEntity(
-                    eventId =
+                DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                         "EVENT-FRESH-ORPHAN",
                     incidentId =
                         "INC-FRESH-ORPHAN",
@@ -114,8 +112,7 @@ class DeferredIncidentUpdateRetentionTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-PARENT-BACKED",
                         title =
                             "Parent",
@@ -129,8 +126,7 @@ class DeferredIncidentUpdateRetentionTest {
                 )
 
             dao.insert(
-                DeferredIncidentUpdateEntity(
-                    eventId =
+                DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                         "EVENT-PARENT-BACKED",
                     incidentId =
                         "INC-PARENT-BACKED",
@@ -151,7 +147,7 @@ class DeferredIncidentUpdateRetentionTest {
 
             val deleted =
                 dao.deleteOrphansBefore(
-                    cutoff
+                    "operator-a", cutoff
                 )
 
             assertEquals(
@@ -163,7 +159,7 @@ class DeferredIncidentUpdateRetentionTest {
                 0,
                 dao
                     .loadForIncident(
-                        "INC-OLD-ORPHAN"
+                        "operator-a", "INC-OLD-ORPHAN"
                     )
                     .size
             )
@@ -172,7 +168,7 @@ class DeferredIncidentUpdateRetentionTest {
                 1,
                 dao
                     .loadForIncident(
-                        "INC-FRESH-ORPHAN"
+                        "operator-a", "INC-FRESH-ORPHAN"
                     )
                     .size
             )
@@ -181,7 +177,7 @@ class DeferredIncidentUpdateRetentionTest {
                 1,
                 dao
                     .loadForIncident(
-                        "INC-PARENT-BACKED"
+                        "operator-a", "INC-PARENT-BACKED"
                     )
                     .size
             )
@@ -190,7 +186,7 @@ class DeferredIncidentUpdateRetentionTest {
                 "EVENT-PARENT-BACKED",
                 dao
                     .loadForIncident(
-                        "INC-PARENT-BACKED"
+                        "operator-a", "INC-PARENT-BACKED"
                     )
                     .single()
                     .eventId

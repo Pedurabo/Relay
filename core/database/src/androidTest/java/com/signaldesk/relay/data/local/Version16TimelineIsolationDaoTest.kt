@@ -128,4 +128,71 @@ class Version16TimelineIsolationDaoTest {
             dao.deliveryState("", "ENTRY-SHARED")
         )
     }
+
+    @Test
+    fun accountAtoBtoAKeepsTimelineAcknowledgementsIsolated() = runBlocking {
+        var activeOwner = "account-a"
+
+        suspend fun visibleState(): String? =
+            dao.deliveryState(activeOwner, "ENTRY-SHARED")
+
+        suspend fun visibleEntries(): List<String> =
+            dao.entriesForIncident(activeOwner, "INC-SHARED")
+
+        // Account A initially sees its own pending entry.
+        assertEquals(
+            listOf("ENTRY-SHARED"),
+            visibleEntries()
+        )
+        assertEquals("PENDING", visibleState())
+
+        // Account B becomes active.
+        activeOwner = "account-b"
+
+        assertEquals(
+            listOf("ENTRY-SHARED"),
+            visibleEntries()
+        )
+        assertEquals("PENDING", visibleState())
+
+        // B acknowledges B's record only.
+        assertEquals(
+            1,
+            dao.acknowledge(activeOwner, "ENTRY-SHARED")
+        )
+        assertEquals("SENT", visibleState())
+
+        // Account A returns.
+        activeOwner = "account-a"
+
+        assertEquals(
+            listOf("ENTRY-SHARED"),
+            visibleEntries()
+        )
+        assertEquals(
+            "PENDING",
+            visibleState()
+        )
+
+        // B's change persists independently.
+        assertEquals(
+            "SENT",
+            dao.deliveryState("account-b", "ENTRY-SHARED")
+        )
+
+        // Historical unowned data remains quarantined.
+        assertEquals(
+            "PENDING",
+            dao.deliveryState("", "ENTRY-SHARED")
+        )
+
+        // An unrelated owner cannot see the shared ID.
+        assertTrue(
+            dao.entriesForIncident("account-c", "INC-SHARED")
+                .isEmpty()
+        )
+        assertNull(
+            dao.deliveryState("account-c", "ENTRY-SHARED")
+        )
+    }
 }

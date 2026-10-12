@@ -74,7 +74,7 @@ class IncidentUpdateGapEventIdentityConflictTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -99,7 +99,7 @@ class IncidentUpdateGapEventIdentityConflictTest {
             assertEquals(
                 EventProcessingResult.GAP_DETECTED,
                 processor.process(
-                    originalFuture
+                    originalFuture, "operator-a"
                 )
             )
 
@@ -107,7 +107,7 @@ class IncidentUpdateGapEventIdentityConflictTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-GAP-ID-3"
+                        "operator-a", "EVENT-GAP-ID-3"
                     )
             )
 
@@ -129,7 +129,7 @@ class IncidentUpdateGapEventIdentityConflictTest {
                             "Resolved",
                         severity =
                             "HIGH"
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -154,7 +154,7 @@ class IncidentUpdateGapEventIdentityConflictTest {
                             "LOW",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -166,7 +166,7 @@ class IncidentUpdateGapEventIdentityConflictTest {
             assertEquals(
                 EventProcessingResult.DUPLICATE,
                 processor.process(
-                    originalFuture
+                    originalFuture, "operator-a"
                 )
             )
 
@@ -175,7 +175,7 @@ class IncidentUpdateGapEventIdentityConflictTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-GAP-ID"
+                            "operator-a", "INC-GAP-ID"
                         )
                 )
 

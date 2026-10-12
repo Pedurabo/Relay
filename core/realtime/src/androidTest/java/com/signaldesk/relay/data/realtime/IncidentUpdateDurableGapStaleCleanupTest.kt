@@ -74,7 +74,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -99,7 +99,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                             "MEDIUM",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -108,7 +108,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-DURABLE-STALE"
+                        "operator-a", "INC-DURABLE-STALE"
                     )
                     .size
             )
@@ -138,7 +138,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                             "LOW",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -165,7 +165,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                             "HIGH",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
 
             assertTrue(
@@ -193,7 +193,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                             "HIGH",
                         sequence =
                             4L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -202,7 +202,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-DURABLE-STALE"
+                            "operator-a", "INC-DURABLE-STALE"
                         )
                 )
 
@@ -224,7 +224,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-DURABLE-STALE"
+                        "operator-a", "INC-DURABLE-STALE"
                     )
                     .size
             )
@@ -234,7 +234,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-DURABLE-STALE"
+                        "operator-a", "INC-DURABLE-STALE"
                     )
             )
 
@@ -246,7 +246,7 @@ class IncidentUpdateDurableGapStaleCleanupTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-DURABLE-STALE-3"
+                        "operator-a", "EVENT-DURABLE-STALE-3"
                     )
             )
         }

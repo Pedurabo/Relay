@@ -72,8 +72,7 @@ class IncidentUpdateGapProcessDeathRecoveryTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-GAP-RESTART",
                         title =
                             "Initial",
@@ -92,8 +91,7 @@ class IncidentUpdateGapProcessDeathRecoveryTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-GAP-3",
                         incidentId =
                             "INC-GAP-RESTART",
@@ -122,13 +120,13 @@ class IncidentUpdateGapProcessDeathRecoveryTest {
              * It must persist the seq=2..3 gap and leave seq=3 durable.
              */
             firstProcessor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val persistedGap =
                 firstDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-GAP-RESTART"
+                        "operator-a", "INC-GAP-RESTART"
                     )
 
             assertNotNull(
@@ -152,7 +150,7 @@ class IncidentUpdateGapProcessDeathRecoveryTest {
                 firstDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-GAP-RESTART"
+                        "operator-a", "INC-GAP-RESTART"
                     )
                     .size
             )
@@ -211,7 +209,7 @@ class IncidentUpdateGapProcessDeathRecoveryTest {
                             "MEDIUM",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -220,7 +218,7 @@ class IncidentUpdateGapProcessDeathRecoveryTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-GAP-RESTART"
+                            "operator-a", "INC-GAP-RESTART"
                         )
                 )
 
@@ -249,7 +247,7 @@ class IncidentUpdateGapProcessDeathRecoveryTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-GAP-RESTART"
+                        "operator-a", "INC-GAP-RESTART"
                     )
                     .size
             )
@@ -258,7 +256,7 @@ class IncidentUpdateGapProcessDeathRecoveryTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-GAP-RESTART"
+                        "operator-a", "INC-GAP-RESTART"
                     )
             )
         }

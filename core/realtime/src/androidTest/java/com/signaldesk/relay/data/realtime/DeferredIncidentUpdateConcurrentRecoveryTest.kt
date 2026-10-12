@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -63,8 +63,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-CONCURRENT-RECOVERY",
                         title =
                             "Initial",
@@ -80,8 +79,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-CONCURRENT-3",
                         incidentId =
                             "INC-CONCURRENT-RECOVERY",
@@ -103,8 +101,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-CONCURRENT-2",
                         incidentId =
                             "INC-CONCURRENT-RECOVERY",
@@ -136,7 +133,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
                 listOf(
                     async {
                         processor
-                            .recoverDeferredIncidentUpdates()
+                            .recoverDeferredIncidentUpdates("operator-a")
                     },
                     async {
                         processor.process(
@@ -155,7 +152,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
                                     "MEDIUM",
                                 sequence =
                                     2L
-                            )
+                            ), "operator-a"
                         )
                     }
                 ).awaitAll()
@@ -166,7 +163,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-CONCURRENT-RECOVERY"
+                            "operator-a", "INC-CONCURRENT-RECOVERY"
                         )
                 )
 
@@ -195,7 +192,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-CONCURRENT-RECOVERY"
+                        "operator-a", "INC-CONCURRENT-RECOVERY"
                     )
                     .size
             )
@@ -204,7 +201,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-CONCURRENT-2"
+                        "operator-a", "EVENT-CONCURRENT-2"
                     )
             )
 
@@ -212,7 +209,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-CONCURRENT-3"
+                        "operator-a", "EVENT-CONCURRENT-3"
                     )
             )
 
@@ -221,7 +218,7 @@ class DeferredIncidentUpdateConcurrentRecoveryTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-CONCURRENT-RECOVERY"
+                        "operator-a", "INC-CONCURRENT-RECOVERY"
                     )
             )
         }

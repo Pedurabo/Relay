@@ -60,8 +60,7 @@ class IncidentUpdatePartialGapRecoveryTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-PARTIAL-GAP",
                         title =
                             "Initial",
@@ -77,8 +76,7 @@ class IncidentUpdatePartialGapRecoveryTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-PARTIAL-4",
                         incidentId =
                             "INC-PARTIAL-GAP",
@@ -101,14 +99,14 @@ class IncidentUpdatePartialGapRecoveryTest {
              * Recovery sees seq=4 while current=1 and records 2..4.
              */
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val initialGap =
                 requireNotNull(
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-PARTIAL-GAP"
+                            "operator-a", "INC-PARTIAL-GAP"
                         )
                 )
 
@@ -145,7 +143,7 @@ class IncidentUpdatePartialGapRecoveryTest {
                             "MEDIUM",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -154,7 +152,7 @@ class IncidentUpdatePartialGapRecoveryTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-PARTIAL-GAP"
+                            "operator-a", "INC-PARTIAL-GAP"
                         )
                 )
 
@@ -167,7 +165,7 @@ class IncidentUpdatePartialGapRecoveryTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-PARTIAL-GAP"
+                        "operator-a", "INC-PARTIAL-GAP"
                     )
 
             assertNotNull(
@@ -194,7 +192,7 @@ class IncidentUpdatePartialGapRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-PARTIAL-GAP"
+                        "operator-a", "INC-PARTIAL-GAP"
                     )
                     .size
             )

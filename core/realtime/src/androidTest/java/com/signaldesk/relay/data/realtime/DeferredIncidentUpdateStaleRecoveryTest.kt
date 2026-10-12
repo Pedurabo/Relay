@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -62,8 +62,7 @@ class DeferredIncidentUpdateStaleRecoveryTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-STALE-DEFERRED",
                         title =
                             "Newest title",
@@ -85,8 +84,7 @@ class DeferredIncidentUpdateStaleRecoveryTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STALE-2",
                         incidentId =
                             "INC-STALE-DEFERRED",
@@ -110,20 +108,20 @@ class DeferredIncidentUpdateStaleRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-STALE-DEFERRED"
+                        "operator-a", "INC-STALE-DEFERRED"
                     )
                     .size
             )
 
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val incident =
                 requireNotNull(
                     database
                         .incidentDao()
                         .getById(
-                            "INC-STALE-DEFERRED"
+                            "operator-a", "INC-STALE-DEFERRED"
                         )
                 )
 
@@ -159,7 +157,7 @@ class DeferredIncidentUpdateStaleRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-STALE-DEFERRED"
+                        "operator-a", "INC-STALE-DEFERRED"
                     )
                     .size
             )
@@ -172,7 +170,7 @@ class DeferredIncidentUpdateStaleRecoveryTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-STALE-2"
+                        "operator-a", "EVENT-STALE-2"
                     )
             )
         }

@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -76,7 +76,7 @@ class DeferredIncidentUpdateOrderingTest {
                             "HIGH",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -103,7 +103,7 @@ class DeferredIncidentUpdateOrderingTest {
                             "MEDIUM",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -111,7 +111,7 @@ class DeferredIncidentUpdateOrderingTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-ORDER"
+                        "operator-a", "INC-ORDER"
                     )
 
             assertEquals(
@@ -152,7 +152,7 @@ class DeferredIncidentUpdateOrderingTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -161,7 +161,7 @@ class DeferredIncidentUpdateOrderingTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-ORDER"
+                            "operator-a", "INC-ORDER"
                         )
                 )
 
@@ -190,7 +190,7 @@ class DeferredIncidentUpdateOrderingTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-ORDER"
+                        "operator-a", "INC-ORDER"
                     )
                     .size
             )
@@ -204,7 +204,7 @@ class DeferredIncidentUpdateOrderingTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-ORDER"
+                        "operator-a", "INC-ORDER"
                     )
             )
         }

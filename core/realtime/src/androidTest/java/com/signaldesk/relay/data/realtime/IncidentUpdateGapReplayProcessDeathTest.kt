@@ -91,7 +91,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -116,7 +116,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
             assertEquals(
                 EventProcessingResult.GAP_DETECTED,
                 firstProcessor.process(
-                    future
+                    future, "operator-a"
                 )
             )
 
@@ -127,7 +127,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
                 firstDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-GAP-RESTART-3"
+                        "operator-a", "EVENT-GAP-RESTART-3"
                     )
             )
 
@@ -136,7 +136,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
                     firstDatabase
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-RESTART-REPLAY"
+                            "operator-a", "INC-GAP-RESTART-REPLAY"
                         )
                 )
 
@@ -193,7 +193,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
                             "MEDIUM",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -205,7 +205,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-GAP-RESTART-3"
+                        "operator-a", "EVENT-GAP-RESTART-3"
                     )
             )
 
@@ -215,7 +215,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
             assertEquals(
                 EventProcessingResult.DUPLICATE,
                 recreatedProcessor.process(
-                    future
+                    future, "operator-a"
                 )
             )
 
@@ -224,7 +224,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-GAP-RESTART-REPLAY"
+                            "operator-a", "INC-GAP-RESTART-REPLAY"
                         )
                 )
 
@@ -253,7 +253,7 @@ class IncidentUpdateGapReplayProcessDeathTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-GAP-RESTART-REPLAY"
+                        "operator-a", "INC-GAP-RESTART-REPLAY"
                     )
             )
         }

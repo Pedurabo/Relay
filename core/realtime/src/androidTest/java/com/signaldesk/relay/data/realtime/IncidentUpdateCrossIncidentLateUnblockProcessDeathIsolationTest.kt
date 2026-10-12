@@ -74,8 +74,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-RESTART-LATE-A",
                         title =
                             "A fifth",
@@ -94,8 +93,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-RESTART-LATE-B",
                         title =
                             "B second",
@@ -111,8 +109,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-LATE-B-4",
                         incidentId =
                             "INC-RESTART-LATE-B",
@@ -134,8 +131,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-LATE-B-5",
                         incidentId =
                             "INC-RESTART-LATE-B",
@@ -163,7 +159,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
                 )
 
             firstProcessor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             firstDatabase.close()
 
@@ -208,7 +204,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
                             "MEDIUM",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -217,7 +213,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-RESTART-LATE-B"
+                            "operator-a", "INC-RESTART-LATE-B"
                         )
                 )
 
@@ -246,7 +242,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-RESTART-LATE-B"
+                        "operator-a", "INC-RESTART-LATE-B"
                     )
                     .size
             )
@@ -256,7 +252,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-RESTART-LATE-B"
+                        "operator-a", "INC-RESTART-LATE-B"
                     )
             )
 
@@ -268,7 +264,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-RESTART-LATE-A"
+                            "operator-a", "INC-RESTART-LATE-A"
                         )
                 )
 
@@ -296,7 +292,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-RESTART-LATE-A"
+                        "operator-a", "INC-RESTART-LATE-A"
                     )
                     .isEmpty()
             )
@@ -306,7 +302,7 @@ class IncidentUpdateCrossIncidentLateUnblockProcessDeathIsolationTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-RESTART-LATE-A"
+                        "operator-a", "INC-RESTART-LATE-A"
                     )
             )
         }

@@ -58,8 +58,7 @@ class IncidentUpdateStartupBlockedGapIdempotencyTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-STARTUP-IDEMPOTENT",
                         title =
                             "Third",
@@ -75,8 +74,7 @@ class IncidentUpdateStartupBlockedGapIdempotencyTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STARTUP-IDEMPOTENT-5",
                         incidentId =
                             "INC-STARTUP-IDEMPOTENT",
@@ -98,8 +96,7 @@ class IncidentUpdateStartupBlockedGapIdempotencyTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STARTUP-IDEMPOTENT-6",
                         incidentId =
                             "INC-STARTUP-IDEMPOTENT",
@@ -122,14 +119,14 @@ class IncidentUpdateStartupBlockedGapIdempotencyTest {
              * First startup recovery establishes gap 4..6.
              */
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val firstGap =
                 requireNotNull(
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-STARTUP-IDEMPOTENT"
+                            "operator-a", "INC-STARTUP-IDEMPOTENT"
                         )
                 )
 
@@ -148,7 +145,7 @@ class IncidentUpdateStartupBlockedGapIdempotencyTest {
              */
             repeat(3) {
                 processor
-                    .recoverDeferredIncidentUpdates()
+                    .recoverDeferredIncidentUpdates("operator-a")
             }
 
             val finalIncident =
@@ -156,7 +153,7 @@ class IncidentUpdateStartupBlockedGapIdempotencyTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-STARTUP-IDEMPOTENT"
+                            "operator-a", "INC-STARTUP-IDEMPOTENT"
                         )
                 )
 
@@ -175,7 +172,7 @@ class IncidentUpdateStartupBlockedGapIdempotencyTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-STARTUP-IDEMPOTENT"
+                            "operator-a", "INC-STARTUP-IDEMPOTENT"
                         )
                 )
 
@@ -193,7 +190,7 @@ class IncidentUpdateStartupBlockedGapIdempotencyTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-STARTUP-IDEMPOTENT"
+                        "operator-a", "INC-STARTUP-IDEMPOTENT"
                     )
 
             assertEquals(

@@ -58,8 +58,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-GAP-LOWER-BOUND",
                         title =
                             "Initial",
@@ -93,7 +92,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                             "HIGH",
                         sequence =
                             7L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -119,7 +118,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                             "MEDIUM",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -141,7 +140,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                             "MEDIUM",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -150,7 +149,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-LOWER-BOUND"
+                            "operator-a", "INC-GAP-LOWER-BOUND"
                         )
                 )
 
@@ -186,7 +185,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                             "HIGH",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -195,7 +194,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-LOWER-BOUND"
+                            "operator-a", "INC-GAP-LOWER-BOUND"
                         )
                 )
 
@@ -230,7 +229,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                             "HIGH",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -239,7 +238,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-LOWER-BOUND"
+                            "operator-a", "INC-GAP-LOWER-BOUND"
                         )
                 )
 
@@ -261,7 +260,7 @@ class IncidentUpdateGapLowerBoundStabilityTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-GAP-LOWER-BOUND"
+                            "operator-a", "INC-GAP-LOWER-BOUND"
                         )
                 )
 

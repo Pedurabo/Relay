@@ -76,8 +76,7 @@ class IncidentUpdateStartupBlockedChainRecoveryTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-STARTUP-BLOCKED",
                         title =
                             "Third",
@@ -93,8 +92,7 @@ class IncidentUpdateStartupBlockedChainRecoveryTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STARTUP-BLOCKED-5",
                         incidentId =
                             "INC-STARTUP-BLOCKED",
@@ -116,8 +114,7 @@ class IncidentUpdateStartupBlockedChainRecoveryTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STARTUP-BLOCKED-6",
                         incidentId =
                             "INC-STARTUP-BLOCKED",
@@ -159,7 +156,7 @@ class IncidentUpdateStartupBlockedChainRecoveryTest {
                 )
 
             recreatedProcessor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             /*
              * Startup must not leapfrog the missing seq4.
@@ -169,7 +166,7 @@ class IncidentUpdateStartupBlockedChainRecoveryTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-STARTUP-BLOCKED"
+                            "operator-a", "INC-STARTUP-BLOCKED"
                         )
                 )
 
@@ -190,7 +187,7 @@ class IncidentUpdateStartupBlockedChainRecoveryTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-STARTUP-BLOCKED"
+                        "operator-a", "INC-STARTUP-BLOCKED"
                     )
 
             assertEquals(
@@ -217,7 +214,7 @@ class IncidentUpdateStartupBlockedChainRecoveryTest {
                     recreatedDatabase
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-STARTUP-BLOCKED"
+                            "operator-a", "INC-STARTUP-BLOCKED"
                         )
                 )
 

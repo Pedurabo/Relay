@@ -66,8 +66,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-ISO-A",
                         title =
                             "A second",
@@ -83,8 +82,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-ISO-A-4",
                         incidentId =
                             "INC-ISO-A",
@@ -106,8 +104,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-ISO-A-5",
                         incidentId =
                             "INC-ISO-A",
@@ -136,8 +133,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-ISO-B",
                         title =
                             "B second",
@@ -153,8 +149,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-ISO-B-4",
                         incidentId =
                             "INC-ISO-B",
@@ -176,8 +171,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-ISO-B-5",
                         incidentId =
                             "INC-ISO-B",
@@ -200,14 +194,14 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
              * Establish durable gaps for both incidents.
              */
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val gapABefore =
                 requireNotNull(
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-ISO-A"
+                            "operator-a", "INC-ISO-A"
                         )
                 )
 
@@ -216,7 +210,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-ISO-B"
+                            "operator-a", "INC-ISO-B"
                         )
                 )
 
@@ -264,7 +258,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
                             "MEDIUM",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -276,7 +270,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-ISO-A"
+                            "operator-a", "INC-ISO-A"
                         )
                 )
 
@@ -305,7 +299,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-ISO-A"
+                        "operator-a", "INC-ISO-A"
                     )
                     .size
             )
@@ -315,7 +309,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-ISO-A"
+                        "operator-a", "INC-ISO-A"
                     )
             )
 
@@ -327,7 +321,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-ISO-B"
+                            "operator-a", "INC-ISO-B"
                         )
                 )
 
@@ -355,7 +349,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-ISO-B"
+                        "operator-a", "INC-ISO-B"
                     )
 
             assertEquals(
@@ -377,7 +371,7 @@ class IncidentUpdateCrossIncidentRecoveryIsolationTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-ISO-B"
+                        "operator-a", "INC-ISO-B"
                     )
 
             assertNotNull(

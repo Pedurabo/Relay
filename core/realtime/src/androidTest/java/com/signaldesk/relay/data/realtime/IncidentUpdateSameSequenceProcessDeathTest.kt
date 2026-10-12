@@ -70,8 +70,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-PROCESS-DEATH",
                         title =
                             "Initial",
@@ -110,7 +109,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
             assertEquals(
                 EventProcessingResult.APPLIED,
                 firstProcessor.process(
-                    winner
+                    winner, "operator-a"
                 )
             )
 
@@ -119,7 +118,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
                     firstDatabase
                         .incidentDao()
                         .getById(
-                            "INC-PROCESS-DEATH"
+                            "operator-a", "INC-PROCESS-DEATH"
                         )
                 )
 
@@ -137,7 +136,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
                 firstDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-WINNER"
+                        "operator-a", "EVENT-WINNER"
                     )
             )
 
@@ -187,7 +186,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
             assertEquals(
                 EventProcessingResult.IGNORED_STALE,
                 recreatedProcessor.process(
-                    conflicting
+                    conflicting, "operator-a"
                 )
             )
 
@@ -196,7 +195,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-PROCESS-DEATH"
+                            "operator-a", "INC-PROCESS-DEATH"
                         )
                 )
 
@@ -231,7 +230,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-CONFLICT-AFTER-RESTART"
+                        "operator-a", "EVENT-CONFLICT-AFTER-RESTART"
                     )
             )
 
@@ -240,7 +239,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-PROCESS-DEATH"
+                        "operator-a", "INC-PROCESS-DEATH"
                     )
                     .size
             )
@@ -250,7 +249,7 @@ class IncidentUpdateSameSequenceProcessDeathTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-PROCESS-DEATH"
+                        "operator-a", "INC-PROCESS-DEATH"
                     )
             )
         }

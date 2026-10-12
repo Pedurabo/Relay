@@ -90,7 +90,7 @@ class IncidentUpdatedStaleReplayProcessDeathTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -112,7 +112,7 @@ class IncidentUpdatedStaleReplayProcessDeathTest {
                             "HIGH",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -137,7 +137,7 @@ class IncidentUpdatedStaleReplayProcessDeathTest {
             assertEquals(
                 EventProcessingResult.IGNORED_STALE,
                 firstProcessor.process(
-                    stale
+                    stale, "operator-a"
                 )
             )
 
@@ -145,7 +145,7 @@ class IncidentUpdatedStaleReplayProcessDeathTest {
                 firstDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-STALE-OLD"
+                        "operator-a", "EVENT-STALE-OLD"
                     )
             )
 
@@ -187,7 +187,7 @@ class IncidentUpdatedStaleReplayProcessDeathTest {
                             "MEDIUM",
                         occurredAt =
                             99_000L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -196,7 +196,7 @@ class IncidentUpdatedStaleReplayProcessDeathTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-STALE-REPLAY"
+                            "operator-a", "INC-STALE-REPLAY"
                         )
                 )
 
@@ -225,7 +225,7 @@ class IncidentUpdatedStaleReplayProcessDeathTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-STALE-REPLAY"
+                        "operator-a", "INC-STALE-REPLAY"
                     )
             )
         }

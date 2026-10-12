@@ -59,8 +59,7 @@ class IncidentCreatedLateUnsequencedTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-LATE-CREATE",
                         title =
                             "Newest title",
@@ -91,7 +90,7 @@ class IncidentCreatedLateUnsequencedTest {
                             "LOW",
                         sequence =
                             0L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -100,7 +99,7 @@ class IncidentCreatedLateUnsequencedTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-LATE-CREATE"
+                            "operator-a", "INC-LATE-CREATE"
                         )
                 )
 
@@ -128,7 +127,7 @@ class IncidentCreatedLateUnsequencedTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-LATE-CREATE"
+                        "operator-a", "EVENT-LATE-CREATE"
                     )
             )
         }
@@ -144,8 +143,7 @@ class IncidentCreatedLateUnsequencedTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-PRE-SEQUENCE",
                         title =
                             "Optimistic title",
@@ -176,7 +174,7 @@ class IncidentCreatedLateUnsequencedTest {
                             "MEDIUM",
                         sequence =
                             0L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -185,7 +183,7 @@ class IncidentCreatedLateUnsequencedTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-PRE-SEQUENCE"
+                            "operator-a", "INC-PRE-SEQUENCE"
                         )
                 )
 

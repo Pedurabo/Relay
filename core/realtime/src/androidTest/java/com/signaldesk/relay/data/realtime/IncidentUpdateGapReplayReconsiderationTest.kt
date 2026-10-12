@@ -75,7 +75,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -103,7 +103,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
             assertEquals(
                 EventProcessingResult.GAP_DETECTED,
                 processor.process(
-                    future
+                    future, "operator-a"
                 )
             )
 
@@ -115,7 +115,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-GAP-RECONSIDER-3"
+                        "operator-a", "EVENT-GAP-RECONSIDER-3"
                     )
             )
 
@@ -124,7 +124,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-RECONSIDER"
+                            "operator-a", "INC-GAP-RECONSIDER"
                         )
                 )
 
@@ -159,7 +159,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
                             "MEDIUM",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -173,7 +173,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-GAP-RECONSIDER-3"
+                        "operator-a", "EVENT-GAP-RECONSIDER-3"
                     )
             )
 
@@ -184,7 +184,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
             assertEquals(
                 EventProcessingResult.DUPLICATE,
                 processor.process(
-                    future
+                    future, "operator-a"
                 )
             )
 
@@ -193,7 +193,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-GAP-RECONSIDER"
+                            "operator-a", "INC-GAP-RECONSIDER"
                         )
                 )
 
@@ -222,7 +222,7 @@ class IncidentUpdateGapReplayReconsiderationTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-GAP-RECONSIDER"
+                        "operator-a", "INC-GAP-RECONSIDER"
                     )
             )
         }

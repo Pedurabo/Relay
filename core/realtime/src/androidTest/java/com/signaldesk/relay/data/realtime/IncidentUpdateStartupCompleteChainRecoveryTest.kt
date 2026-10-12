@@ -78,8 +78,7 @@ class IncidentUpdateStartupCompleteChainRecoveryTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-STARTUP-COMPLETE",
                         title =
                             "Third",
@@ -95,8 +94,7 @@ class IncidentUpdateStartupCompleteChainRecoveryTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STARTUP-COMPLETE-4",
                         incidentId =
                             "INC-STARTUP-COMPLETE",
@@ -118,8 +116,7 @@ class IncidentUpdateStartupCompleteChainRecoveryTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STARTUP-COMPLETE-5",
                         incidentId =
                             "INC-STARTUP-COMPLETE",
@@ -165,14 +162,14 @@ class IncidentUpdateStartupCompleteChainRecoveryTest {
              * seq=4 followed by seq=5.
              */
             recreatedProcessor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val incident =
                 requireNotNull(
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-STARTUP-COMPLETE"
+                            "operator-a", "INC-STARTUP-COMPLETE"
                         )
                 )
 
@@ -201,7 +198,7 @@ class IncidentUpdateStartupCompleteChainRecoveryTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-STARTUP-COMPLETE"
+                        "operator-a", "INC-STARTUP-COMPLETE"
                     )
                     .size
             )
@@ -211,7 +208,7 @@ class IncidentUpdateStartupCompleteChainRecoveryTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-STARTUP-COMPLETE"
+                        "operator-a", "INC-STARTUP-COMPLETE"
                     )
             )
 
@@ -219,7 +216,7 @@ class IncidentUpdateStartupCompleteChainRecoveryTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-STARTUP-COMPLETE-4"
+                        "operator-a", "EVENT-STARTUP-COMPLETE-4"
                     )
             )
 
@@ -227,7 +224,7 @@ class IncidentUpdateStartupCompleteChainRecoveryTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-STARTUP-COMPLETE-5"
+                        "operator-a", "EVENT-STARTUP-COMPLETE-5"
                     )
             )
         }

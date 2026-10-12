@@ -63,8 +63,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-LATE-ISO-A",
                         title =
                             "A fifth",
@@ -84,8 +83,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-LATE-ISO-B",
                         title =
                             "B second",
@@ -101,8 +99,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-LATE-ISO-B-4",
                         incidentId =
                             "INC-LATE-ISO-B",
@@ -124,8 +121,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-LATE-ISO-B-5",
                         incidentId =
                             "INC-LATE-ISO-B",
@@ -145,14 +141,14 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
                 )
 
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val gapB =
                 requireNotNull(
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-LATE-ISO-B"
+                            "operator-a", "INC-LATE-ISO-B"
                         )
                 )
 
@@ -188,7 +184,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
                             "MEDIUM",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -197,7 +193,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-LATE-ISO-B"
+                            "operator-a", "INC-LATE-ISO-B"
                         )
                 )
 
@@ -226,7 +222,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-LATE-ISO-B"
+                        "operator-a", "INC-LATE-ISO-B"
                     )
                     .size
             )
@@ -236,7 +232,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-LATE-ISO-B"
+                        "operator-a", "INC-LATE-ISO-B"
                     )
             )
 
@@ -248,7 +244,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-LATE-ISO-A"
+                            "operator-a", "INC-LATE-ISO-A"
                         )
                 )
 
@@ -276,7 +272,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-LATE-ISO-A"
+                        "operator-a", "INC-LATE-ISO-A"
                     )
                     .isEmpty()
             )
@@ -286,7 +282,7 @@ class IncidentUpdateCrossIncidentLateUnblockIsolationTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-LATE-ISO-A"
+                        "operator-a", "INC-LATE-ISO-A"
                     )
             )
         }

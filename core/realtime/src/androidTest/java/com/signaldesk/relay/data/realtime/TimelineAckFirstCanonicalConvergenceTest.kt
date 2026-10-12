@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -64,7 +64,8 @@ class TimelineAckFirstCanonicalConvergenceTest {
                         title =
                             "Canonical convergence",
                         status =
-                            "Active"
+                            "Active",
+                        ownerPrincipal = "operator-a"
                     )
                 )
 
@@ -111,7 +112,7 @@ class TimelineAckFirstCanonicalConvergenceTest {
                         author =
                             "Alex"
                     )
-                )
+                , "operator-a")
 
             assertEquals(
                 EventProcessingResult.APPLIED,
@@ -123,7 +124,7 @@ class TimelineAckFirstCanonicalConvergenceTest {
                     database
                         .timelineEntryDao()
                         .getById(
-                            "ENTRY-CONVERGENCE"
+                            "operator-a", "ENTRY-CONVERGENCE"
                         )
                 )
 

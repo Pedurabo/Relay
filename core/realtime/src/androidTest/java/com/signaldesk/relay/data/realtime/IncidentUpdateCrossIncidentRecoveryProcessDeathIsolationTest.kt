@@ -75,8 +75,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-RESTART-ISO-A",
                         title =
                             "A second",
@@ -92,8 +91,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-ISO-A-4",
                         incidentId =
                             "INC-RESTART-ISO-A",
@@ -115,8 +113,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-ISO-A-5",
                         incidentId =
                             "INC-RESTART-ISO-A",
@@ -142,8 +139,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-RESTART-ISO-B",
                         title =
                             "B second",
@@ -159,8 +155,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-ISO-B-4",
                         incidentId =
                             "INC-RESTART-ISO-B",
@@ -182,8 +177,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-ISO-B-5",
                         incidentId =
                             "INC-RESTART-ISO-B",
@@ -211,7 +205,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
                 )
 
             firstProcessor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             firstDatabase.close()
 
@@ -256,7 +250,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
                             "MEDIUM",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -268,7 +262,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-RESTART-ISO-A"
+                            "operator-a", "INC-RESTART-ISO-A"
                         )
                 )
 
@@ -287,7 +281,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-RESTART-ISO-A"
+                        "operator-a", "INC-RESTART-ISO-A"
                     )
                     .size
             )
@@ -297,7 +291,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-RESTART-ISO-A"
+                        "operator-a", "INC-RESTART-ISO-A"
                     )
             )
 
@@ -309,7 +303,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-RESTART-ISO-B"
+                            "operator-a", "INC-RESTART-ISO-B"
                         )
                 )
 
@@ -337,7 +331,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-RESTART-ISO-B"
+                        "operator-a", "INC-RESTART-ISO-B"
                     )
 
             assertEquals(
@@ -359,7 +353,7 @@ class IncidentUpdateCrossIncidentRecoveryProcessDeathIsolationTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-RESTART-ISO-B"
+                        "operator-a", "INC-RESTART-ISO-B"
                     )
 
             assertNotNull(

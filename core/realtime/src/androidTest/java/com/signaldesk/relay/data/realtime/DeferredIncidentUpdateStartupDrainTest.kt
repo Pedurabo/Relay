@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -58,8 +58,7 @@ class DeferredIncidentUpdateStartupDrainTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-STARTUP",
                         title =
                             "Initial",
@@ -79,8 +78,7 @@ class DeferredIncidentUpdateStartupDrainTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STARTUP-3",
                         incidentId =
                             "INC-STARTUP",
@@ -102,8 +100,7 @@ class DeferredIncidentUpdateStartupDrainTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-STARTUP-2",
                         incidentId =
                             "INC-STARTUP",
@@ -123,14 +120,14 @@ class DeferredIncidentUpdateStartupDrainTest {
                 )
 
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val incident =
                 requireNotNull(
                     database
                         .incidentDao()
                         .getById(
-                            "INC-STARTUP"
+                            "operator-a", "INC-STARTUP"
                         )
                 )
 
@@ -159,7 +156,7 @@ class DeferredIncidentUpdateStartupDrainTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-STARTUP"
+                        "operator-a", "INC-STARTUP"
                     )
                     .size
             )
@@ -169,7 +166,7 @@ class DeferredIncidentUpdateStartupDrainTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-STARTUP"
+                        "operator-a", "INC-STARTUP"
                     )
             )
         }

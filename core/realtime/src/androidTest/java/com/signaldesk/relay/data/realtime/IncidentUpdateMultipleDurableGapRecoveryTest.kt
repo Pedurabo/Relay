@@ -74,7 +74,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -99,7 +99,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                             "MEDIUM",
                         sequence =
                             4L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -121,7 +121,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                             "HIGH",
                         sequence =
                             5L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -129,7 +129,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-MULTI-GAP"
+                        "operator-a", "INC-MULTI-GAP"
                     )
 
             assertEquals(
@@ -169,7 +169,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                             "LOW",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -178,7 +178,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-MULTI-GAP"
+                            "operator-a", "INC-MULTI-GAP"
                         )
                 )
 
@@ -191,7 +191,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-MULTI-GAP"
+                        "operator-a", "INC-MULTI-GAP"
                     )
 
             assertEquals(
@@ -223,7 +223,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                             "MEDIUM",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -232,7 +232,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-MULTI-GAP"
+                            "operator-a", "INC-MULTI-GAP"
                         )
                 )
 
@@ -261,7 +261,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-MULTI-GAP"
+                        "operator-a", "INC-MULTI-GAP"
                     )
                     .size
             )
@@ -271,7 +271,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-MULTI-GAP"
+                        "operator-a", "INC-MULTI-GAP"
                     )
             )
 
@@ -279,7 +279,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-MULTI-GAP-4"
+                        "operator-a", "EVENT-MULTI-GAP-4"
                     )
             )
 
@@ -287,7 +287,7 @@ class IncidentUpdateMultipleDurableGapRecoveryTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-MULTI-GAP-5"
+                        "operator-a", "EVENT-MULTI-GAP-5"
                     )
             )
         }

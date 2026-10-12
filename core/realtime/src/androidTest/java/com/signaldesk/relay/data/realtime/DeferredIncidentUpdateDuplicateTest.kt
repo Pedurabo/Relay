@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -80,9 +80,7 @@ class DeferredIncidentUpdateDuplicateTest {
              */
             assertEquals(
                 EventProcessingResult.DEFERRED,
-                processor.process(
-                    deferredEvent
-                )
+                processor.process(deferredEvent, "operator-a")
             )
 
             assertEquals(
@@ -90,7 +88,7 @@ class DeferredIncidentUpdateDuplicateTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-DUPLICATE"
+                        "operator-a", "INC-DUPLICATE"
                     )
                     .size
             )
@@ -102,9 +100,7 @@ class DeferredIncidentUpdateDuplicateTest {
              */
             assertEquals(
                 EventProcessingResult.DEFERRED,
-                processor.process(
-                    deferredEvent
-                )
+                processor.process(deferredEvent, "operator-a")
             )
 
             assertEquals(
@@ -112,7 +108,7 @@ class DeferredIncidentUpdateDuplicateTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-DUPLICATE"
+                        "operator-a", "INC-DUPLICATE"
                     )
                     .size
             )
@@ -138,7 +134,7 @@ class DeferredIncidentUpdateDuplicateTest {
                             "MEDIUM",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -147,7 +143,7 @@ class DeferredIncidentUpdateDuplicateTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-DUPLICATE"
+                            "operator-a", "INC-DUPLICATE"
                         )
                 )
 
@@ -176,7 +172,7 @@ class DeferredIncidentUpdateDuplicateTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-DUPLICATE"
+                        "operator-a", "INC-DUPLICATE"
                     )
                     .size
             )
@@ -185,7 +181,7 @@ class DeferredIncidentUpdateDuplicateTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-DUPLICATE-2"
+                        "operator-a", "EVENT-DUPLICATE-2"
                     )
             )
 
@@ -196,9 +192,7 @@ class DeferredIncidentUpdateDuplicateTest {
              */
             assertEquals(
                 EventProcessingResult.DUPLICATE,
-                processor.process(
-                    deferredEvent
-                )
+                processor.process(deferredEvent, "operator-a")
             )
 
             val afterDuplicate =
@@ -206,7 +200,7 @@ class DeferredIncidentUpdateDuplicateTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-DUPLICATE"
+                            "operator-a", "INC-DUPLICATE"
                         )
                 )
 
@@ -235,7 +229,7 @@ class DeferredIncidentUpdateDuplicateTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-DUPLICATE"
+                        "operator-a", "INC-DUPLICATE"
                     )
                     .size
             )

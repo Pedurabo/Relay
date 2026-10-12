@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -94,7 +94,7 @@ class DeferredIncidentUpdateIdentityConflictTest {
             assertEquals(
                 EventProcessingResult.DEFERRED,
                 processor.process(
-                    original
+                    original, "operator-a"
                 )
             )
 
@@ -108,7 +108,7 @@ class DeferredIncidentUpdateIdentityConflictTest {
             assertEquals(
                 EventProcessingResult.DEFERRED,
                 processor.process(
-                    conflicting
+                    conflicting, "operator-a"
                 )
             )
 
@@ -116,7 +116,7 @@ class DeferredIncidentUpdateIdentityConflictTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-CONFLICT-A"
+                        "operator-a", "INC-CONFLICT-A"
                     )
 
             assertEquals(
@@ -167,7 +167,7 @@ class DeferredIncidentUpdateIdentityConflictTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-CONFLICT-B"
+                        "operator-a", "INC-CONFLICT-B"
                     )
                     .size
             )
@@ -194,7 +194,7 @@ class DeferredIncidentUpdateIdentityConflictTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -203,7 +203,7 @@ class DeferredIncidentUpdateIdentityConflictTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-CONFLICT-A"
+                            "operator-a", "INC-CONFLICT-A"
                         )
                 )
 
@@ -232,7 +232,7 @@ class DeferredIncidentUpdateIdentityConflictTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-CONFLICT-A"
+                        "operator-a", "INC-CONFLICT-A"
                     )
                     .size
             )

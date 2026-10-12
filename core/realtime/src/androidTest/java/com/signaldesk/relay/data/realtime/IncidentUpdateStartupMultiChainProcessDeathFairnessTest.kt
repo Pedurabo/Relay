@@ -74,8 +74,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-RESTART-FAIR-BLOCKED",
                         title =
                             "Blocked third",
@@ -91,8 +90,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-FAIR-BLOCKED-5",
                         incidentId =
                             "INC-RESTART-FAIR-BLOCKED",
@@ -114,8 +112,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-FAIR-BLOCKED-6",
                         incidentId =
                             "INC-RESTART-FAIR-BLOCKED",
@@ -141,8 +138,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
             firstDatabase
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-RESTART-FAIR-READY",
                         title =
                             "Ready third",
@@ -158,8 +154,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-FAIR-READY-4",
                         incidentId =
                             "INC-RESTART-FAIR-READY",
@@ -181,8 +176,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
             firstDatabase
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-RESTART-FAIR-READY-5",
                         incidentId =
                             "INC-RESTART-FAIR-READY",
@@ -227,7 +221,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                 )
 
             recreatedProcessor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             /*
              * Blocked chain remains untouched except for durable gap state.
@@ -237,7 +231,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-RESTART-FAIR-BLOCKED"
+                            "operator-a", "INC-RESTART-FAIR-BLOCKED"
                         )
                 )
 
@@ -250,7 +244,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-RESTART-FAIR-BLOCKED"
+                        "operator-a", "INC-RESTART-FAIR-BLOCKED"
                     )
 
             assertEquals(
@@ -273,7 +267,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                     recreatedDatabase
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-RESTART-FAIR-BLOCKED"
+                            "operator-a", "INC-RESTART-FAIR-BLOCKED"
                         )
                 )
 
@@ -295,7 +289,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-RESTART-FAIR-READY"
+                            "operator-a", "INC-RESTART-FAIR-READY"
                         )
                 )
 
@@ -324,7 +318,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                 recreatedDatabase
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-RESTART-FAIR-READY"
+                        "operator-a", "INC-RESTART-FAIR-READY"
                     )
                     .size
             )
@@ -334,7 +328,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-RESTART-FAIR-READY"
+                        "operator-a", "INC-RESTART-FAIR-READY"
                     )
             )
 
@@ -342,7 +336,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-RESTART-FAIR-READY-4"
+                        "operator-a", "EVENT-RESTART-FAIR-READY-4"
                     )
             )
 
@@ -350,7 +344,7 @@ class IncidentUpdateStartupMultiChainProcessDeathFairnessTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-RESTART-FAIR-READY-5"
+                        "operator-a", "EVENT-RESTART-FAIR-READY-5"
                     )
             )
         }

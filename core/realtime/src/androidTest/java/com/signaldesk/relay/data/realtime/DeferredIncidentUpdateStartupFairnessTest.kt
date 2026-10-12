@@ -59,8 +59,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-BLOCKED",
                         title =
                             "Blocked initial",
@@ -76,8 +75,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-READY",
                         title =
                             "Ready initial",
@@ -98,8 +96,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-BLOCKED-3",
                         incidentId =
                             "INC-BLOCKED",
@@ -125,8 +122,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-READY-2",
                         incidentId =
                             "INC-READY",
@@ -146,14 +142,14 @@ class DeferredIncidentUpdateStartupFairnessTest {
                 )
 
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val blocked =
                 requireNotNull(
                     database
                         .incidentDao()
                         .getById(
-                            "INC-BLOCKED"
+                            "operator-a", "INC-BLOCKED"
                         )
                 )
 
@@ -162,7 +158,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-READY"
+                            "operator-a", "INC-READY"
                         )
                 )
 
@@ -184,7 +180,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-BLOCKED"
+                        "operator-a", "INC-BLOCKED"
                     )
                     .size
             )
@@ -194,7 +190,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-BLOCKED"
+                            "operator-a", "INC-BLOCKED"
                         )
                 )
 
@@ -236,7 +232,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-READY"
+                        "operator-a", "INC-READY"
                     )
                     .size
             )
@@ -245,7 +241,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-READY-2"
+                        "operator-a", "EVENT-READY-2"
                     )
             )
 
@@ -254,7 +250,7 @@ class DeferredIncidentUpdateStartupFairnessTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-READY"
+                        "operator-a", "INC-READY"
                     )
             )
         }

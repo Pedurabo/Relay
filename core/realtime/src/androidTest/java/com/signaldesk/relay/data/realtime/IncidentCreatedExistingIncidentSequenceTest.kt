@@ -59,8 +59,7 @@ class IncidentCreatedExistingIncidentSequenceTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-EXISTING-CREATE",
                         title =
                             "Current title",
@@ -91,7 +90,7 @@ class IncidentCreatedExistingIncidentSequenceTest {
                             "HIGH",
                         sequence =
                             6L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -100,7 +99,7 @@ class IncidentCreatedExistingIncidentSequenceTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-EXISTING-CREATE"
+                            "operator-a", "INC-EXISTING-CREATE"
                         )
                 )
 
@@ -128,7 +127,7 @@ class IncidentCreatedExistingIncidentSequenceTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-LATE-CREATE-6"
+                        "operator-a", "EVENT-LATE-CREATE-6"
                     )
             )
 
@@ -140,7 +139,7 @@ class IncidentCreatedExistingIncidentSequenceTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-EXISTING-CREATE"
+                        "operator-a", "INC-EXISTING-CREATE"
                     )
             )
         }
@@ -156,8 +155,7 @@ class IncidentCreatedExistingIncidentSequenceTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-PRE-SEQUENCE-CREATE",
                         title =
                             "Optimistic title",
@@ -188,7 +186,7 @@ class IncidentCreatedExistingIncidentSequenceTest {
                             "MEDIUM",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -197,7 +195,7 @@ class IncidentCreatedExistingIncidentSequenceTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-PRE-SEQUENCE-CREATE"
+                            "operator-a", "INC-PRE-SEQUENCE-CREATE"
                         )
                 )
 

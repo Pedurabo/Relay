@@ -90,7 +90,7 @@ class IncidentUpdatedReplayProcessDeathTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -115,7 +115,7 @@ class IncidentUpdatedReplayProcessDeathTest {
             assertEquals(
                 EventProcessingResult.APPLIED,
                 firstProcessor.process(
-                    update
+                    update, "operator-a"
                 )
             )
 
@@ -141,7 +141,7 @@ class IncidentUpdatedReplayProcessDeathTest {
                             "HIGH",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -183,7 +183,7 @@ class IncidentUpdatedReplayProcessDeathTest {
                             "LOW",
                         occurredAt =
                             99_000L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -192,7 +192,7 @@ class IncidentUpdatedReplayProcessDeathTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-UPDATE-REPLAY"
+                            "operator-a", "INC-UPDATE-REPLAY"
                         )
                 )
 
@@ -220,7 +220,7 @@ class IncidentUpdatedReplayProcessDeathTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-UPDATE-REPLAY-2"
+                        "operator-a", "EVENT-UPDATE-REPLAY-2"
                     )
             )
 
@@ -228,7 +228,7 @@ class IncidentUpdatedReplayProcessDeathTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-UPDATE-REPLAY-3"
+                        "operator-a", "EVENT-UPDATE-REPLAY-3"
                     )
             )
 
@@ -237,7 +237,7 @@ class IncidentUpdatedReplayProcessDeathTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-UPDATE-REPLAY"
+                        "operator-a", "INC-UPDATE-REPLAY"
                     )
             )
         }

@@ -58,8 +58,7 @@ class IncidentUpdateGapUpperBoundStabilityTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-GAP-UPPER-BOUND",
                         title =
                             "Initial",
@@ -93,7 +92,7 @@ class IncidentUpdateGapUpperBoundStabilityTest {
                             "HIGH",
                         sequence =
                             7L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -102,7 +101,7 @@ class IncidentUpdateGapUpperBoundStabilityTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-UPPER-BOUND"
+                            "operator-a", "INC-GAP-UPPER-BOUND"
                         )
                 )
 
@@ -140,7 +139,7 @@ class IncidentUpdateGapUpperBoundStabilityTest {
                             "MEDIUM",
                         sequence =
                             4L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -149,7 +148,7 @@ class IncidentUpdateGapUpperBoundStabilityTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-UPPER-BOUND"
+                            "operator-a", "INC-GAP-UPPER-BOUND"
                         )
                 )
 
@@ -171,7 +170,7 @@ class IncidentUpdateGapUpperBoundStabilityTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-GAP-UPPER-BOUND"
+                            "operator-a", "INC-GAP-UPPER-BOUND"
                         )
                 )
 

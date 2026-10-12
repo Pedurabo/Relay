@@ -65,8 +65,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-FAIR-BLOCKED",
                         title =
                             "Blocked third",
@@ -82,8 +81,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-FAIR-BLOCKED-5",
                         incidentId =
                             "INC-FAIR-BLOCKED",
@@ -105,8 +103,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-FAIR-BLOCKED-6",
                         incidentId =
                             "INC-FAIR-BLOCKED",
@@ -135,8 +132,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-FAIR-READY",
                         title =
                             "Ready third",
@@ -152,8 +148,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-FAIR-READY-4",
                         incidentId =
                             "INC-FAIR-READY",
@@ -175,8 +170,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-FAIR-READY-5",
                         incidentId =
                             "INC-FAIR-READY",
@@ -196,7 +190,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                 )
 
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             /*
              * Blocked incident remains at seq=3 with both successors.
@@ -206,7 +200,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-FAIR-BLOCKED"
+                            "operator-a", "INC-FAIR-BLOCKED"
                         )
                 )
 
@@ -220,7 +214,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-FAIR-BLOCKED"
+                        "operator-a", "INC-FAIR-BLOCKED"
                     )
                     .size
             )
@@ -230,7 +224,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-FAIR-BLOCKED"
+                            "operator-a", "INC-FAIR-BLOCKED"
                         )
                 )
 
@@ -252,7 +246,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-FAIR-READY"
+                            "operator-a", "INC-FAIR-READY"
                         )
                 )
 
@@ -281,7 +275,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-FAIR-READY"
+                        "operator-a", "INC-FAIR-READY"
                     )
                     .size
             )
@@ -291,7 +285,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-FAIR-READY"
+                        "operator-a", "INC-FAIR-READY"
                     )
             )
 
@@ -299,7 +293,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-FAIR-READY-4"
+                        "operator-a", "EVENT-FAIR-READY-4"
                     )
             )
 
@@ -307,7 +301,7 @@ class IncidentUpdateStartupMultiChainFairnessTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-FAIR-READY-5"
+                        "operator-a", "EVENT-FAIR-READY-5"
                     )
             )
         }

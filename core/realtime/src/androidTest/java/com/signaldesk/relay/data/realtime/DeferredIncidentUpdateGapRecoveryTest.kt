@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -77,7 +77,7 @@ class DeferredIncidentUpdateGapRecoveryTest {
                             "HIGH",
                         sequence =
                             3L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -86,7 +86,7 @@ class DeferredIncidentUpdateGapRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-GAP-DEFERRED"
+                        "operator-a", "INC-GAP-DEFERRED"
                     )
                     .size
             )
@@ -115,7 +115,7 @@ class DeferredIncidentUpdateGapRecoveryTest {
                             "MEDIUM",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -124,7 +124,7 @@ class DeferredIncidentUpdateGapRecoveryTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-GAP-DEFERRED"
+                            "operator-a", "INC-GAP-DEFERRED"
                         )
                 )
 
@@ -143,7 +143,7 @@ class DeferredIncidentUpdateGapRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-GAP-DEFERRED"
+                        "operator-a", "INC-GAP-DEFERRED"
                     )
                     .size
             )
@@ -173,7 +173,7 @@ class DeferredIncidentUpdateGapRecoveryTest {
                             null,
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -182,7 +182,7 @@ class DeferredIncidentUpdateGapRecoveryTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-GAP-DEFERRED"
+                            "operator-a", "INC-GAP-DEFERRED"
                         )
                 )
 
@@ -211,7 +211,7 @@ class DeferredIncidentUpdateGapRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-GAP-DEFERRED"
+                        "operator-a", "INC-GAP-DEFERRED"
                     )
                     .size
             )

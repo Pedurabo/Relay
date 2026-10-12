@@ -76,7 +76,7 @@ class IncidentCreatedIdempotencyTest {
             assertEquals(
                 EventProcessingResult.APPLIED,
                 processor.process(
-                    original
+                    original, "operator-a"
                 )
             )
 
@@ -93,7 +93,7 @@ class IncidentCreatedIdempotencyTest {
                             "Resolved",
                         severity =
                             "HIGH"
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -102,7 +102,7 @@ class IncidentCreatedIdempotencyTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-CREATE-IDEMPOTENCY"
+                            "operator-a", "INC-CREATE-IDEMPOTENCY"
                         )
                 )
 
@@ -148,7 +148,7 @@ class IncidentCreatedIdempotencyTest {
                             "HIGH",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -157,7 +157,7 @@ class IncidentCreatedIdempotencyTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-CREATE-IDEMPOTENCY"
+                            "operator-a", "INC-CREATE-IDEMPOTENCY"
                         )
                 )
 
@@ -189,7 +189,7 @@ class IncidentCreatedIdempotencyTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-CREATE-ORIGINAL"
+                        "operator-a", "EVENT-CREATE-ORIGINAL"
                     )
             )
 
@@ -197,7 +197,7 @@ class IncidentCreatedIdempotencyTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-CREATE-CONFLICT"
+                        "operator-a", "EVENT-CREATE-CONFLICT"
                     )
             )
 
@@ -206,7 +206,7 @@ class IncidentCreatedIdempotencyTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-CREATE-IDEMPOTENCY"
+                        "operator-a", "INC-CREATE-IDEMPOTENCY"
                     )
             )
         }

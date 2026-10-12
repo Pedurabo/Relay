@@ -146,4 +146,68 @@ class Version16IncidentDaoTest {
                 ?.expectedSequence
         )
     }
+
+    @Test
+    fun accountAtoBtoARestoresOnlyItsOwnIncident() = runBlocking {
+        // The same incident ID exists for both authenticated owners.
+        // Legacy unowned records must not appear under either owner.
+
+        var activeOwner = "account-a"
+
+        suspend fun visibleIncident(): V16Incident? =
+            dao.getIncident(activeOwner, "INC-SHARED")
+
+        // Initial Account A session.
+        assertEquals(
+            "account-a incident",
+            visibleIncident()?.title
+        )
+
+        // Account B signs in.
+        activeOwner = "account-b"
+
+        assertEquals(
+            "account-b incident",
+            visibleIncident()?.title
+        )
+
+        // B updates only B's version of the incident.
+        assertTrue(
+            dao.reconcile(
+                activeOwner,
+                incident(activeOwner, 6L)
+            )
+        )
+
+        assertEquals(
+            6L,
+            visibleIncident()?.latestSequence
+        )
+
+        // Account A signs back in.
+        activeOwner = "account-a"
+
+        assertEquals(
+            "account-a incident",
+            visibleIncident()?.title
+        )
+
+        assertEquals(
+            2L,
+            visibleIncident()?.latestSequence
+        )
+
+        // B's update remains intact but isolated.
+        assertEquals(
+            6L,
+            dao.getIncident("account-b", "INC-SHARED")
+                ?.latestSequence
+        )
+
+        // Neither authenticated owner sees the legacy record.
+        assertEquals(
+            " incident",
+            dao.getIncident("", "INC-SHARED")?.title
+        )
+    }
 }

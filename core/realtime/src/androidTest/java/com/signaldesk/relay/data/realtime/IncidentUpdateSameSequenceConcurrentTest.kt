@@ -62,8 +62,7 @@ class IncidentUpdateSameSequenceConcurrentTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-CONCURRENT-SAME-SEQUENCE",
                         title =
                             "Initial",
@@ -118,12 +117,12 @@ class IncidentUpdateSameSequenceConcurrentTest {
                     listOf(
                         async {
                             processor.process(
-                                eventA
+                                eventA, "operator-a"
                             )
                         },
                         async {
                             processor.process(
-                                eventB
+                                eventB, "operator-a"
                             )
                         }
                     ).awaitAll()
@@ -153,7 +152,7 @@ class IncidentUpdateSameSequenceConcurrentTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-CONCURRENT-SAME-SEQUENCE"
+                            "operator-a", "INC-CONCURRENT-SAME-SEQUENCE"
                         )
                 )
 
@@ -189,7 +188,7 @@ class IncidentUpdateSameSequenceConcurrentTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-CONCURRENT-A"
+                        "operator-a", "EVENT-CONCURRENT-A"
                     )
             )
 
@@ -197,7 +196,7 @@ class IncidentUpdateSameSequenceConcurrentTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-CONCURRENT-B"
+                        "operator-a", "EVENT-CONCURRENT-B"
                     )
             )
 
@@ -206,7 +205,7 @@ class IncidentUpdateSameSequenceConcurrentTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-CONCURRENT-SAME-SEQUENCE"
+                        "operator-a", "INC-CONCURRENT-SAME-SEQUENCE"
                     )
             )
 
@@ -215,7 +214,7 @@ class IncidentUpdateSameSequenceConcurrentTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-CONCURRENT-SAME-SEQUENCE"
+                        "operator-a", "INC-CONCURRENT-SAME-SEQUENCE"
                     )
                     .size
             )

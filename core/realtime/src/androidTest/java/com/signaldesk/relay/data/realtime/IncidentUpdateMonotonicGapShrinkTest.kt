@@ -60,8 +60,7 @@ class IncidentUpdateMonotonicGapShrinkTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-MONOTONIC-GAP",
                         title =
                             "Initial",
@@ -80,8 +79,7 @@ class IncidentUpdateMonotonicGapShrinkTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-GAP-5",
                         incidentId =
                             "INC-MONOTONIC-GAP",
@@ -101,7 +99,7 @@ class IncidentUpdateMonotonicGapShrinkTest {
                 )
 
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             assertGap(
                 expected =
@@ -162,7 +160,7 @@ class IncidentUpdateMonotonicGapShrinkTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-MONOTONIC-GAP"
+                            "operator-a", "INC-MONOTONIC-GAP"
                         )
                 )
 
@@ -190,7 +188,7 @@ class IncidentUpdateMonotonicGapShrinkTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-MONOTONIC-GAP"
+                        "operator-a", "INC-MONOTONIC-GAP"
                     )
             )
 
@@ -199,7 +197,7 @@ class IncidentUpdateMonotonicGapShrinkTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-MONOTONIC-GAP"
+                        "operator-a", "INC-MONOTONIC-GAP"
                     )
                     .size
             )
@@ -229,7 +227,7 @@ class IncidentUpdateMonotonicGapShrinkTest {
                         "MEDIUM",
                     sequence =
                         sequence
-                )
+                ), "operator-a"
             )
         )
     }
@@ -244,7 +242,7 @@ class IncidentUpdateMonotonicGapShrinkTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-MONOTONIC-GAP"
+                        "operator-a", "INC-MONOTONIC-GAP"
                     )
             )
 

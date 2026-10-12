@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -70,7 +70,7 @@ class DeferredIncidentUpdateRecoveryTest {
                             "HIGH",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
 
             assertEquals(
@@ -83,7 +83,7 @@ class DeferredIncidentUpdateRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-DEFERRED"
+                        "operator-a", "INC-DEFERRED"
                     )
                     .size
             )
@@ -104,7 +104,7 @@ class DeferredIncidentUpdateRecoveryTest {
                         "MEDIUM",
                     sequence =
                         1L
-                )
+                ), "operator-a"
             )
 
             val incident =
@@ -112,7 +112,7 @@ class DeferredIncidentUpdateRecoveryTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-DEFERRED"
+                            "operator-a", "INC-DEFERRED"
                         )
                 )
 
@@ -140,7 +140,7 @@ class DeferredIncidentUpdateRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-DEFERRED"
+                        "operator-a", "INC-DEFERRED"
                     )
                     .isEmpty()
             )
@@ -167,14 +167,13 @@ class DeferredIncidentUpdateRecoveryTest {
                         "Resolved",
                     sequence =
                         2L
-                )
+                ), "operator-a"
             )
 
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-RECOVERY",
                         title =
                             "Existing incident",
@@ -196,14 +195,14 @@ class DeferredIncidentUpdateRecoveryTest {
                 )
 
             recoveredProcessor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val incident =
                 requireNotNull(
                     database
                         .incidentDao()
                         .getById(
-                            "INC-RECOVERY"
+                            "operator-a", "INC-RECOVERY"
                         )
                 )
 
@@ -221,7 +220,7 @@ class DeferredIncidentUpdateRecoveryTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-RECOVERY"
+                        "operator-a", "INC-RECOVERY"
                     )
                     .isEmpty()
             )

@@ -1,4 +1,4 @@
-﻿package com.signaldesk.relay.data.realtime
+package com.signaldesk.relay.data.realtime
 
 import android.content.Context
 import androidx.room.Room
@@ -59,8 +59,7 @@ class DeferredIncidentUpdateSameSequenceConflictTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-SAME-SEQUENCE",
                         title =
                             "Initial",
@@ -82,8 +81,7 @@ class DeferredIncidentUpdateSameSequenceConflictTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-A",
                         incidentId =
                             "INC-SAME-SEQUENCE",
@@ -105,8 +103,7 @@ class DeferredIncidentUpdateSameSequenceConflictTest {
             database
                 .deferredIncidentUpdateDao()
                 .insert(
-                    DeferredIncidentUpdateEntity(
-                        eventId =
+                    DeferredIncidentUpdateEntity(ownerPrincipal = "operator-a", eventId =
                             "EVENT-B",
                         incidentId =
                             "INC-SAME-SEQUENCE",
@@ -126,14 +123,14 @@ class DeferredIncidentUpdateSameSequenceConflictTest {
                 )
 
             processor
-                .recoverDeferredIncidentUpdates()
+                .recoverDeferredIncidentUpdates("operator-a")
 
             val incident =
                 requireNotNull(
                     database
                         .incidentDao()
                         .getById(
-                            "INC-SAME-SEQUENCE"
+                            "operator-a", "INC-SAME-SEQUENCE"
                         )
                 )
 
@@ -171,7 +168,7 @@ class DeferredIncidentUpdateSameSequenceConflictTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-A"
+                        "operator-a", "EVENT-A"
                     )
             )
 
@@ -179,7 +176,7 @@ class DeferredIncidentUpdateSameSequenceConflictTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-B"
+                        "operator-a", "EVENT-B"
                     )
             )
 
@@ -188,7 +185,7 @@ class DeferredIncidentUpdateSameSequenceConflictTest {
                 database
                     .deferredIncidentUpdateDao()
                     .loadForIncident(
-                        "INC-SAME-SEQUENCE"
+                        "operator-a", "INC-SAME-SEQUENCE"
                     )
                     .size
             )
@@ -198,7 +195,7 @@ class DeferredIncidentUpdateSameSequenceConflictTest {
                 database
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-SAME-SEQUENCE"
+                        "operator-a", "INC-SAME-SEQUENCE"
                     )
             )
         }

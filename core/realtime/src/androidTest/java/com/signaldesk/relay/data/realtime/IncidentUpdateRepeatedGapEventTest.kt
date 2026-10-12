@@ -74,7 +74,7 @@ class IncidentUpdateRepeatedGapEventTest {
                             "LOW",
                         sequence =
                             1L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -99,7 +99,7 @@ class IncidentUpdateRepeatedGapEventTest {
             assertEquals(
                 EventProcessingResult.GAP_DETECTED,
                 processor.process(
-                    future
+                    future, "operator-a"
                 )
             )
 
@@ -108,7 +108,7 @@ class IncidentUpdateRepeatedGapEventTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-REPEAT-GAP"
+                            "operator-a", "INC-REPEAT-GAP"
                         )
                 )
 
@@ -126,7 +126,7 @@ class IncidentUpdateRepeatedGapEventTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-REPEAT-GAP-3"
+                        "operator-a", "EVENT-REPEAT-GAP-3"
                     )
             )
 
@@ -139,7 +139,7 @@ class IncidentUpdateRepeatedGapEventTest {
             assertEquals(
                 EventProcessingResult.GAP_DETECTED,
                 processor.process(
-                    future
+                    future, "operator-a"
                 )
             )
 
@@ -148,7 +148,7 @@ class IncidentUpdateRepeatedGapEventTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-REPEAT-GAP"
+                            "operator-a", "INC-REPEAT-GAP"
                         )
                 )
 
@@ -166,7 +166,7 @@ class IncidentUpdateRepeatedGapEventTest {
                 database
                     .processedEventDao()
                     .exists(
-                        "EVENT-REPEAT-GAP-3"
+                        "operator-a", "EVENT-REPEAT-GAP-3"
                     )
             )
 
@@ -175,7 +175,7 @@ class IncidentUpdateRepeatedGapEventTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-REPEAT-GAP"
+                            "operator-a", "INC-REPEAT-GAP"
                         )
                 )
 

@@ -93,7 +93,7 @@ class IncidentCreatedReplayProcessDeathTest {
             assertEquals(
                 EventProcessingResult.APPLIED,
                 firstProcessor.process(
-                    create
+                    create, "operator-a"
                 )
             )
 
@@ -115,7 +115,7 @@ class IncidentCreatedReplayProcessDeathTest {
                             "HIGH",
                         sequence =
                             2L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -124,7 +124,7 @@ class IncidentCreatedReplayProcessDeathTest {
                     firstDatabase
                         .incidentDao()
                         .getById(
-                            "INC-CREATE-PERSISTED"
+                            "operator-a", "INC-CREATE-PERSISTED"
                         )
                 )
 
@@ -174,7 +174,7 @@ class IncidentCreatedReplayProcessDeathTest {
                             "Investigating",
                         severity =
                             "MEDIUM"
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -183,7 +183,7 @@ class IncidentCreatedReplayProcessDeathTest {
                     recreatedDatabase
                         .incidentDao()
                         .getById(
-                            "INC-CREATE-PERSISTED"
+                            "operator-a", "INC-CREATE-PERSISTED"
                         )
                 )
 
@@ -211,7 +211,7 @@ class IncidentCreatedReplayProcessDeathTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-CREATE-PERSISTED"
+                        "operator-a", "EVENT-CREATE-PERSISTED"
                     )
             )
 
@@ -219,7 +219,7 @@ class IncidentCreatedReplayProcessDeathTest {
                 recreatedDatabase
                     .processedEventDao()
                     .exists(
-                        "EVENT-UPDATE-PERSISTED"
+                        "operator-a", "EVENT-UPDATE-PERSISTED"
                     )
             )
 
@@ -228,7 +228,7 @@ class IncidentCreatedReplayProcessDeathTest {
                 recreatedDatabase
                     .incidentSequenceGapDao()
                     .getByIncidentId(
-                        "INC-CREATE-PERSISTED"
+                        "operator-a", "INC-CREATE-PERSISTED"
                     )
             )
         }

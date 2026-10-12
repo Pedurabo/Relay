@@ -58,8 +58,7 @@ class IncidentUpdateGapExpansionTest {
             database
                 .incidentDao()
                 .insert(
-                    IncidentEntity(
-                        id =
+                    IncidentEntity(ownerPrincipal = "operator-a", id =
                             "INC-GAP-EXPANSION",
                         title =
                             "Initial",
@@ -93,7 +92,7 @@ class IncidentUpdateGapExpansionTest {
                             "MEDIUM",
                         sequence =
                             5L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -102,7 +101,7 @@ class IncidentUpdateGapExpansionTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-EXPANSION"
+                            "operator-a", "INC-GAP-EXPANSION"
                         )
                 )
 
@@ -140,7 +139,7 @@ class IncidentUpdateGapExpansionTest {
                             "HIGH",
                         sequence =
                             7L
-                    )
+                    ), "operator-a"
                 )
             )
 
@@ -149,7 +148,7 @@ class IncidentUpdateGapExpansionTest {
                     database
                         .incidentSequenceGapDao()
                         .getByIncidentId(
-                            "INC-GAP-EXPANSION"
+                            "operator-a", "INC-GAP-EXPANSION"
                         )
                 )
 
@@ -171,7 +170,7 @@ class IncidentUpdateGapExpansionTest {
                     database
                         .incidentDao()
                         .getById(
-                            "INC-GAP-EXPANSION"
+                            "operator-a", "INC-GAP-EXPANSION"
                         )
                 )
 
