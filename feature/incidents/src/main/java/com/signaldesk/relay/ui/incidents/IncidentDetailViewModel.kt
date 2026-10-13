@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -33,6 +34,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 class IncidentDetailViewModel(
     application: Application,
@@ -67,6 +70,11 @@ class IncidentDetailViewModel(
     val timelinePostSaved =
         MutableStateFlow(false)
 
+    private val monitorClaims = IncidentMonitorClaims()
+    private val monitorRecoveryBudget = IncidentMonitorRecoveryBudget()
+
+    private var activeStatusCommand: IncidentMonitorOwnership? = null
+
     val statusUpdateInProgress =
         MutableStateFlow(false)
 
@@ -78,6 +86,8 @@ class IncidentDetailViewModel(
 
     val optimisticStatus =
         MutableStateFlow<String?>(null)
+
+    private var activeSeverityCommand: IncidentMonitorOwnership? = null
 
     val severityUpdateInProgress =
         MutableStateFlow(false)
@@ -101,6 +111,39 @@ class IncidentDetailViewModel(
         IncidentRepositoryFactory.create(
             application
         )
+
+    // F10-M8A.2: Preserve the owner and generation of each Room emission.
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val ownedIncident: StateFlow<OwnedIncidentObservation?> =
+        SessionManager.sessionState
+            .flatMapLatest { state ->
+                val generation = SessionManager.sessionGeneration
+
+                when (state) {
+                    SessionState.SignedOut ->
+                        flowOf<OwnedIncidentObservation?>(null)
+
+                    is SessionState.SignedIn -> {
+                        require(state.userId.isNotBlank())
+
+                        repository.observeIncident(
+                            ownerPrincipal = state.userId,
+                            incidentId = incidentId
+                        ).map { observed ->
+                            OwnedIncidentObservation(
+                                ownerPrincipal = state.userId,
+                                sessionGeneration = generation,
+                                incident = observed
+                            )
+                        }
+                    }
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = null
+            )
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val incident: StateFlow<Incident?> =
@@ -148,19 +191,12 @@ class IncidentDetailViewModel(
                 initialValue = emptyList()
             )
 
-    // SESSION_TRANSITION_UI_RESET_246
+    // F10-M8B.6C: Production uses the tested lifecycle coordinator.
     init {
         viewModelScope.launch {
-            SessionManager.sessionState
-                .map { state ->
-                    when (state) {
-                        SessionState.SignedOut -> null
-                        is SessionState.SignedIn -> state.userId
-                    }
-                }
-                .distinctUntilChanged()
-                .drop(1)
-                .collect {
+            collectIncidentSessionLifecycle(
+                identities = SessionManager.sessionIdentity,
+                onReset = {
                     timelineRetryInProgressEntryId.value = null
                     timelineRetryErrorEntryId.value = null
                     timelineRetryError.value = null
@@ -169,16 +205,145 @@ class IncidentDetailViewModel(
                     timelinePostError.value = null
                     timelinePostSaved.value = false
 
+                    monitorClaims.clear()
+                    monitorRecoveryBudget.clear()
+                    activeStatusCommand = null
                     statusUpdateInProgress.value = false
                     statusUpdateMessage.value = null
                     statusUpdateError.value = null
                     optimisticStatus.value = null
 
+                    activeSeverityCommand = null
                     severityUpdateInProgress.value = false
                     severityUpdateMessage.value = null
                     severityUpdateError.value = null
                     optimisticSeverity.value = null
+                },
+                restoreStatus = statusRestore@{ identity ->
+                    val owner = identity.ownerPrincipal
+                        ?.takeIf { it.isNotBlank() }
+                        ?: return@statusRestore
+
+                    fun identityIsCurrent(): Boolean =
+                        SessionManager.sessionIdentity.value == identity &&
+                            SessionManager.sessionGeneration == identity.generation &&
+                            (SessionManager.sessionState.value as?
+                                SessionState.SignedIn)?.userId == owner
+
+                    if (!identityIsCurrent()) {
+                        return@statusRestore
+                    }
+
+                    val pending =
+                        pendingStatusStore.loadForIncident(
+                            incidentId,
+                            owner
+                        ) ?: return@statusRestore
+
+                    if (
+                        !identityIsCurrent() ||
+                        pending.ownerPrincipal != owner
+                    ) {
+                        return@statusRestore
+                    }
+
+                    val pendingOwnership = IncidentMonitorOwnership(
+                        ownerPrincipal = owner,
+                        sessionGeneration = identity.generation,
+                        commandId = pending.commandId
+                    )
+
+                    if (
+                        statusUpdateInProgress.value &&
+                        (
+                            activeStatusCommand != pendingOwnership ||
+                            monitorClaims.hasActiveStatusMonitor(pendingOwnership)
+                        )
+                    ) {
+                        return@statusRestore
+                    }
+
+                    activeStatusCommand = pendingOwnership
+
+                    optimisticStatus.value = pending.status
+                    statusUpdateInProgress.value = true
+                    statusUpdateError.value = null
+                    statusUpdateMessage.value =
+                        "Pending status update restored."
+
+                    monitorPendingStatusRecoverably(
+                        pending,
+                        identity.generation
+                    )
+                },
+                restoreSeverity = severityRestore@{ identity ->
+                    val owner = identity.ownerPrincipal
+                        ?.takeIf { it.isNotBlank() }
+                        ?: return@severityRestore
+
+                    fun identityIsCurrent(): Boolean =
+                        SessionManager.sessionIdentity.value == identity &&
+                            SessionManager.sessionGeneration == identity.generation &&
+                            (SessionManager.sessionState.value as?
+                                SessionState.SignedIn)?.userId == owner
+
+                    if (!identityIsCurrent()) {
+                        return@severityRestore
+                    }
+
+                    val pending =
+                        pendingSeverityStore.loadForIncident(
+                            incidentId,
+                            owner
+                        ) ?: return@severityRestore
+
+                    if (
+                        !identityIsCurrent() ||
+                        pending.ownerPrincipal != owner
+                    ) {
+                        return@severityRestore
+                    }
+
+                    val pendingOwnership = IncidentMonitorOwnership(
+                        ownerPrincipal = owner,
+                        sessionGeneration = identity.generation,
+                        commandId = pending.commandId
+                    )
+
+                    if (
+                        severityUpdateInProgress.value &&
+                        (
+                            activeSeverityCommand != pendingOwnership ||
+                            monitorClaims.hasActiveSeverityMonitor(pendingOwnership)
+                        )
+                    ) {
+                        return@severityRestore
+                    }
+
+                    activeSeverityCommand = pendingOwnership
+
+                    optimisticSeverity.value =
+                        IncidentSeverity.fromStoredValue(
+                            pending.severity
+                        )
+
+                    severityUpdateInProgress.value = true
+                    severityUpdateError.value = null
+                    severityUpdateMessage.value =
+                        "Pending severity update restored."
+
+                    monitorPendingSeverityRecoverably(
+                        pending,
+                        identity.generation
+                    )
+                },
+                onRestoreFailure = { operation, exceptionType ->
+                    android.util.Log.w(
+                        "RelayIncidentRestore",
+                        "$operation restoration failed ($exceptionType)"
+                    )
                 }
+            )
         }
     }
 
@@ -202,6 +367,8 @@ class IncidentDetailViewModel(
                 SessionState.SignedIn
                 ?: return
 
+        val postingGeneration =
+            SessionManager.sessionGeneration
         timelinePostError.value =
             null
 
@@ -236,6 +403,13 @@ class IncidentDetailViewModel(
                 error: Exception
             ) {
 
+                            if (
+                SessionManager.sessionGeneration != postingGeneration ||
+                (SessionManager.sessionState.value as?
+                    SessionState.SignedIn)?.userId != currentSession.userId
+            ) {
+                return@launch
+            }
                 timelinePostInProgress.value =
                     false
 
@@ -245,6 +419,14 @@ class IncidentDetailViewModel(
                 return@launch
             }
 
+
+            if (
+                SessionManager.sessionGeneration != postingGeneration ||
+                (SessionManager.sessionState.value as?
+                    SessionState.SignedIn)?.userId != currentSession.userId
+            ) {
+                return@launch
+            }
             timelinePostInProgress.value =
                 false
 
@@ -264,199 +446,112 @@ class IncidentDetailViewModel(
     fun retry(
         entry: TimelineEntry
     ) {
+        if (timelineRetryInProgressEntryId.value == entry.id) {
+            return
+        }
+
+        val retrySession =
+            SessionManager.sessionState.value as?
+                SessionState.SignedIn
+                ?: return
+
+        val retryGeneration =
+            SessionManager.sessionGeneration
+
         if (
-            timelineRetryInProgressEntryId.value ==
-            entry.id
+            (SessionManager.sessionState.value as?
+                SessionState.SignedIn)?.userId != retrySession.userId ||
+            SessionManager.sessionGeneration != retryGeneration
         ) {
             return
         }
 
-        timelineRetryErrorEntryId.value =
-            null
-
-        timelineRetryError.value =
-            null
-
-        timelineRetryInProgressEntryId.value =
-            entry.id
+        timelineRetryErrorEntryId.value = null
+        timelineRetryError.value = null
+        timelineRetryInProgressEntryId.value = entry.id
 
         viewModelScope.launch {
-
             val activeSession =
                 SessionManager.sessionState.value as?
                     SessionState.SignedIn
-                    ?: run {
-                        timelineRetryInProgressEntryId.value = null
-                        return@launch
-                    }
-
-            val ownerPrincipal =
-                repository
-                    .getTimelineEntryOwnerPrincipal(
-                        ownerPrincipal = activeSession.userId,
-                        entryId = entry.id
-                    )
-                    ?: run {
-                        timelineRetryInProgressEntryId.value =
-                            null
-
-                        return@launch
-                    }
-
-            timelineDeliveryCredential(
-                SessionManager
-                    .sessionState
-                    .value,
-                ownerPrincipal
-            )
-                ?: run {
-                    timelineRetryInProgressEntryId.value =
-                        null
-
-                    return@launch
-                }
-
-            val markedPending =
-                try {
-
-                    repository
-                        .markTimelineEntryPending(
-                            entryId =
-                                entry.id,
-                            ownerPrincipal =
-                                ownerPrincipal
-                        )
-
-                } catch (
-                    error: CancellationException
-                ) {
-                    throw error
-
-                } catch (
-                    error: Exception
-                ) {
-                    false
-                }
 
             if (
-                !markedPending
+                activeSession?.userId != retrySession.userId ||
+                SessionManager.sessionGeneration != retryGeneration
             ) {
-                timelineRetryInProgressEntryId.value =
-                    null
-
-                timelineRetryErrorEntryId.value =
-                    entry.id
-
-                timelineRetryError.value =
-                    "Unable to retry timeline update. Try again."
-
                 return@launch
             }
 
-            timelineRetryInProgressEntryId.value =
-                null
-
-            TimelineOutboxCoordinator
-                .kick()
-        }
-    }
-
-    // PERSISTENT_STATUS_OUTBOX
-
-    init {
-
-        viewModelScope.launch {
-
             val ownerPrincipal =
-                when (
-                    val session =
-                        SessionManager
-                            .sessionState
-                            .value
-                ) {
+                repository.getTimelineEntryOwnerPrincipal(
+                    ownerPrincipal = retrySession.userId,
+                    entryId = entry.id
+                )
 
-                    SessionState.SignedOut ->
-                        null
+            // The database query may have suspended while accounts switched.
+            if (
+                (SessionManager.sessionState.value as?
+                    SessionState.SignedIn)?.userId != retrySession.userId ||
+                SessionManager.sessionGeneration != retryGeneration
+            ) {
+                return@launch
+            }
 
-                    is SessionState.SignedIn ->
-                        session.userId
-                }
+            if (ownerPrincipal == null) {
+                timelineRetryInProgressEntryId.value = null
+                return@launch
+            }
 
-            ownerPrincipal
-                ?.let { owner ->
+            val credential =
+                timelineDeliveryCredential(
+                    SessionManager.sessionState.value,
+                    ownerPrincipal
+                )
 
-                    pendingStatusStore
-                        .loadForIncident(
-                            incidentId,
-                            owner
-                        )
-                }
-                ?.let { pending ->
+            if (
+                (SessionManager.sessionState.value as?
+                    SessionState.SignedIn)?.userId != retrySession.userId ||
+                SessionManager.sessionGeneration != retryGeneration
+            ) {
+                return@launch
+            }
 
-                    optimisticStatus.value =
-                        pending.status
+            if (credential == null) {
+                timelineRetryInProgressEntryId.value = null
+                return@launch
+            }
 
-                    statusUpdateInProgress.value =
-                        true
-
-                    statusUpdateMessage.value =
-            "Pending status update restored.`"
-
-                    monitorPendingStatus(
-                        pending
+            val markedPending =
+                try {
+                    repository.markTimelineEntryPending(
+                        entryId = entry.id,
+                        ownerPrincipal = ownerPrincipal
                     )
-                }
-        }
-    }
-
-    // PERSISTENT_SEVERITY_OUTBOX
-
-    init {
-
-        viewModelScope.launch {
-
-            val ownerPrincipal =
-                when (
-                    val session =
-                        SessionManager
-                            .sessionState
-                            .value
-                ) {
-
-                    SessionState.SignedOut ->
-                        null
-
-                    is SessionState.SignedIn ->
-                        session.userId
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    false
                 }
 
-            ownerPrincipal
-                ?.let { owner ->
+            // Reject old coroutine results before touching shared UI state.
+            if (
+                (SessionManager.sessionState.value as?
+                    SessionState.SignedIn)?.userId != retrySession.userId ||
+                SessionManager.sessionGeneration != retryGeneration
+            ) {
+                return@launch
+            }
 
-                    pendingSeverityStore
-                        .loadForIncident(
-                            incidentId,
-                            owner
-                        )
-                }
-                ?.let { pending ->
+            if (!markedPending) {
+                timelineRetryInProgressEntryId.value = null
+                timelineRetryErrorEntryId.value = entry.id
+                timelineRetryError.value =
+                    "Unable to retry timeline update. Try again."
+                return@launch
+            }
 
-                    optimisticSeverity.value =
-                        IncidentSeverity
-                            .fromStoredValue(
-                                pending.severity
-                            )
-
-                    severityUpdateInProgress.value =
-                        true
-
-                    severityUpdateMessage.value =
-            "Pending severity update restored.`"
-
-                    monitorPendingSeverity(
-                        pending
-                    )
-                }
+            timelineRetryInProgressEntryId.value = null
+            TimelineOutboxCoordinator.kick()
         }
     }
     fun updateSeverity(
@@ -470,8 +565,12 @@ class IncidentDetailViewModel(
             return
         }
 
+        val observedIncident =
+            ownedIncident.value
+                ?: return
+
         val displayedIncident =
-            incident.value
+            observedIncident.incident
                 ?: return
 
         if (
@@ -503,6 +602,24 @@ class IncidentDetailViewModel(
                     session.userId
             }
 
+        val originatingGeneration =
+            SessionManager.sessionGeneration
+
+        // A displayed incident is not mutation-authoritative
+        // unless its observation belongs to this exact session.
+        if (
+            !observedIncident.matchesSession(
+                ownerPrincipal,
+                originatingGeneration
+            ) ||
+            !SessionManager.sessionIdentity.value.owns(
+                ownerPrincipal,
+                originatingGeneration
+            )
+        ) {
+            return
+        }
+
         val pending =
             PendingSeverityMutation(
                 commandId =
@@ -531,6 +648,14 @@ class IncidentDetailViewModel(
          * Process death after this line cannot lose the
          * operator's intent.
          */
+        val commandOwnership = IncidentMonitorOwnership(
+            ownerPrincipal = ownerPrincipal,
+            sessionGeneration = originatingGeneration,
+            commandId = pending.commandId
+        )
+
+        activeSeverityCommand = commandOwnership
+
         optimisticSeverity.value =
             severity
 
@@ -560,6 +685,17 @@ class IncidentDetailViewModel(
                 error: Exception
             ) {
 
+                                if (
+                    SessionManager.sessionGeneration != originatingGeneration ||
+                    (SessionManager.sessionState.value as?
+                        SessionState.SignedIn)?.userId != ownerPrincipal
+                ) {
+                    return@launch
+                }
+                if (!commandOwnership.canUpdatePresentation(activeSeverityCommand)) {
+                    return@launch
+                }
+
                 optimisticSeverity.value =
                     null
 
@@ -572,6 +708,20 @@ class IncidentDetailViewModel(
                 severityUpdateError.value =
                     "Unable to save severity change. Try again."
 
+                activeSeverityCommand =
+                    commandOwnership.releaseIfCurrent(activeSeverityCommand)
+
+                return@launch
+            }
+
+                if (
+                    SessionManager.sessionGeneration != originatingGeneration ||
+                    (SessionManager.sessionState.value as?
+                        SessionState.SignedIn)?.userId != ownerPrincipal
+                ) {
+                    return@launch
+                }
+            if (!commandOwnership.canUpdatePresentation(activeSeverityCommand)) {
                 return@launch
             }
 
@@ -585,9 +735,7 @@ class IncidentDetailViewModel(
             SeverityOutboxCoordinator
                 .kick()
 
-            monitorPendingSeverity(
-                pending
-            )
+            monitorPendingSeverityRecoverably(pending, originatingGeneration)
         }
     }
     fun updateStatus(
@@ -610,8 +758,12 @@ class IncidentDetailViewModel(
             return
         }
 
+        val observedIncident =
+            ownedIncident.value
+                ?: return
+
         val displayedIncident =
-            incident.value
+            observedIncident.incident
                 ?: return
 
         if (
@@ -643,6 +795,24 @@ class IncidentDetailViewModel(
                     session.userId
             }
 
+        val originatingGeneration =
+            SessionManager.sessionGeneration
+
+        // A displayed incident is not mutation-authoritative
+        // unless its observation belongs to this exact session.
+        if (
+            !observedIncident.matchesSession(
+                ownerPrincipal,
+                originatingGeneration
+            ) ||
+            !SessionManager.sessionIdentity.value.owns(
+                ownerPrincipal,
+                originatingGeneration
+            )
+        ) {
+            return
+        }
+
         val pending =
             PendingStatusMutation(
                 commandId =
@@ -662,6 +832,14 @@ class IncidentDetailViewModel(
                 ownerPrincipal =
                     ownerPrincipal
             )
+
+        val commandOwnership = IncidentMonitorOwnership(
+            ownerPrincipal = ownerPrincipal,
+            sessionGeneration = originatingGeneration,
+            commandId = pending.commandId
+        )
+
+        activeStatusCommand = commandOwnership
 
         optimisticStatus.value =
             requestedStatus
@@ -692,6 +870,18 @@ class IncidentDetailViewModel(
                 error: Exception
             ) {
 
+                if (
+                    SessionManager.sessionGeneration != originatingGeneration ||
+                    (SessionManager.sessionState.value as?
+                        SessionState.SignedIn)?.userId != ownerPrincipal
+                ) {
+                    return@launch
+                }
+
+                if (!commandOwnership.canUpdatePresentation(activeStatusCommand)) {
+                    return@launch
+                }
+
                 optimisticStatus.value =
                     null
 
@@ -704,6 +894,21 @@ class IncidentDetailViewModel(
                 statusUpdateError.value =
                     "Unable to save status change. Try again."
 
+                activeStatusCommand =
+                    commandOwnership.releaseIfCurrent(activeStatusCommand)
+
+                return@launch
+            }
+
+            if (
+                    SessionManager.sessionGeneration != originatingGeneration ||
+                    (SessionManager.sessionState.value as?
+                        SessionState.SignedIn)?.userId != ownerPrincipal
+                ) {
+                    return@launch
+                }
+
+            if (!commandOwnership.canUpdatePresentation(activeStatusCommand)) {
                 return@launch
             }
 
@@ -713,15 +918,89 @@ class IncidentDetailViewModel(
             StatusOutboxCoordinator
                 .kick()
 
-            monitorPendingStatus(
-                pending
+            monitorPendingStatusRecoverably(
+                pending,
+                originatingGeneration
             )
         }
     }
 
+    /**
+     * Runs the status presentation monitor with at most one
+     * automatic recovery attempt for the current command.
+     *
+     * Pending mutation persistence and outbox delivery remain
+     * separate from presentation recovery.
+     */
+    /**
+     * Monitors status with at most one automatic recovery.
+     * Outbox delivery remains independent of presentation monitoring.
+     */
+    private suspend fun monitorPendingStatusRecoverably(
+        pending: PendingStatusMutation,
+        originatingGeneration: Long
+    ) {
+        val ownership = IncidentMonitorOwnership(
+            ownerPrincipal = pending.ownerPrincipal,
+            sessionGeneration = originatingGeneration,
+            commandId = pending.commandId
+        )
+
+        executeMonitorWithOneRecovery(
+            initial = pending,
+            monitor = { command ->
+                monitorPendingStatus(command, originatingGeneration)
+            },
+            reload = {
+                pendingStatusStore.loadForIncident(
+                    pending.incidentId,
+                    pending.ownerPrincipal
+                )
+            },
+            mayRetry = { reloaded ->
+                val sameCommand =
+                    reloaded.commandId == pending.commandId &&
+                        reloaded.ownerPrincipal == pending.ownerPrincipal
+
+                decideIncidentMonitorRecovery(
+                    pendingOwnership = if (sameCommand) ownership else null,
+                    activeOwnership = activeStatusCommand,
+                    currentIdentity = SessionManager.sessionIdentity.value,
+                    pendingStillPresent = sameCommand,
+                    monitorActive =
+                        monitorClaims.hasActiveStatusMonitor(ownership),
+                    unexpectedFailure = true,
+                    retryAlreadyRequested =
+                        monitorRecoveryBudget.statusRetryRequested(ownership)
+                ) == IncidentMonitorRecoveryDecision.RETRY
+            },
+            acquireRetryPermit = {
+                monitorRecoveryBudget.requestStatusRetry(ownership)
+            },
+            onStopped = {
+                if (
+                    SessionManager.sessionIdentity.value.owns(
+                        ownership.ownerPrincipal,
+                        ownership.sessionGeneration
+                    ) &&
+                    ownership.canUpdatePresentation(activeStatusCommand) &&
+                    !monitorClaims.hasActiveStatusMonitor(ownership)
+                ) {
+                    statusUpdateInProgress.value = false
+                    optimisticStatus.value = null
+                    statusUpdateMessage.value = null
+                    statusUpdateError.value =
+                        "Status monitoring stopped. The saved update may still sync."
+
+                    activeStatusCommand =
+                        ownership.releaseIfCurrent(activeStatusCommand)
+                }
+            }
+        )
+    }
     private suspend fun monitorPendingStatus(
-        pending:
-            PendingStatusMutation
+        pending: PendingStatusMutation,
+        originatingGeneration: Long
     ) {
 
         val requestedStatus =
@@ -730,54 +1009,115 @@ class IncidentDetailViewModel(
         val baseStatus =
             pending.baseStatus
 
+        val entrySession =
+            SessionManager.sessionState.value as?
+                SessionState.SignedIn
+
+        if (
+            entrySession?.userId != pending.ownerPrincipal ||
+            SessionManager.sessionGeneration != originatingGeneration
+        ) {
+            return
+        }
+        val monitorOwnership = IncidentMonitorOwnership(
+            ownerPrincipal = pending.ownerPrincipal,
+            sessionGeneration = originatingGeneration,
+            commandId = pending.commandId
+        )
+
+        if (!monitorOwnership.canUpdatePresentation(activeStatusCommand)) {
+            return
+        }
+
+        val claim = monitorClaims.claimStatus(monitorOwnership)
+            ?: return
+
+        try {
+            val monitorJob = currentCoroutineContext()[Job]
+                ?: return
+
+            if (!monitorClaims.attachStatus(claim, monitorJob)) {
+                return
+            }
+
         statusUpdateMessage.value =
-            "Status change saved. Waiting for confirmation.`"
+            "Status change saved. Waiting for confirmation."
 
         val result =
             combine(
-                incident,
-                pendingStatusStore
-                    .observeForIncident(
-                        pending.incidentId,
-                        pending.ownerPrincipal
-                    )
-            ) {
-                current,
-                stored ->
-
-                current to
-                    stored
+                ownedIncident,
+                pendingStatusStore.observeForIncident(
+                    pending.incidentId,
+                    pending.ownerPrincipal
+                ),
+                SessionManager.sessionState
+            ) { current, stored, session ->
+                Triple(current, stored, session)
             }
                 .first {
                     state ->
 
                     val current =
                         state.first
+                            ?.takeIf { observation ->
+                                observation.matchesSession(
+                                    pending.ownerPrincipal,
+                                    originatingGeneration
+                                )
+                            }
+                            ?.incident
+                    val stored = state.second
+                    val observedSession = state.third
 
-                    val stored =
-                        state.second
+                    val decision =
+                        decidePendingStatusMonitor(
+                            pendingOwner = pending.ownerPrincipal,
+                            pendingGeneration = originatingGeneration,
+                            pendingIncidentId = pending.incidentId,
+                            pendingCommandId = pending.commandId,
+                            requestedStatus = requestedStatus,
+                            baseStatus = baseStatus,
+                            activeOwner =
+                                (observedSession as?
+                                    SessionState.SignedIn)?.userId,
+                            activeGeneration =
+                                SessionManager.sessionGeneration,
+                            observedIncidentId = current?.id,
+                            observedStatus = current?.status,
+                            storedCommandId = stored?.commandId
+                        )
 
-                    val authoritativeTerminal =
-                        current?.id ==
-                            pending.incidentId &&
-                            (
-                                current.status ==
-                                    requestedStatus ||
-                                    (
-                                        current.status !=
-                                            baseStatus &&
-                                            current.status !=
-                                            requestedStatus
-                                    )
-                            )
-
-                    authoritativeTerminal ||
-                        stored?.commandId !=
-                            pending.commandId
+                    decision != StatusMonitorDecision.WAIT
                 }
+
+        if (
+            !monitorClaims.ownsStatus(claim) ||
+            !monitorOwnership.canUpdatePresentation(activeStatusCommand)
+        ) {
+            return
+        }
 
         val current =
             result.first
+                ?.takeIf { observation ->
+                    observation.matchesSession(
+                        pending.ownerPrincipal,
+                        originatingGeneration
+                    )
+                }
+                ?.incident
+        val resultSession = result.third
+        val activeSession = SessionManager.sessionState.value
+
+        if (
+            resultSession !is SessionState.SignedIn ||
+            resultSession.userId != pending.ownerPrincipal ||
+            activeSession !is SessionState.SignedIn ||
+            activeSession.userId != pending.ownerPrincipal ||
+            SessionManager.sessionGeneration != originatingGeneration
+        ) {
+            return
+        }
 
         if (
             current?.id ==
@@ -794,6 +1134,9 @@ class IncidentDetailViewModel(
 
             statusUpdateError.value =
                 null
+
+            activeStatusCommand =
+                monitorOwnership.releaseIfCurrent(activeStatusCommand)
 
             return
         }
@@ -816,6 +1159,9 @@ class IncidentDetailViewModel(
             statusUpdateError.value =
                 "Status was superseded by a newer update: ${current.status}."
 
+            activeStatusCommand =
+                monitorOwnership.releaseIfCurrent(activeStatusCommand)
+
             return
         }
 
@@ -837,131 +1183,244 @@ class IncidentDetailViewModel(
             statusUpdateError.value =
                 null
         }
+
+        activeStatusCommand =
+            monitorOwnership.releaseIfCurrent(activeStatusCommand)
+        } finally {
+            monitorClaims.releaseStatus(claim)
+        }
     }
 
-    private suspend fun monitorPendingSeverity(
-        pending:
-            PendingSeverityMutation
+    /**
+     * Runs the severity presentation monitor with a single
+     * bounded recovery attempt after unexpected failure.
+     *
+     * Persistence and outbox delivery remain independent.
+     */
+    /**
+     * Monitors severity with at most one automatic recovery.
+     * Outbox delivery remains independent of presentation monitoring.
+     */
+    private suspend fun monitorPendingSeverityRecoverably(
+        pending: PendingSeverityMutation,
+        originatingGeneration: Long
     ) {
+        val ownership = IncidentMonitorOwnership(
+            ownerPrincipal = pending.ownerPrincipal,
+            sessionGeneration = originatingGeneration,
+            commandId = pending.commandId
+        )
 
-        val requestedSeverity =
-            IncidentSeverity
-                .fromStoredValue(
-                    pending.severity
+        executeMonitorWithOneRecovery(
+            initial = pending,
+            monitor = { command ->
+                monitorPendingSeverity(command, originatingGeneration)
+            },
+            reload = {
+                pendingSeverityStore.loadForIncident(
+                    pending.incidentId,
+                    pending.ownerPrincipal
                 )
+            },
+            mayRetry = { reloaded ->
+                val sameCommand =
+                    reloaded.commandId == pending.commandId &&
+                        reloaded.ownerPrincipal == pending.ownerPrincipal
+
+                decideIncidentMonitorRecovery(
+                    pendingOwnership = if (sameCommand) ownership else null,
+                    activeOwnership = activeSeverityCommand,
+                    currentIdentity = SessionManager.sessionIdentity.value,
+                    pendingStillPresent = sameCommand,
+                    monitorActive =
+                        monitorClaims.hasActiveSeverityMonitor(ownership),
+                    unexpectedFailure = true,
+                    retryAlreadyRequested =
+                        monitorRecoveryBudget.severityRetryRequested(ownership)
+                ) == IncidentMonitorRecoveryDecision.RETRY
+            },
+            acquireRetryPermit = {
+                monitorRecoveryBudget.requestSeverityRetry(ownership)
+            },
+            onStopped = {
+                if (
+                    SessionManager.sessionIdentity.value.owns(
+                        ownership.ownerPrincipal,
+                        ownership.sessionGeneration
+                    ) &&
+                    ownership.canUpdatePresentation(activeSeverityCommand) &&
+                    !monitorClaims.hasActiveSeverityMonitor(ownership)
+                ) {
+                    severityUpdateInProgress.value = false
+                    optimisticSeverity.value = null
+                    severityUpdateMessage.value = null
+                    severityUpdateError.value =
+                        "Severity monitoring stopped. The saved update may still sync."
+
+                    activeSeverityCommand =
+                        ownership.releaseIfCurrent(activeSeverityCommand)
+                }
+            }
+        )
+    }
+    private suspend fun monitorPendingSeverity(
+        pending: PendingSeverityMutation,
+        originatingGeneration: Long
+    ) {
+        val requestedSeverity =
+            IncidentSeverity.fromStoredValue(pending.severity)
 
         val baseSeverity =
-            IncidentSeverity
-                .fromStoredValue(
-                    pending.baseSeverity
-                )
+            IncidentSeverity.fromStoredValue(pending.baseSeverity)
+
+        val entrySession =
+            SessionManager.sessionState.value as?
+                SessionState.SignedIn
+
+        if (
+            entrySession?.userId != pending.ownerPrincipal ||
+            SessionManager.sessionGeneration != originatingGeneration
+        ) {
+            return
+        }
+
+        val monitorOwnership = IncidentMonitorOwnership(
+            ownerPrincipal = pending.ownerPrincipal,
+            sessionGeneration = originatingGeneration,
+            commandId = pending.commandId
+        )
+
+        if (!monitorOwnership.canUpdatePresentation(activeSeverityCommand)) {
+            return
+        }
+
+        val claim = monitorClaims.claimSeverity(monitorOwnership)
+            ?: return
+
+        try {
+            val monitorJob = currentCoroutineContext()[Job]
+                ?: return
+
+            if (!monitorClaims.attachSeverity(claim, monitorJob)) {
+                return
+            }
 
         severityUpdateMessage.value =
-            "Severity change saved. Waiting for confirmation.`"
+            "Severity change saved. Waiting for confirmation."
 
         val result =
             combine(
-                incident,
-                pendingSeverityStore
-                    .observeForIncident(
-                        pending.incidentId,
-                        pending.ownerPrincipal
-                    )
-            ) {
-                current,
-                stored ->
-
-                current to
-                    stored
-            }
-                .first {
-                    state ->
-
-                    val current =
-                        state.first
-
-                    val stored =
-                        state.second
-
-                    val authoritativeTerminal =
-                        current?.id ==
-                            pending.incidentId &&
-                            (
-                                current.severity ==
-                                    requestedSeverity ||
-                                    (
-                                        current.severity !=
-                                            baseSeverity &&
-                                            current.severity !=
-                                            requestedSeverity
-                                    )
+                ownedIncident,
+                pendingSeverityStore.observeForIncident(
+                    pending.incidentId,
+                    pending.ownerPrincipal
+                ),
+                SessionManager.sessionState
+            ) { current, stored, session ->
+                Triple(current, stored, session)
+            }.first { state ->
+                val current =
+                    state.first
+                        ?.takeIf { observation ->
+                            observation.matchesSession(
+                                pending.ownerPrincipal,
+                                originatingGeneration
                             )
+                        }
+                        ?.incident
+                val stored = state.second
+                val session = state.third
 
-                    authoritativeTerminal ||
-                        stored?.commandId !=
-                            pending.commandId
-                }
+                decidePendingSeverityMonitor(
+                    pendingOwner = pending.ownerPrincipal,
+                    pendingGeneration = originatingGeneration,
+                    pendingIncidentId = pending.incidentId,
+                    pendingCommandId = pending.commandId,
+                    requestedSeverity = requestedSeverity.name,
+                    baseSeverity = baseSeverity.name,
+                    activeOwner =
+                        (session as? SessionState.SignedIn)?.userId,
+                    activeGeneration = SessionManager.sessionGeneration,
+                    observedIncidentId = current?.id,
+                    observedSeverity = current?.severity?.name,
+                    storedCommandId = stored?.commandId
+                ) != SeverityMonitorDecision.WAIT
+            }
 
-        val current =
+        if (
+            !monitorClaims.ownsSeverity(claim) ||
+            !monitorOwnership.canUpdatePresentation(activeSeverityCommand)
+        ) {
+            return
+        }
+
+        val activeSession =
+            SessionManager.sessionState.value as?
+                SessionState.SignedIn
+
+        if (
+            activeSession?.userId != pending.ownerPrincipal ||
+            (result.third as? SessionState.SignedIn)?.userId !=
+                pending.ownerPrincipal ||
+            SessionManager.sessionGeneration != originatingGeneration
+        ) {
+            return
+        }
+
+        val authorizedIncident =
             result.first
+                ?.takeIf { observation ->
+                    observation.matchesSession(
+                        pending.ownerPrincipal,
+                        originatingGeneration
+                    )
+                }
+                ?.incident
 
-        if (
-            current?.id ==
-                pending.incidentId &&
-            current.severity ==
-                requestedSeverity
-        ) {
+        val decision =
+            decidePendingSeverityMonitor(
+                pendingOwner = pending.ownerPrincipal,
+                pendingGeneration = originatingGeneration,
+                pendingIncidentId = pending.incidentId,
+                pendingCommandId = pending.commandId,
+                requestedSeverity = requestedSeverity.name,
+                baseSeverity = baseSeverity.name,
+                activeOwner = activeSession.userId,
+                activeGeneration = SessionManager.sessionGeneration,
+                observedIncidentId = authorizedIncident?.id,
+                observedSeverity = authorizedIncident?.severity?.name,
+                storedCommandId = result.second?.commandId
+            )
 
-            optimisticSeverity.value =
-                null
+        when (decision) {
+            SeverityMonitorDecision.SESSION_OBSOLETE,
+            SeverityMonitorDecision.WAIT -> return
 
-            severityUpdateInProgress.value =
-                false
+            SeverityMonitorDecision.CONFIRMED -> {
+                optimisticSeverity.value = null
+                severityUpdateInProgress.value = false
+                severityUpdateError.value = null
+            }
 
-            severityUpdateError.value =
-                null
+            SeverityMonitorDecision.SUPERSEDED -> {
+                optimisticSeverity.value = null
+                severityUpdateInProgress.value = false
+                severityUpdateError.value =
+                    "Severity was superseded by a newer update: ${authorizedIncident?.severity?.name}."
+            }
 
-            return
+            SeverityMonitorDecision.COMMAND_REMOVED -> {
+                optimisticSeverity.value = null
+                severityUpdateInProgress.value = false
+                severityUpdateError.value =
+                    "Severity update was not applied. Try again if you still have access."
+            }
         }
 
-        if (
-            current?.id ==
-                pending.incidentId &&
-            current.severity !=
-                baseSeverity &&
-            current.severity !=
-                requestedSeverity
-        ) {
-
-            optimisticSeverity.value =
-                null
-
-            severityUpdateInProgress.value =
-                false
-
-            severityUpdateError.value =
-                "Severity was superseded by a newer update: ${current.severity.name}."
-
-            return
-        }
-
-        optimisticSeverity.value =
-            null
-
-        severityUpdateInProgress.value =
-            false
-
-        if (
-            current?.severity !=
-                requestedSeverity
-        ) {
-
-            severityUpdateError.value =
-                "Severity update was not applied. Try again if you still have access."
-        } else {
-
-            severityUpdateError.value =
-                null
+        activeSeverityCommand =
+            monitorOwnership.releaseIfCurrent(activeSeverityCommand)
+        } finally {
+            monitorClaims.releaseSeverity(claim)
         }
     }
 }

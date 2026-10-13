@@ -43,6 +43,23 @@ object SessionManager {
         get() = sessionGenerationCounter.current()
 
 
+    /**
+     * Observable account-and-generation identity.
+     *
+     * Consumers must use this value as one snapshot rather
+     * than pairing sessionState with sessionGeneration.
+     */
+    private val _sessionIdentity =
+        MutableStateFlow(
+            SessionIdentity(
+                ownerPrincipal = null,
+                generation = 0L
+            )
+        )
+
+    val sessionIdentity: StateFlow<SessionIdentity> =
+        _sessionIdentity.asStateFlow()
+
     private val _sessionState =
         MutableStateFlow<SessionState>(
             SessionState.SignedOut
@@ -68,6 +85,19 @@ object SessionManager {
     private var initialized =
         false
 
+    private fun publishSessionIdentity() {
+        val owner =
+            when (val state = _sessionState.value) {
+                SessionState.SignedOut -> null
+                is SessionState.SignedIn -> state.userId
+            }
+
+        _sessionIdentity.value =
+            SessionIdentity(
+                ownerPrincipal = owner,
+                generation = sessionGeneration
+            )
+    }
     fun initialize(
         context: Context
     ) {
@@ -109,6 +139,7 @@ object SessionManager {
             }
 
         initialized = true
+        publishSessionIdentity()
     }
 
     private fun establishSession(
@@ -168,6 +199,7 @@ object SessionManager {
                 accessTokenExpiresAt =
                     session.accessTokenExpiresAt
             )
+        publishSessionIdentity()
     }
 
     private fun signOut(
@@ -187,6 +219,7 @@ object SessionManager {
 
         _sessionState.value =
             SessionState.SignedOut
+        publishSessionIdentity()
     }
 
     /*
