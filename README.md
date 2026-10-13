@@ -553,3 +553,54 @@ Relay is being developed as part of a project-driven Android engineering program
 - reliable background work,
 - deterministic failure testing, and
 - production-oriented mobile system design.
+
+## Milestone 248 — Account-Switching Isolation
+
+**Status:** Complete
+**Completed:** October 13, 2026
+**Implementation commit:** `c98414b4ca1a78fc9c20f328b71258c53b69aebb`
+
+Milestone 248 strengthens Relay's Android incident-management
+experience when users sign out, change accounts, or return to
+a previously authenticated account.
+
+### Delivered
+
+- Session identity tracking using authenticated principal and
+  session generation.
+- Account-scoped incident observation and mutation authorization.
+- Ownership-aware status and severity presentation monitoring.
+- Independent monitor claims with cancellation and stale-claim
+  release protection.
+- Bounded recovery after unexpected monitor failures, with at
+  most one automatic retry per eligible command.
+- Pending-command restoration coordinated with session changes.
+- Independent status and severity restoration failure handling.
+- Privacy-conscious diagnostic reporting without logging
+  account identifiers, incident identifiers, credentials, or
+  exception messages.
+- JVM regression coverage for ownership, account switching,
+  monitor recovery, cancellation, and concurrency.
+
+### Verification
+
+- Core session JVM tests: passed.
+- Incident feature JVM tests: passed.
+- Integrated Gradle verification: 63 tasks executed successfully.
+- Milestone change set: 34 files committed.
+- Working tree verified clean after the implementation commit.
+
+### Known limitations
+
+- Unexpected failures while initially loading pending commands
+  are isolated and logged, but are not automatically retried.
+- Physical-device Android integration has not yet been verified.
+
+The milestone was completed using JVM-only verification.
+No production-device installation, Samsung/ADB operation,
+or production Room database change was performed.
+
+### Next milestone
+
+Milestone 249 — Post-commit Reliability and Integration
+Validation.
